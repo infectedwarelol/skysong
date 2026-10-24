@@ -24,6 +24,7 @@ import net.minecraft.util.Util;
 
 public final class Profiles {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skysong_profiles.json");
+    private static final Path LEGACY_FILE = FabricLoader.getInstance().getConfigDir().resolve("spotify_mod_profiles.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     public static final String CODE_PREFIX = "VF2";
     public static final String V1_PREFIX = "VF1-";
@@ -304,12 +305,13 @@ public final class Profiles {
 
     private static List<Profiles.Profile> read() {
         List<Profiles.Profile> out = new ArrayList<>();
-        if (!Files.exists(FILE)) {
+        Path source = Files.exists(FILE) ? FILE : LEGACY_FILE;
+        if (!Files.exists(source)) {
             return out;
         }
 
         try {
-            JsonObject root = JsonParser.parseString(Files.readString(FILE, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = JsonParser.parseString(Files.readString(source, StandardCharsets.UTF_8)).getAsJsonObject();
 
             for (JsonElement e : root.getAsJsonArray("profiles")) {
                 JsonObject o = e.getAsJsonObject();

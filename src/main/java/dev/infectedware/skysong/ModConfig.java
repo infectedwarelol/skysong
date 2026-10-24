@@ -23,6 +23,7 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public final class ModConfig {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skysong.json");
+    private static final Path LEGACY_FILE = FabricLoader.getInstance().getConfigDir().resolve("spotify_mod.json");
     private static final Class<?>[] HOLDERS = new Class<?>[]{ModSettings.class};
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Field, Object> DEFAULTS = captureDefaults();
@@ -32,9 +33,20 @@ public final class ModConfig {
     }
 
     public static void load() {
-        if (Files.exists(FILE)) {
+        boolean migrate = !Files.exists(FILE) && Files.exists(LEGACY_FILE);
+        Path source = migrate ? LEGACY_FILE : FILE;
+        if (Files.exists(source)) {
             try {
-                apply(JsonParser.parseString(Files.readString(FILE, StandardCharsets.UTF_8)).getAsJsonObject(), true);
+                JsonObject json = JsonParser.parseString(Files.readString(source, StandardCharsets.UTF_8)).getAsJsonObject();
+                if (migrate && json.has("theme") && "VERSEFALL".equals(json.get("theme").getAsString())) {
+                    json.addProperty("theme", "SKYSONG");
+                }
+
+                apply(json, true);
+                if (migrate) {
+                    save();
+                    SkysongClient.LOGGER.info("[Skysong] Imported settings from " + LEGACY_FILE.getFileName());
+                }
             } catch (Exception e) {
                 SkysongClient.LOGGER.warn("[Skysong] Could not load config: " + e.getMessage());
             }
