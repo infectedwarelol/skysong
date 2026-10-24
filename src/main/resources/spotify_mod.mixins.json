@@ -1,0 +1,29 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.spotifyclient.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+
+    "FogColorMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "EntityRenderDispatcherMixin",
+    "EntityRendererMixin",
+    "GameRendererMixin",
+    "HandProjectionMixin",
+    "HeldItemRendererMixin",
+    "InGameHudMixin",
+    "KeyboardMixin",
+    "LivingEntityRendererMixin",
+    "MainTargetMixin",
+    "ModMenuCreditsMixin",
+    "SkyRendererMixin",
+    "MouseMixin",
+    "OutlineBufferSourceMixin",
+
+    "WorldRendererMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

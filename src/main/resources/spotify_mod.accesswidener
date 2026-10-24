@@ -1,0 +1,20 @@
+accessWidener	v2	named
+accessible	field	net/minecraft/client/renderer/rendertype/RenderType	state	Lnet/minecraft/client/renderer/rendertype/RenderSetup;
+accessible	field	net/minecraft/client/renderer/rendertype/RenderSetup	textures	Ljava/util/Map;
+accessible	class	net/minecraft/client/renderer/rendertype/RenderSetup$TextureBinding
+accessible	field	net/minecraft/client/renderer/item/ItemStackRenderState	activeLayerCount	I
+accessible	field	net/minecraft/client/renderer/item/ItemStackRenderState	layers	[Lnet/minecraft/client/renderer/item/ItemStackRenderState$LayerRenderState;
+accessible	field	net/minecraft/client/renderer/item/ItemStackRenderState$LayerRenderState	transform	Lnet/minecraft/client/renderer/block/model/ItemTransform;
+accessible	field	net/minecraft/world/item/ItemCooldowns	cooldowns	Ljava/util/Map;
+accessible	field	net/minecraft/world/item/ItemCooldowns	tickCount	I
+accessible	class	net/minecraft/world/item/ItemCooldowns$CooldownInstance
+accessible	field	net/minecraft/world/item/ItemCooldowns$CooldownInstance	startTime	I
+accessible	field	net/minecraft/world/item/ItemCooldowns$CooldownInstance	endTime	I
+accessible	method	net/minecraft/world/entity/Display$TextDisplay	getText	()Lnet/minecraft/network/chat/Component;
+accessible	class	com/mojang/blaze3d/opengl/GlCommandEncoder
+accessible	field	com/mojang/blaze3d/opengl/GlCommandEncoder	lastPipeline	Lcom/mojang/blaze3d/pipeline/RenderPipeline;
+accessible	field	com/mojang/blaze3d/opengl/GlCommandEncoder	lastProgram	Lcom/mojang/blaze3d/opengl/GlProgram;
+accessible	field	net/minecraft/client/renderer/GameRenderer	guiRenderer	Lnet/minecraft/client/gui/render/GuiRenderer;
+accessible	field	net/minecraft/client/renderer/GameRenderer	guiRenderState	Lnet/minecraft/client/gui/render/state/GuiRenderState;
+accessible	field	net/minecraft/client/renderer/GameRenderer	fogRenderer	Lnet/minecraft/client/renderer/fog/FogRenderer;
+accessible	field	net/minecraft/client/renderer/GameRenderer	hud3dProjectionMatrixBuffer	Lnet/minecraft/client/renderer/CachedPerspectiveProjectionMatrixBuffer;

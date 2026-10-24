@@ -1,0 +1,77 @@
+{
+  "ui.open": {
+    "sounds": [
+      "spotify_mod:ui/open-gui"
+    ]
+  },
+  "ui.close": {
+    "sounds": [
+      "spotify_mod:ui/close-gui"
+    ]
+  },
+  "ui.select_category": {
+    "sounds": [
+      "spotify_mod:ui/select-category"
+    ]
+  },
+  "ui.slider": {
+    "sounds": [
+      "spotify_mod:ui/slider"
+    ]
+  },
+  "ui.search_typing": {
+    "sounds": [
+      "spotify_mod:ui/searchtyping"
+    ]
+  },
+  "ui.settings_open": {
+    "sounds": [
+      "spotify_mod:ui/settings-open"
+    ]
+  },
+  "ui.settings_close": {
+    "sounds": [
+      "spotify_mod:ui/settings-close"
+    ]
+  },
+  "ui.module_settings_open": {
+    "sounds": [
+      "spotify_mod:ui/module_settings_open"
+    ]
+  },
+  "ui.module_settings_close": {
+    "sounds": [
+      "spotify_mod:ui/module_settings_close"
+    ]
+  },
+  "ui.switch_left": {
+    "sounds": [
+      "spotify_mod:ui/switch-left"
+    ]
+  },
+  "ui.switch_right": {
+    "sounds": [
+      "spotify_mod:ui/switch-right"
+    ]
+  },
+  "ui.button": {
+    "sounds": [
+      "spotify_mod:ui/buttonclick"
+    ]
+  },
+  "ui.no_settings": {
+    "sounds": [
+      "spotify_mod:ui/no-settings"
+    ]
+  },
+  "ui.module_on": {
+    "sounds": [
+      "spotify_mod:ui/module_on"
+    ]
+  },
+  "ui.module_off": {
+    "sounds": [
+      "spotify_mod:ui/module_off"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "spotify_mod",
+  "version": "${version}",
+  "name": "Versefall",
+  "description": "Lyrics that fall into your world: the song you play on Spotify floats around you as 3D lyrics, with a glass HUD and shader visuals.",
+  "authors": [
+    "VerseFall-Development"
+  ],
+  "contributors": [
+    "LIMTDD",
+    "PoppedByKid",
+    "OkaySleepyX"
+  ],
+  "contact": {
+    "repo": "https://github.com/example/spotify-mod"
+  },
+  "license": "MIT",
+  "icon": "assets/spotify_mod/icon.png",
+  "environment": "client",
+  "accessWidener": "spotify_mod.accesswidener",
+  "entrypoints": {
+    "client": [
+      "com.spotifyclient.SpotifyModClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.17.3",
+    "minecraft": "1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "mixins": [
+    "spotify_mod.mixins.json"
+  ]
+}

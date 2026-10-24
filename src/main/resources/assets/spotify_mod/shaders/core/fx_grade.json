@@ -1,0 +1,102 @@
+{
+    "vertex": "spotify_mod:core/fx_quad",
+    "fragment": "spotify_mod:core/fx_grade",
+    "samplers": [
+        {
+            "name": "Sampler0"
+        },
+        {
+            "name": "Sampler1"
+        }
+    ],
+    "uniforms": [
+        {
+            "name": "Grade",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                0.0
+            ]
+        },
+        {
+            "name": "Style",
+            "type": "float",
+            "count": 4,
+            "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "name": "Pal0",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        {
+            "name": "Pal1",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        {
+            "name": "Pal2",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        {
+            "name": "Pal3",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        {
+            "name": "Pal4",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        },
+        {
+            "name": "Pal5",
+            "type": "float",
+            "count": 4,
+            "values": [
+                1.0,
+                1.0,
+                1.0,
+                1.0
+            ]
+        }
+    ]
+}
