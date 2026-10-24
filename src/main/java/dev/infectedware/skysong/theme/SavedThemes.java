@@ -38,7 +38,15 @@ public final class SavedThemes {
         "textDropShadows", "cinematicFades", "nowPlayingStyle", "hudLyricsStyle", "hudIcons"
     );
     private static final Set<String> NOT_THEME = Set.of(
-        "lyricOffsetMs", "lyricSpawnDistMin", "lyricSpawnDistMax", "lyricFollowPlayer", "lyricThroughWalls", "lyricShowMode"
+        "lyricOffsetMs",
+        "lyricSpawnDistMin",
+        "lyricSpawnDistMax",
+        "lyricFollowPlayer",
+        "lyricThroughWalls",
+        "lyricShowMode",
+        "lyricRealTiming",
+        "lyricTranslate",
+        "lyricTranslateLanguage"
     );
     private static List<SavedThemes.Theme> themes;
     private static String active;
