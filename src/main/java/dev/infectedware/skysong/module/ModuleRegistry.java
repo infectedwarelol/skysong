@@ -121,6 +121,22 @@ public final class ModuleRegistry {
                 new Setting.Shown(
                     () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
                     new Setting.Slide("Sky text scale", 0.5F, 3.0F, 0.05F, 1.0, () -> ModSettings.lyricSkyScale, v -> ModSettings.lyricSkyScale = (float)v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Choice("Sky style", ModSettings.LYRIC_SKY_STYLE_NAMES, () -> ModSettings.lyricSkyStyle, v -> ModSettings.lyricSkyStyle = v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Toggle("Arc across the sky", () -> ModSettings.lyricSkyArc, v -> ModSettings.lyricSkyArc = v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Toggle("Drift away like clouds", () -> ModSettings.lyricSkyDrift, v -> ModSettings.lyricSkyDrift = v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Toggle("Brighter at night", () -> ModSettings.lyricSkyNightGlow, v -> ModSettings.lyricSkyNightGlow = v)
                 )
             )
         ),

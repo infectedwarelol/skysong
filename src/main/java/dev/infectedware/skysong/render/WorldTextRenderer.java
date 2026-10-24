@@ -91,6 +91,15 @@ public class WorldTextRenderer {
     private CameraType lastPerspective;
     private int lastLayoutKey = -1;
     private float framePulse;
+    private float frameDaylight = 1.0F;
+    private static final double SKY_ARC_LIFT_DEGREES = 7.0;
+    private static final float SKY_DRIFT_MS = 2600.0F;
+    private static final double SKY_WIND_SPEED = 0.35;
+    private static final double SKY_RISE_SPEED = 0.25;
+    private static final float SKY_NIGHT_GLOW = 1.5F;
+    private static final float STAR_SCALE = 0.28F;
+    private static final float STAR_HALO_SCALE = 2.4F;
+    private static final Component STAR = Component.literal("\u2726");
     private static final float TYPE_STEP_MS = 40.0F;
     private static final float TYPE_FADE_MS = 90.0F;
     private static final float FALL_STEP_MS = 30.0F;
@@ -122,7 +131,9 @@ public class WorldTextRenderer {
         long key = line == null ? Long.MIN_VALUE : line.timeMs;
         Minecraft mc = Minecraft.getInstance();
         CameraType perspective = mc.options.getCameraType();
-        int layoutKey = ModSettings.lyricShowMode | ModSettings.lyricLayout << 2 | ModSettings.lyricFont << 4 | (ModSettings.lyricUppercase ? 256 : 0);
+        int layoutKey = ModSettings.lyricShowMode | ModSettings.lyricLayout << 2 | ModSettings.lyricFont << 4 | (ModSettings.lyricUppercase ? 256 : 0)
+            | ModSettings.lyricSkyStyle << 9
+            | (ModSettings.lyricSkyArc ? 1024 : 0);
         if (key != this.currentLineKey || perspective != this.lastPerspective || layoutKey != this.lastLayoutKey) {
             this.currentLineKey = key;
             this.lastPerspective = perspective;
@@ -184,15 +195,18 @@ public class WorldTextRenderer {
 
                             Vec3 right = Vec3.directionFromRotation(0.0F, yaw + 90.0F);
                             Vec3 center = sky ? skyPos(eye, yaw) : inFront(eye, this.centerPos(eye, yaw, pitch));
+                            boolean arc = sky && ModSettings.lyricSkyArc;
                             float rowFit = (float)Math.min(
-                                1.0, 2.0 * center.distanceTo(eye) * Math.tan(Math.toRadians(horizontalFov() * 0.38)) / Math.max(total * unit, 0.001)
+                                1.0, 2.0 * center.distanceTo(eye) * Math.tan(Math.toRadians(horizontalFov() * (arc ? 0.55 : 0.38))) / Math.max(total * unit, 0.001)
                             );
                             unit *= rowFit;
                             float cursor = -total / 2.0F;
 
                             for (int i = 0; i < words.length; i++) {
                                 float w = tr.width(styled(words[i], false));
-                                Vec3 pos = center.add(right.scale((cursor + w / 2.0F) * unit));
+                                Vec3 pos = arc
+                                    ? arcPos(eye, yaw, (cursor + w / 2.0F) * unit, total * unit / 2.0F)
+                                    : center.add(right.scale((cursor + w / 2.0F) * unit));
                                 this.addPiece(new String[]{words[i]}, new long[]{sungAt[i]}, pos, eye, yaw, false, rowFit, colorT(i, words.length), sky).emphasized = new boolean[]{
                                     emphasized[i]
                                 };
@@ -308,6 +322,32 @@ public class WorldTextRenderer {
 
     private static Vec3 skyPos(Vec3 eye, float yaw) {
         return eye.add(Vec3.directionFromRotation(-ModSettings.lyricSkyAngle, yaw).scale(ModSettings.lyricSkyDistance));
+    }
+
+    private static Vec3 arcPos(Vec3 eye, float yaw, double offset, double halfSpan) {
+        double distance = ModSettings.lyricSkyDistance;
+        double normalized = halfSpan > 0.0 ? Mth.clamp(offset / halfSpan, -1.0, 1.0) : 0.0;
+        float yawOffset = (float)Math.toDegrees(offset / distance);
+        float lift = (float)(SKY_ARC_LIFT_DEGREES * (1.0 - normalized * normalized));
+        return eye.add(Vec3.directionFromRotation(-(ModSettings.lyricSkyAngle + lift), yaw + yawOffset).scale(distance));
+    }
+
+    private static boolean constellation() {
+        return ModSettings.lyricLayout == ModSettings.LAYOUT_SKY && ModSettings.lyricSkyStyle == ModSettings.LYRIC_SKY_CONSTELLATION;
+    }
+
+    private static float fadeDuration(WorldTextRenderer.Piece p) {
+        return p.sky && ModSettings.lyricSkyDrift ? SKY_DRIFT_MS : 550.0F;
+    }
+
+    private static Vec3 skyDrift(WorldTextRenderer.Piece p, long now) {
+        if (!p.sky || !ModSettings.lyricSkyDrift || now <= p.fadeAt) {
+            return Vec3.ZERO;
+        }
+
+        double seconds = (now - p.fadeAt) / 1000.0;
+        Vec3 wind = Vec3.directionFromRotation(0.0F, p.yaw + 90.0F).scale(SKY_WIND_SPEED * seconds * p.sizeMultiplier);
+        return wind.add(0.0, SKY_RISE_SPEED * seconds * p.sizeMultiplier, 0.0);
     }
 
     private static float skySizeMultiplier() {
@@ -591,7 +631,7 @@ public class WorldTextRenderer {
             synchronized (this.pieces) {
                 updateFollow(mc, context.partialTick());
                 this.placePending(mc, context, now);
-                this.pieces.removeIf(px -> now - px.fadeAt > 550L || worldPos(px).distanceToSqr(eye) > 4096.0);
+                this.pieces.removeIf(px -> now - px.fadeAt > fadeDuration(px) || worldPos(px).distanceToSqr(eye) > 4096.0);
                 if (!ModSettings.enable3DLyrics || this.pieces.isEmpty()) {
                     return;
                 }
@@ -600,6 +640,7 @@ public class WorldTextRenderer {
                 boolean walls = ModSettings.lyricThroughWalls;
                 boolean smooth = smoothFont();
                 float daylight = 1.0F - Mth.clamp(mc.level.getSkyDarken() / 11.0F, 0.0F, 1.0F);
+                this.frameDaylight = daylight;
                 WorldTextRenderer.Passes passes = new WorldTextRenderer.Passes(
                     LyricLayers.remap(this.glowBuffers, LyricLayers.Pass.GLOW, walls, smooth),
                     LyricLayers.remap(this.outlineBuffers, LyricLayers.Pass.OUTLINE, walls, smooth),
@@ -691,7 +732,7 @@ public class WorldTextRenderer {
         long appearAt = p.sungAt[0];
         if (now >= appearAt) {
             float appear = RenderUtil.clamp01((float)(now - appearAt) / 280.0F);
-            float fade = now < p.fadeAt ? 0.0F : RenderUtil.clamp01((float)(now - p.fadeAt) / 550.0F);
+            float fade = now < p.fadeAt ? 0.0F : RenderUtil.clamp01((float)(now - p.fadeAt) / fadeDuration(p));
             float alpha = RenderUtil.easeOutCubic(appear) * (1.0F - fade) * ModSettings.lyricOpacity;
             if (!(alpha < 0.02F)) {
                 float bounce = ModSettings.lyricBounce;
@@ -704,7 +745,7 @@ public class WorldTextRenderer {
                 Vec3 cam = Compat.camPos(context.camera());
                 PoseStack m = context.poseStack();
                 m.pushPose();
-                Vec3 at = worldPos(p);
+                Vec3 at = worldPos(p).add(skyDrift(p, now));
                 if (mirror) {
                     double floor = floorBelow(at);
                     double y = at.y + rise + drift;
@@ -771,6 +812,10 @@ public class WorldTextRenderer {
                     }
 
                     float glowStrength = ModSettings.lyricGlow * (1.0F + this.framePulse);
+                    if (p.sky && ModSettings.lyricSkyNightGlow) {
+                        glowStrength *= 1.0F + SKY_NIGHT_GLOW * (1.0F - this.frameDaylight);
+                    }
+
                     long wordStart = karaoke ? p.sungAt[i] : p.sungAt[0];
                     boolean shake = ModSettings.lyricEffect == ModSettings.LYRIC_EFFECT_SHAKE
                         || ModSettings.lyricShakeEmphasis && i < p.emphasized.length && p.emphasized[i];
@@ -778,7 +823,9 @@ public class WorldTextRenderer {
                     m.pushPose();
                     m.translate(x + w / 2.0F, 0.0F, 0.0F);
                     m.scale(wordPop, wordPop, 1.0F);
-                    if (ModSettings.lyricEffect == ModSettings.LYRIC_EFFECT_NONE && !shake) {
+                    if (p.sky && constellation()) {
+                        this.drawConstellation(tr, p.words[i], i == current, -w / 2.0F, y, wordAlpha, color, m, passes, glowStrength, now, p.driftSeed + i);
+                    } else if (ModSettings.lyricEffect == ModSettings.LYRIC_EFFECT_NONE && !shake) {
                         this.drawWord(tr, texts[i], -w / 2.0F, y, wordAlpha, blur, color, m.last().pose(), passes, glitchAmount, glowStrength);
                     } else {
                         this.drawLetters(
@@ -856,6 +903,70 @@ public class WorldTextRenderer {
 
             cursor += glyphWidth;
         }
+    }
+
+    private void drawConstellation(
+        Font tr,
+        String word,
+        boolean bold,
+        float x,
+        float y,
+        float alpha,
+        int color,
+        PoseStack m,
+        WorldTextRenderer.Passes passes,
+        float glowStrength,
+        long now,
+        float seed
+    ) {
+        float cursor = x;
+        float starWidth = tr.width(STAR);
+
+        for (int offset = 0; offset < word.length(); ) {
+            int codePoint = word.codePointAt(offset);
+            offset += Character.charCount(codePoint);
+            Component glyph = styled(new String(Character.toChars(codePoint)), bold);
+            float advance = tr.width(glyph);
+            boolean[] grid = StarGlyphs.glyph(codePoint);
+            if (grid == null) {
+                if (!Character.isWhitespace(codePoint)) {
+                    this.drawWord(tr, glyph, cursor, y, alpha, 0.0F, color, m.last().pose(), passes, 0.0F, glowStrength);
+                }
+            } else {
+                for (int gy = 0; gy < StarGlyphs.GRID; gy++) {
+                    for (int gx = 0; gx < StarGlyphs.GRID; gx++) {
+                        if (grid[gy * StarGlyphs.GRID + gx] && (gx + gy & 1) == 0) {
+                            float twinkle = 0.55F + 0.45F * (float)Math.sin(now / 260.0 + seed * 3.1 + codePoint * 0.7 + gx * 1.3 + gy * 2.1);
+                            this.drawStar(tr, cursor + gx + 0.5F, y + gy + 0.5F, alpha * twinkle, color, starWidth, m, passes, glowStrength);
+                        }
+                    }
+                }
+            }
+
+            cursor += advance;
+        }
+    }
+
+    private void drawStar(
+        Font tr, float x, float y, float alpha, int color, float starWidth, PoseStack m, WorldTextRenderer.Passes passes, float glowStrength
+    ) {
+        m.pushPose();
+        m.translate(x, y, 0.0F);
+        m.scale(STAR_SCALE, STAR_SCALE, 1.0F);
+        int main = argb(alpha, color);
+        if (main != 0) {
+            tr.drawInBatch(STAR, -starWidth / 2.0F, -4.5F, main, false, m.last().pose(), passes.main(), DisplayMode.NORMAL, 0, 15728880);
+        }
+
+        if (glowStrength > 0.02F) {
+            int halo = argb(alpha * 0.22F * Math.min(glowStrength, 2.0F), color);
+            if (halo != 0) {
+                m.scale(STAR_HALO_SCALE, STAR_HALO_SCALE, 1.0F);
+                tr.drawInBatch(STAR, -starWidth / 2.0F, -4.5F, halo, false, m.last().pose(), passes.glow(), DisplayMode.NORMAL, 0, 15728880);
+            }
+        }
+
+        m.popPose();
     }
 
     private static float noise(long bucket, int letter, float seed) {
@@ -1027,7 +1138,7 @@ public class WorldTextRenderer {
     }
 
     private static Component styled(String word, boolean bold) {
-        Style style = switch (ModSettings.lyricFont) {
+        Style style = switch (constellation() ? ModSettings.FONT_MINECRAFT : ModSettings.lyricFont) {
             case ModSettings.FONT_MINECRAFT -> Style.EMPTY.withBold(bold);
             case ModSettings.FONT_SMOOTH -> Compat.withFont(Style.EMPTY, UNIFORM_FONT).withBold(bold);
             case ModSettings.FONT_AQUIRE -> Compat.withFont(Style.EMPTY, bold ? AQUIRE_FONT_BOLD : AQUIRE_FONT);

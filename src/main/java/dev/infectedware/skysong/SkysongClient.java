@@ -15,6 +15,7 @@ import dev.infectedware.skysong.module.Binds;
 import dev.infectedware.skysong.module.Category;
 import dev.infectedware.skysong.module.ClientModule;
 import dev.infectedware.skysong.render.CinematicTextRenderer;
+import dev.infectedware.skysong.render.StarGlyphs;
 import dev.infectedware.skysong.render.WorldTextRenderer;
 import dev.infectedware.skysong.render.fx.Afterimages;
 import dev.infectedware.skysong.render.fx.DeathFx;
@@ -136,6 +137,7 @@ public class SkysongClient implements ClientModInitializer {
             @Override
             public void onResourceManagerReload(ResourceManager manager) {
                 Shader.reloadAll();
+                StarGlyphs.clear();
                 Fx.reset("resources reloaded");
             }
         });
