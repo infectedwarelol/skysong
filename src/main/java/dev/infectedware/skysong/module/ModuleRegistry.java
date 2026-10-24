@@ -13,6 +13,7 @@ import dev.infectedware.skysong.hud.Crosshair;
 import dev.infectedware.skysong.hud.InfoHud;
 import dev.infectedware.skysong.lyrics.LyricTranslator;
 import dev.infectedware.skysong.render.AspectRatio;
+import dev.infectedware.skysong.render.CustomFonts;
 import dev.infectedware.skysong.render.fx.DeathFx;
 import dev.infectedware.skysong.render.fx.Fx;
 import dev.infectedware.skysong.render.fx.KillFx;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Util;
 
 public final class ModuleRegistry {
     public static final String CLICK_GUI = "Click GUI";
@@ -44,6 +46,25 @@ public final class ModuleRegistry {
                 new Setting.Choice("Show", ModSettings.SHOW_NAMES, () -> ModSettings.lyricShowMode, v -> ModSettings.lyricShowMode = v),
                 new Setting.Choice("Layout", ModSettings.LAYOUT_NAMES, () -> ModSettings.lyricLayout, v -> ModSettings.lyricLayout = v),
                 new Setting.Choice("Font", ModSettings.FONT_NAMES, () -> ModSettings.lyricFont, v -> ModSettings.lyricFont = v),
+                new Setting.Shown(() -> ModSettings.lyricFont == ModSettings.FONT_CUSTOM, customFontSetting()),
+                new Setting.Shown(
+                    () -> ModSettings.lyricFont == ModSettings.FONT_CUSTOM,
+                    new Setting.Info(() -> "Put .ttf or .otf files in config/skysong/fonts")
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricFont == ModSettings.FONT_CUSTOM,
+                    new Setting.Action("Open fonts folder", () -> {
+                        CustomFonts.refresh();
+                        Util.getPlatform().openPath(CustomFonts.FONT_DIR);
+                    })
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricFont == ModSettings.FONT_CUSTOM,
+                    new Setting.Action("Reload fonts", () -> {
+                        Minecraft.getInstance().reloadResourcePacks();
+                        SettingsPopup.rebuildSoon();
+                    })
+                ),
                 new Setting.Slide("Line size", 0.05F, 0.5F, 0.01F, 0.17, () -> ModSettings.lyricSize, v -> ModSettings.lyricSize = (float)v),
                 new Setting.Slide("Opacity", 0.1F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricOpacity, v -> ModSettings.lyricOpacity = (float)v),
                 new Setting.Toggle("Through walls", () -> ModSettings.lyricThroughWalls, v -> ModSettings.lyricThroughWalls = v),
@@ -1183,6 +1204,18 @@ public final class ModuleRegistry {
 
     public static boolean listedCategory(Category c) {
         return (ModSettings.arrayListCategories >> c.ordinal() & 1) != 0;
+    }
+
+    private static Setting customFontSetting() {
+        List<String> names = CustomFonts.names();
+        if (names.isEmpty()) {
+            return new Setting.Info(() -> "No font files found yet.");
+        }
+
+        String[] options = names.toArray(String[]::new);
+        return new Setting.Choice("Font file", options, () -> Math.max(0, names.indexOf(ModSettings.lyricCustomFont)), v -> {
+            ModSettings.lyricCustomFont = options[Math.floorMod(v, options.length)];
+        });
     }
 
     private static SpotifyManager spotify() {

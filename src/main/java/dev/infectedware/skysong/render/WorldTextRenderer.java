@@ -134,7 +134,8 @@ public class WorldTextRenderer {
         long key = line == null ? Long.MIN_VALUE : line.timeMs;
         Minecraft mc = Minecraft.getInstance();
         CameraType perspective = mc.options.getCameraType();
-        int layoutKey = ModSettings.lyricShowMode | ModSettings.lyricLayout << 2 | ModSettings.lyricFont << 4 | (ModSettings.lyricUppercase ? 256 : 0)
+        int layoutKey = ModSettings.lyricCustomFont.hashCode() * 31
+            ^ ModSettings.lyricShowMode | ModSettings.lyricLayout << 2 | ModSettings.lyricFont << 4 | (ModSettings.lyricUppercase ? 256 : 0)
             | ModSettings.lyricSkyStyle << 9
             | (ModSettings.lyricSkyArc ? 1024 : 0);
         if (key != this.currentLineKey || perspective != this.lastPerspective || layoutKey != this.lastLayoutKey) {
@@ -1172,6 +1173,10 @@ public class WorldTextRenderer {
             case ModSettings.FONT_MONTSERRAT -> Compat.withFont(Style.EMPTY, bold ? MONTSERRAT_FONT_BOLD : MONTSERRAT_FONT);
             case ModSettings.FONT_GALACTIC -> Compat.withFont(Style.EMPTY, GALACTIC_FONT).withBold(bold);
             case ModSettings.FONT_RUNIC -> Compat.withFont(Style.EMPTY, RUNIC_FONT).withBold(bold);
+            case ModSettings.FONT_CUSTOM -> {
+                Identifier custom = CustomFonts.font(ModSettings.lyricCustomFont);
+                yield custom == null ? Compat.withFont(Style.EMPTY, bold ? LYRIC_FONT_BOLD : LYRIC_FONT) : Compat.withFont(Style.EMPTY, custom).withBold(bold);
+            }
             default -> Compat.withFont(Style.EMPTY, bold ? LYRIC_FONT_BOLD : LYRIC_FONT);
         };
         return Component.literal(word).setStyle(style);

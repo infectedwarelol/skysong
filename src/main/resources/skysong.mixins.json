@@ -4,7 +4,6 @@
   "package": "dev.infectedware.skysong.mixin",
   "compatibilityLevel": "JAVA_21",
   "client": [
-
     "FogColorMixin",
     "ClientPlayNetworkHandlerMixin",
     "EntityRenderDispatcherMixin",
@@ -20,8 +19,8 @@
     "SkyRendererMixin",
     "MouseMixin",
     "OutlineBufferSourceMixin",
-
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "PackRepositoryMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -48,9 +48,10 @@ public final class ModSettings {
     public static final int FONT_EXO = 5;
     public static final int FONT_GALACTIC = 6;
     public static final int FONT_RUNIC = 7;
+    public static final int FONT_CUSTOM = 8;
     public static final String[] SHOW_NAMES = new String[]{"Words", "Lines"};
     public static final String[] LAYOUT_NAMES = new String[]{"Scatter", "Center", "Sky"};
-    public static final String[] FONT_NAMES = new String[]{"Minecraft", "Smooth", "Wide", "Aquire", "Montserrat", "Exo", "Galactic", "Runic"};
+    public static final String[] FONT_NAMES = new String[]{"Minecraft", "Smooth", "Wide", "Aquire", "Montserrat", "Exo", "Galactic", "Runic", "My font files"};
     public static final int LYRIC_COLOR_WHITE = 0;
     public static final int LYRIC_COLOR_CLIENT = 1;
     public static final int LYRIC_COLOR_CUSTOM = 2;
@@ -74,6 +75,7 @@ public final class ModSettings {
     public static float lyricSkyAngle = 35.0F;
     public static float lyricSkyScale = 1.0F;
     public static boolean lyricRealTiming = true;
+    public static String lyricCustomFont = "";
     public static boolean lyricTranslate = false;
     public static int lyricTranslateLanguage = 1;
     public static final int LYRIC_SKY_TEXT = 0;
