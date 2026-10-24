@@ -86,6 +86,7 @@ public final class Profiles {
         } else {
             backup();
             ModConfig.resetShared();
+            ModConfig.migrateEffects(all().get(at).settings());
             ModConfig.apply(all().get(at).settings(), false);
             applied();
             active = name;

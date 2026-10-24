@@ -76,6 +76,7 @@ public final class ModSettings {
     public static float lyricSkyScale = 1.0F;
     public static boolean lyricRealTiming = true;
     public static boolean classicMenu = false;
+    public static int effectListVersion = 2;
     public static boolean shareMySong = false;
     public static boolean showOthersSongs = true;
     public static String lyricCustomFont = "";
@@ -283,14 +284,14 @@ public final class ModSettings {
     public static boolean crosshairMirrorX = true;
     public static boolean crosshairMirrorY = false;
     public static boolean killEffects = true;
-    public static int killEffectType = 6;
+    public static int killEffectType = 11;
     public static int killEffectColor = 0;
     public static int killEffectCustomColor = -4437771;
     public static int killEffectCustomColor2 = -9830145;
     public static boolean killEffectPlayersOnly = false;
     public static boolean killEffectSounds = true;
     public static boolean deathEffect = true;
-    public static int deathEffectType = 4;
+    public static int deathEffectType = 8;
     public static int deathEffectColor = 0;
     public static int deathEffectCustomColor = -8588545;
     public static int deathEffectCustomColor2 = -45149;

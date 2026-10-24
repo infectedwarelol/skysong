@@ -251,3 +251,4 @@ lyricBpm
 lyricEffect
 lyricShakeEmphasis
 lyricParticles
+effectListVersion

@@ -9,6 +9,10 @@
 //    washes out to bright light while motes drift up.
 //  3 Signal Lost: the picture breaks up like a dying video feed: lines tear sideways, blocks
 //    corrupt, the colors split, a bar rolls through, and it all sinks into static.
+//  4 Cinematic: black bars slide in, the world drains to film grey, slowly zooms and fades out.
+//  5 Swallowed: the world spins into a dark hole in the middle that grows until it takes it all.
+//  6 Frozen: frost crystals grow in from the edges and the picture turns to ice.
+//  7 Pixelated: the picture breaks into bigger and bigger pixels with fewer colors, then goes dark.
 
 uniform sampler2D Sampler0;   // the world
 
@@ -177,6 +181,84 @@ vec3 signalLost(vec2 uv, float t) {
     return col;
 }
 
+// ── 4: Cinematic ───────────────────────────────────────────────────
+
+vec3 cinematic(vec2 uv, float r, float t) {
+    float k = smoothstep(0.0, 1.2, t);
+    float zoom = 1.0 - 0.06 * smoothstep(0.0, 4.0, t);
+    vec2 zuv = 0.5 + (uv - 0.5) * zoom;
+    vec3 col = texture(Sampler0, zuv).rgb;
+    vec3 film = vec3(luma(col)) * vec3(1.04, 1.0, 0.94);
+    col = mix(col, film, k);
+    col = (col - 0.5) * (1.0 + 0.25 * k) + 0.5;
+    col += (hash12(gl_FragCoord.xy + floor(t * 24.0) * 17.0) - 0.5) * 0.08 * k;
+    col *= 1.0 - smoothstep(0.35, 1.05, r) * 0.7 * k;
+    float bar = 0.13 * smoothstep(0.0, 0.9, t);
+    float edge = min(uv.y, 1.0 - uv.y);
+    float inBar = 1.0 - smoothstep(bar - 0.002, bar + 0.002, edge);
+    col = mix(col, vec3(0.0), inBar);
+    col += tintAt(uv.x) * 0.35 * (1.0 - smoothstep(0.0, 0.006, abs(edge - bar))) * step(0.01, bar);
+    col *= 1.0 - smoothstep(2.6, 4.2, t);
+    return col;
+}
+
+// ── 5: Swallowed ───────────────────────────────────────────────────
+
+vec3 swallowed(vec2 uv, vec2 c, float r, float t) {
+    float aspect = OutSize.x / max(OutSize.y, 1.0);
+    float pull = smoothstep(0.0, 3.5, t);
+    float angle = pull * 6.0 * exp(-r * 2.2);
+    float cs = cos(angle);
+    float sn = sin(angle);
+    vec2 rc = vec2(c.x * cs - c.y * sn, c.x * sn + c.y * cs) * (1.0 - 0.35 * pull * exp(-r * 1.5));
+    vec2 suv = rc / vec2(aspect, 1.0) + 0.5;
+    vec3 col = texture(Sampler0, clamp(suv, 0.0, 1.0)).rgb;
+    float hole = 1.2 * smoothstep(0.3, 4.0, t) * smoothstep(0.3, 4.0, t);
+    float glow = 1.0 - smoothstep(0.0, 0.08, abs(r - hole));
+    col = mix(vec3(0.0), col, smoothstep(hole - 0.02, hole + 0.06, r));
+    col += tintAt(fract(atan(c.y, c.x) / 6.2832 + t * 0.2)) * glow * 0.9 * step(0.01, hole);
+    col = mix(col, vec3(luma(col)), 0.3 * pull);
+    return col;
+}
+
+// ── 6: Frozen ──────────────────────────────────────────────────────
+
+vec3 frozen(vec2 uv, vec2 c, float r, float t) {
+    float edge = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
+    float f1, f2;
+    vec2 cell;
+    voronoi(c * 9.0, f1, f2, cell);
+    float crystal = hash22(cell).x;
+    float reach = 0.5 * smoothstep(0.0, 2.5, t) + 0.1 * crystal;
+    float frost = 1.0 - smoothstep(reach - 0.08, reach + 0.02, edge);
+    vec2 bend = (hash22(cell + 3.1) - 0.5) * 0.012 * frost;
+    vec3 col = texture(Sampler0, clamp(uv + bend, 0.0, 1.0)).rgb;
+    vec3 ice = mix(vec3(0.78, 0.9, 1.0), tintAt(crystal), 0.35);
+    col = mix(col, col * vec3(0.75, 0.88, 1.05), smoothstep(0.0, 1.5, t));
+    col = mix(col, ice * (0.75 + 0.35 * crystal), frost * 0.75);
+    float crack = (1.0 - smoothstep(0.0, 0.05, f2 - f1)) * frost;
+    col += vec3(0.9, 0.97, 1.0) * crack * 0.6;
+    col = mix(col, vec3(luma(col)) * vec3(0.85, 0.95, 1.1), 0.4 * smoothstep(0.5, 3.0, t));
+    col *= 1.0 - 0.3 * smoothstep(2.5, 4.5, t);
+    return col;
+}
+
+// ── 7: Pixelated ───────────────────────────────────────────────────
+
+vec3 pixelated(vec2 uv, float t) {
+    float size = mix(1.0, 72.0, smoothstep(0.0, 2.8, t) * smoothstep(0.0, 2.8, t));
+    vec2 grid = OutSize / size;
+    vec2 puv = (floor(uv * grid) + 0.5) / grid;
+    vec3 col = texture(Sampler0, puv).rgb;
+    float levels = mix(32.0, 3.0, smoothstep(0.3, 2.6, t));
+    col = floor(col * levels + 0.5) / levels;
+    vec2 local = fract(uv * grid);
+    float gap = step(0.92, max(local.x, local.y)) * step(6.0, size);
+    col = mix(col, tintAt(hash12(floor(uv * grid))) * 0.4, gap * 0.6);
+    col *= 1.0 - smoothstep(2.8, 4.2, t);
+    return col;
+}
+
 void main() {
     float t = Death.x;
     vec2 aspect = vec2(OutSize.x / max(OutSize.y, 1.0), 1.0);
@@ -187,6 +269,10 @@ void main() {
     if (mode == 1) col = flatline(texCoord, r, t);
     else if (mode == 2) col = ascension(texCoord, c, t);
     else if (mode == 3) col = signalLost(texCoord, t);
+    else if (mode == 4) col = cinematic(texCoord, r, t);
+    else if (mode == 5) col = swallowed(texCoord, c, r, t);
+    else if (mode == 6) col = frozen(texCoord, c, r, t);
+    else if (mode == 7) col = pixelated(texCoord, t);
     else col = shattered(texCoord, c, r, t);
     fragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }

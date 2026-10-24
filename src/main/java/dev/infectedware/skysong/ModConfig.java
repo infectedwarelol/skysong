@@ -42,6 +42,7 @@ public final class ModConfig {
                     json.addProperty("theme", "SKYSONG");
                 }
 
+                migrateEffects(json);
                 apply(json, true);
                 if (migrate) {
                     save();
@@ -51,6 +52,22 @@ public final class ModConfig {
                 SkysongClient.LOGGER.warn("[Skysong] Could not load config: " + e.getMessage());
             }
         }
+    }
+
+    public static void migrateEffects(JsonObject json) {
+        if (json == null || json.has("effectListVersion")) {
+            return;
+        }
+
+        if (json.has("killEffectType") && json.get("killEffectType").isJsonPrimitive() && json.get("killEffectType").getAsInt() == 6) {
+            json.addProperty("killEffectType", 11);
+        }
+
+        if (json.has("deathEffectType") && json.get("deathEffectType").isJsonPrimitive() && json.get("deathEffectType").getAsInt() == 4) {
+            json.addProperty("deathEffectType", 8);
+        }
+
+        json.addProperty("effectListVersion", 2);
     }
 
     public static void save() {

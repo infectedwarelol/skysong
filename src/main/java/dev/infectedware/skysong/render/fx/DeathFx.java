@@ -16,13 +16,19 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 
 public final class DeathFx {
-    public static final String[] EFFECTS = new String[]{"Shattered Glass", "Flatline", "Ascension", "Signal Lost", "Random"};
+    public static final String[] EFFECTS = new String[]{"Shattered Glass", "Flatline", "Ascension", "Signal Lost", "Cinematic", "Swallowed", "Frozen", "Pixelated", "Random"};
     public static final int SHATTERED = 0;
     public static final int FLATLINE = 1;
     public static final int ASCENSION = 2;
     public static final int SIGNAL_LOST = 3;
-    public static final int RANDOM = 4;
-    private static final int KINDS = 4;
+    public static final int CINEMATIC = 4;
+    public static final int SWALLOWED = 5;
+    public static final int FROZEN = 6;
+    public static final int PIXELATED = 7;
+    public static final int RANDOM = 8;
+    private static final int KINDS = 8;
+    private static final java.util.List<Integer> randomBag = new java.util.ArrayList<>();
+    private static int lastRandom = -1;
     private static final float[] BEATS = new float[]{0.05F, 0.75F};
     private static final DeathFx.Cue[][] CUES = new DeathFx.Cue[][]{
         {
@@ -46,6 +52,27 @@ public final class DeathFx {
                 new DeathFx.Cue(0.0F, SoundEvents.BEACON_DEACTIVATE, 1.0F, 0.8F),
                 new DeathFx.Cue(0.3F, SoundEvents.REDSTONE_TORCH_BURNOUT, 0.8F, 0.7F),
                 new DeathFx.Cue(0.9F, SoundEvents.REDSTONE_TORCH_BURNOUT, 0.8F, 0.5F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.NOTE_BLOCK_BASS.value(), 1.0F, 0.5F),
+                new DeathFx.Cue(0.9F, SoundEvents.NOTE_BLOCK_BASS.value(), 0.8F, 0.45F),
+                new DeathFx.Cue(2.6F, SoundEvents.BEACON_DEACTIVATE, 0.7F, 0.6F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.ENDERMAN_TELEPORT, 0.8F, 0.4F),
+                new DeathFx.Cue(0.5F, SoundEvents.PORTAL_TRAVEL, 0.35F, 1.6F),
+                new DeathFx.Cue(3.2F, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), 0.8F, 0.6F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.PLAYER_HURT_FREEZE, 1.0F, 0.7F),
+                new DeathFx.Cue(0.6F, SoundEvents.POWDER_SNOW_BREAK, 1.0F, 0.6F),
+                new DeathFx.Cue(1.8F, SoundEvents.GLASS_BREAK, 0.6F, 1.5F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 1.0F),
+                new DeathFx.Cue(0.6F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.8F),
+                new DeathFx.Cue(1.2F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.6F),
+                new DeathFx.Cue(1.8F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.5F)
         }
     };
     private static long diedAt = -1L;
@@ -87,8 +114,24 @@ public final class DeathFx {
     public static void preview(int type) {
         diedAt = System.currentTimeMillis();
         previewUntil = diedAt + 4000L;
-        mode = type >= 0 && type < 4 ? type : RNG.nextInt(4);
+        mode = type >= 0 && type < KINDS ? type : nextRandom();
         cue = 0;
+    }
+
+    static int nextRandom() {
+        if (randomBag.isEmpty()) {
+            for (int i = 0; i < KINDS; i++) {
+                randomBag.add(i);
+            }
+
+            java.util.Collections.shuffle(randomBag, RNG);
+            if (randomBag.size() > 1 && randomBag.get(randomBag.size() - 1) == lastRandom) {
+                java.util.Collections.swap(randomBag, 0, randomBag.size() - 1);
+            }
+        }
+
+        lastRandom = randomBag.remove(randomBag.size() - 1);
+        return lastRandom;
     }
 
     public static int mode() {
@@ -100,7 +143,7 @@ public final class DeathFx {
         if (dead && !wasDead && ModSettings.deathEffect) {
             diedAt = System.currentTimeMillis();
             int t = ModSettings.deathEffectType;
-            mode = t >= 0 && t < 4 ? t : RNG.nextInt(4);
+            mode = t >= 0 && t < KINDS ? t : nextRandom();
             cue = 0;
         }
 
