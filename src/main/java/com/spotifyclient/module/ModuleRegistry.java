@@ -51,20 +51,59 @@ public final class ModuleRegistry {
                 new Setting.Slide("Outline", 0.0F, 1.0F, 0.01F, 0.7, () -> ModSettings.lyricOutline, v -> ModSettings.lyricOutline = (float)v),
                 new Setting.Slide("Bounce", 0.0F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricBounce, v -> ModSettings.lyricBounce = (float)v),
                 new Setting.Toggle("Flicker effect", () -> ModSettings.lyricFlicker, v -> ModSettings.lyricFlicker = v),
+                new Setting.Header("Colors"),
+                new Setting.Choice("Text color", ModSettings.LYRIC_COLOR_NAMES, () -> ModSettings.lyricColorMode, v -> ModSettings.lyricColorMode = v),
+                new Setting.Shown(
+                    () -> ModSettings.lyricColorMode == ModSettings.LYRIC_COLOR_CUSTOM || ModSettings.lyricColorMode == ModSettings.LYRIC_COLOR_GRADIENT,
+                    new Setting.ColorPick("Color 1", () -> ModSettings.lyricColor, v -> ModSettings.lyricColor = v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricColorMode == ModSettings.LYRIC_COLOR_GRADIENT,
+                    new Setting.ColorPick("Color 2", () -> ModSettings.lyricColor2, v -> ModSettings.lyricColor2 = v)
+                ),
+                new Setting.Toggle("Highlight sung word", () -> ModSettings.lyricHighlight, v -> ModSettings.lyricHighlight = v),
+                new Setting.Shown(
+                    () -> ModSettings.lyricHighlight,
+                    new Setting.ColorPick("Highlight color", () -> ModSettings.lyricHighlightColor, v -> ModSettings.lyricHighlightColor = v)
+                ),
+                new Setting.Choice("Glow color", ModSettings.LYRIC_GLOW_NAMES, () -> ModSettings.lyricGlowMode, v -> ModSettings.lyricGlowMode = v),
+                new Setting.Shown(
+                    () -> ModSettings.lyricGlowMode == ModSettings.LYRIC_GLOW_CUSTOM,
+                    new Setting.ColorPick("Glow", () -> ModSettings.lyricGlowColor, v -> ModSettings.lyricGlowColor = v)
+                ),
+                new Setting.ColorPick("Outline color", () -> ModSettings.lyricOutlineColor, v -> ModSettings.lyricOutlineColor = v),
                 new Setting.Header("Timing"),
                 new Setting.Slide(
                     "Sync offset (ms)", -2000.0F, 2000.0F, 50.0F, 0.0, () -> ModSettings.lyricOffsetMs, v -> ModSettings.lyricOffsetMs = (int)Math.round(v)
                 ),
                 new Setting.Info(() -> "+ earlier, - later"),
                 new Setting.Header("Position"),
-                new Setting.Slide("Min distance", 2.0F, 20.0F, 1.0F, 4.0, () -> ModSettings.lyricSpawnDistMin, v -> {
-                    ModSettings.lyricSpawnDistMin = (int)Math.round(v);
-                    ModSettings.lyricSpawnDistMax = Math.max(ModSettings.lyricSpawnDistMax, ModSettings.lyricSpawnDistMin + 1);
-                }),
-                new Setting.Slide("Max distance", 3.0F, 30.0F, 1.0F, 9.0, () -> ModSettings.lyricSpawnDistMax, v -> {
-                    ModSettings.lyricSpawnDistMax = (int)Math.round(v);
-                    ModSettings.lyricSpawnDistMin = Math.min(ModSettings.lyricSpawnDistMin, ModSettings.lyricSpawnDistMax - 1);
-                })
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout != ModSettings.LAYOUT_SKY,
+                    new Setting.Slide("Min distance", 2.0F, 20.0F, 1.0F, 4.0, () -> ModSettings.lyricSpawnDistMin, v -> {
+                        ModSettings.lyricSpawnDistMin = (int)Math.round(v);
+                        ModSettings.lyricSpawnDistMax = Math.max(ModSettings.lyricSpawnDistMax, ModSettings.lyricSpawnDistMin + 1);
+                    })
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout != ModSettings.LAYOUT_SKY,
+                    new Setting.Slide("Max distance", 3.0F, 30.0F, 1.0F, 9.0, () -> ModSettings.lyricSpawnDistMax, v -> {
+                        ModSettings.lyricSpawnDistMax = (int)Math.round(v);
+                        ModSettings.lyricSpawnDistMin = Math.min(ModSettings.lyricSpawnDistMin, ModSettings.lyricSpawnDistMax - 1);
+                    })
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Slide("Sky distance", 16.0F, 56.0F, 1.0F, 40.0, () -> ModSettings.lyricSkyDistance, v -> ModSettings.lyricSkyDistance = (float)v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Slide("Sky height (deg)", 5.0F, 75.0F, 1.0F, 35.0, () -> ModSettings.lyricSkyAngle, v -> ModSettings.lyricSkyAngle = (float)v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricLayout == ModSettings.LAYOUT_SKY,
+                    new Setting.Slide("Sky text scale", 0.5F, 3.0F, 0.05F, 1.0, () -> ModSettings.lyricSkyScale, v -> ModSettings.lyricSkyScale = (float)v)
+                )
             )
         ),
         new ClientModule(

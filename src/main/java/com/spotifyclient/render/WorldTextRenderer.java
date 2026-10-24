@@ -9,6 +9,9 @@ import com.spotifyclient.compat.Ids;
 import com.spotifyclient.compat.WorldCtx;
 import com.spotifyclient.lyrics.LyricsManager;
 import com.spotifyclient.render.fx.StormFx;
+import com.spotifyclient.theme.ClientAccent;
+import com.spotifyclient.theme.Colors;
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -44,6 +47,12 @@ public class WorldTextRenderer {
     private static final Identifier LYRIC_FONT_BOLD = Ids.of("spotify_mod", "lyrics_bold");
     private static final Identifier AQUIRE_FONT = Ids.of("spotify_mod", "aquire");
     private static final Identifier AQUIRE_FONT_BOLD = Ids.of("spotify_mod", "aquire_bold");
+    private static final Identifier MONTSERRAT_FONT = Ids.of("spotify_mod", "lyrics_montserrat");
+    private static final Identifier MONTSERRAT_FONT_BOLD = Ids.of("spotify_mod", "lyrics_montserrat_bold");
+    private static final Identifier GALACTIC_FONT = Ids.mc("alt");
+    private static final Identifier RUNIC_FONT = Ids.mc("illageralt");
+    private static final double RAINBOW_CYCLE_MS = 6000.0;
+    private static final float HIGHLIGHT_FADE_MS = 600.0F;
     private static final int FULL_BRIGHT = 15728880;
     private static final int APPEAR_MS = 280;
     private static final int FADE_MS = 550;
@@ -99,7 +108,7 @@ public class WorldTextRenderer {
         long key = line == null ? Long.MIN_VALUE : line.timeMs;
         Minecraft mc = Minecraft.getInstance();
         CameraType perspective = mc.options.getCameraType();
-        int layoutKey = ModSettings.lyricShowMode | ModSettings.lyricLayout << 2 | ModSettings.lyricFont << 4 | (ModSettings.lyricUppercase ? 64 : 0);
+        int layoutKey = ModSettings.lyricShowMode | ModSettings.lyricLayout << 2 | ModSettings.lyricFont << 4 | (ModSettings.lyricUppercase ? 256 : 0);
         if (key != this.currentLineKey || perspective != this.lastPerspective || layoutKey != this.lastLayoutKey) {
             this.currentLineKey = key;
             this.lastPerspective = perspective;
@@ -126,24 +135,28 @@ public class WorldTextRenderer {
                         Vec3 eye = Compat.camPos(camera);
                         float yaw = Compat.camYaw(camera);
                         float pitch = Compat.camPitch(camera);
-                        boolean scatter = ModSettings.lyricLayout == 0;
+                        boolean scatter = ModSettings.lyricLayout == ModSettings.LAYOUT_SCATTER;
+                        boolean sky = ModSettings.lyricLayout == ModSettings.LAYOUT_SKY;
                         if (ModSettings.lyricShowMode == 1) {
-                            Vec3 pos = inFront(
-                                eye, scatter ? this.scatterPos(eye, yaw, pitch, words, sungAt[0], line.endMs - progressMs) : this.centerPos(eye, yaw, pitch)
-                            );
-                            this.addPiece(words, sungAt, pos, eye, yaw, scatter);
+                            Vec3 pos = sky
+                                ? skyPos(eye, yaw)
+                                : inFront(
+                                    eye,
+                                    scatter ? this.scatterPos(eye, yaw, pitch, words, sungAt[0], line.endMs - progressMs) : this.centerPos(eye, yaw, pitch)
+                                );
+                            this.addPiece(words, sungAt, pos, eye, yaw, scatter, 1.0F, 0.5F, sky);
                         } else if (scatter) {
                             long wordGap = words.length > 1 ? (sungAt[words.length - 1] - sungAt[0]) / (words.length - 1) : 300L;
                             long lifetime = Math.max(1200L, Math.min(2400L, 4L * wordGap));
 
                             for (int i = 0; i < words.length; i++) {
                                 if (sungAt[i] + lifetime >= now) {
-                                    this.pending.add(new WorldTextRenderer.Pending(words[i], sungAt[i], sungAt[i] + lifetime, i));
+                                    this.pending.add(new WorldTextRenderer.Pending(words[i], sungAt[i], sungAt[i] + lifetime, i, colorT(i, words.length)));
                                 }
                             }
                         } else {
                             Font tr = mc.font;
-                            float unit = worldScale() * stretch();
+                            float unit = worldScale() * stretch() * (sky ? skySizeMultiplier() : 1.0F);
                             float space = tr.width(styled(" ", false));
                             float total = -space;
 
@@ -152,7 +165,7 @@ public class WorldTextRenderer {
                             }
 
                             Vec3 right = Vec3.directionFromRotation(0.0F, yaw + 90.0F);
-                            Vec3 center = inFront(eye, this.centerPos(eye, yaw, pitch));
+                            Vec3 center = sky ? skyPos(eye, yaw) : inFront(eye, this.centerPos(eye, yaw, pitch));
                             float rowFit = (float)Math.min(
                                 1.0, 2.0 * center.distanceTo(eye) * Math.tan(Math.toRadians(horizontalFov() * 0.38)) / Math.max(total * unit, 0.001)
                             );
@@ -162,7 +175,7 @@ public class WorldTextRenderer {
                             for (int i = 0; i < words.length; i++) {
                                 float w = tr.width(styled(words[i], false));
                                 Vec3 pos = center.add(right.scale((cursor + w / 2.0F) * unit));
-                                this.addPiece(new String[]{words[i]}, new long[]{sungAt[i]}, pos, eye, yaw, false, rowFit);
+                                this.addPiece(new String[]{words[i]}, new long[]{sungAt[i]}, pos, eye, yaw, false, rowFit, colorT(i, words.length), sky);
                                 cursor += w + space;
                             }
                         }
@@ -228,21 +241,38 @@ public class WorldTextRenderer {
         return Math.min(groups, 5);
     }
 
-    private WorldTextRenderer.Piece addPiece(String[] words, long[] sungAt, Vec3 pos, Vec3 eye, float playerYaw, boolean tilted) {
-        return this.addPiece(words, sungAt, pos, eye, playerYaw, tilted, 1.0F);
+    private static float colorT(int index, int count) {
+        return count > 1 ? (float)index / (count - 1) : 0.5F;
     }
 
-    private WorldTextRenderer.Piece addPiece(String[] words, long[] sungAt, Vec3 pos, Vec3 eye, float playerYaw, boolean tilted, float maxFit) {
+    private static Vec3 skyPos(Vec3 eye, float yaw) {
+        return eye.add(Vec3.directionFromRotation(-ModSettings.lyricSkyAngle, yaw).scale(ModSettings.lyricSkyDistance));
+    }
+
+    private static float skySizeMultiplier() {
+        float groundDistance = (ModSettings.lyricSpawnDistMin + ModSettings.lyricSpawnDistMax) / 2.0F;
+        return ModSettings.lyricSkyDistance / Math.max(1.0F, groundDistance) * ModSettings.lyricSkyScale;
+    }
+
+    private WorldTextRenderer.Piece addPiece(
+        String[] words, long[] sungAt, Vec3 pos, Vec3 eye, float playerYaw, boolean tilted, float maxFit, float colorT, boolean sky
+    ) {
+        float sizeMultiplier = sky ? skySizeMultiplier() : 1.0F;
         double dist = pos.distanceTo(eye);
-        double width = textWidth(words) * worldScale() * stretch();
+        double width = textWidth(words) * worldScale() * stretch() * sizeMultiplier;
         double halfFov = Math.toRadians(horizontalFov() * 0.38);
         float fit = (float)Math.min(maxFit, 2.0 * dist * Math.tan(halfFov) / Math.max(width, 0.001));
         double halfWidth = Math.toDegrees(Math.atan(width * fit / (2.0 * dist))) + 2.0;
-        double halfHeight = Math.toDegrees(Math.atan(9.0F * worldScale() * fit / (2.0 * dist))) + 2.0;
+        double halfHeight = Math.toDegrees(Math.atan(9.0F * worldScale() * sizeMultiplier * fit / (2.0 * dist))) + 2.0;
         float yaw;
         float pitch;
         float roll;
-        if (tilted) {
+        if (sky) {
+            Vec3 d = pos.subtract(eye);
+            yaw = (float)Math.toDegrees(Math.atan2(d.z, d.x)) - 90.0F;
+            pitch = (float)(-Math.toDegrees(Math.atan2(d.y, Math.sqrt(d.x * d.x + d.z * d.z))));
+            roll = 0.0F;
+        } else if (tilted) {
             float amount = words.length > 1 ? 0.4F : 1.0F;
             Vec3 d = pos.subtract(eye);
             double horiz = Math.sqrt(d.x * d.x + d.z * d.z);
@@ -255,7 +285,9 @@ public class WorldTextRenderer {
             roll = 0.0F;
         }
 
-        WorldTextRenderer.Piece piece = new WorldTextRenderer.Piece(words, sungAt, pos, yaw, pitch, roll, fit, halfWidth, halfHeight);
+        WorldTextRenderer.Piece piece = new WorldTextRenderer.Piece(
+            words, sungAt, pos, yaw, pitch, roll, fit, halfWidth, halfHeight, colorT, sky, sizeMultiplier
+        );
         this.pieces.add(piece);
         return piece;
     }
@@ -278,7 +310,7 @@ public class WorldTextRenderer {
                         Vec3 placed = inFront(eye, pos);
                         float keepSize = (float)Math.min(1.0, placed.distanceTo(eye) / Math.max(0.01, pos.distanceTo(eye)) * 1.1);
                         WorldTextRenderer.Piece p = this.addPiece(
-                            new String[]{w.word()}, new long[]{w.sungAt()}, placed, eye, Compat.camYaw(camera), true, keepSize
+                            new String[]{w.word()}, new long[]{w.sungAt()}, placed, eye, Compat.camYaw(camera), true, keepSize, w.colorT(), false
                         );
                         p.fadeAt = w.fadeAt();
                         Vec3 look = Vec3.directionFromRotation(Compat.camPitch(camera), Compat.camYaw(camera));
@@ -503,7 +535,7 @@ public class WorldTextRenderer {
                 }
 
                 boolean walls = ModSettings.lyricThroughWalls;
-                boolean smooth = ModSettings.lyricFont != 0;
+                boolean smooth = smoothFont();
                 float daylight = 1.0F - Mth.clamp(mc.level.getSkyDarken() / 11.0F, 0.0F, 1.0F);
                 WorldTextRenderer.Passes passes = new WorldTextRenderer.Passes(
                     LyricLayers.remap(this.glowBuffers, LyricLayers.Pass.GLOW, walls, smooth),
@@ -529,7 +561,7 @@ public class WorldTextRenderer {
     private void renderMirror(WorldCtx context, Minecraft mc, long now) {
         if (StormFx.beginMirror()) {
             try {
-                boolean smooth = ModSettings.lyricFont != 0;
+                boolean smooth = smoothFont();
                 WorldTextRenderer.Passes passes = new WorldTextRenderer.Passes(
                     LyricLayers.remap(this.glowBuffers, LyricLayers.Pass.GLOW, true, smooth),
                     LyricLayers.remap(this.outlineBuffers, LyricLayers.Pass.OUTLINE, true, smooth),
@@ -538,7 +570,9 @@ public class WorldTextRenderer {
                 );
                 synchronized (this.pieces) {
                     for (WorldTextRenderer.Piece p : this.pieces) {
-                        this.renderPiece(context, mc.font, p, now, passes, true);
+                        if (!p.sky) {
+                            this.renderPiece(context, mc.font, p, now, passes, true);
+                        }
                     }
                 }
 
@@ -566,8 +600,8 @@ public class WorldTextRenderer {
                 float blur = ModSettings.lyricBlur * Math.max(1.0F - appear, fade);
                 float popScale = 1.0F - 0.6F * bounce * (1.0F - RenderUtil.easeOutBack(appear, 2.0F));
                 popScale *= 1.0F - 0.15F * fade;
-                double rise = -0.4 * bounce * (1.0F - RenderUtil.easeOutCubic(appear));
-                double drift = Math.sin(now / 700.0 + p.driftSeed) * 0.05 * bounce;
+                double rise = -0.4 * bounce * (1.0F - RenderUtil.easeOutCubic(appear)) * p.sizeMultiplier;
+                double drift = Math.sin(now / 700.0 + p.driftSeed) * 0.05 * bounce * p.sizeMultiplier;
                 Vec3 cam = Compat.camPos(context.camera());
                 PoseStack m = context.poseStack();
                 m.pushPose();
@@ -584,7 +618,7 @@ public class WorldTextRenderer {
                 m.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-p.yaw));
                 m.mulPose(com.mojang.math.Axis.XP.rotationDegrees(p.pitch));
                 m.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(p.roll));
-                float s = worldScale() * p.fit * popScale;
+                float s = worldScale() * p.sizeMultiplier * p.fit * popScale;
                 m.scale(-s * stretch(), -s, s);
                 boolean karaoke = p.words.length > 1;
                 int current = -1;
@@ -616,11 +650,17 @@ public class WorldTextRenderer {
                     float w = tr.width(texts[i]);
                     float wordAlpha = alpha;
                     float wordPop = 1.0F;
-                    int color = 16777215;
+                    int base = textColor(p, i, now);
+                    int color = base;
                     if (karaoke && i != current) {
                         wordAlpha *= 0.85F;
-                        color = 14080742;
-                    } else if (karaoke) {
+                        color = ModSettings.lyricColorMode == ModSettings.LYRIC_COLOR_WHITE ? 14080742 : Colors.darken(base, 0.84F) & 16777215;
+                    } else if (ModSettings.lyricHighlight) {
+                        int highlight = ModSettings.lyricHighlightColor & 16777215;
+                        color = karaoke ? highlight : Colors.mixRgb(highlight, base, (float)(now - p.sungAt[i]) / HIGHLIGHT_FADE_MS);
+                    }
+
+                    if (karaoke && i == current) {
                         float sung = RenderUtil.clamp01((float)(now - p.sungAt[i]) / 250.0F);
                         if (sung < 1.0F) {
                             wordPop += 0.12F * bounce * (float)Math.sin(sung * Math.PI);
@@ -665,7 +705,12 @@ public class WorldTextRenderer {
 
         float glow = ModSettings.lyricGlow;
         if (glow > 0.02F) {
-            int c = argb(alpha * (0.1F + 0.05F * glow), 14543103);
+            int glowRgb = switch (ModSettings.lyricGlowMode) {
+                case ModSettings.LYRIC_GLOW_MATCH -> color;
+                case ModSettings.LYRIC_GLOW_CUSTOM -> ModSettings.lyricGlowColor & 16777215;
+                default -> 14543103;
+            };
+            int c = argb(alpha * (0.1F + 0.05F * glow), glowRgb);
             float spread = 0.5F + 0.5F * glow;
             if (c != 0) {
                 for (float[] o : GLOW_OFFSETS) {
@@ -700,8 +745,9 @@ public class WorldTextRenderer {
 
         float outline = passes.outlineStrength();
         if (outline > 0.02F) {
-            int near = argb(alpha * 0.34F * outline, 461332);
-            int far = argb(alpha * 0.16F * outline, 461332);
+            int outlineRgb = ModSettings.lyricOutlineColor & 16777215;
+            int near = argb(alpha * 0.34F * outline, outlineRgb);
+            int far = argb(alpha * 0.16F * outline, outlineRgb);
 
             for (int i = 0; i < 8; i++) {
                 float[] o = RING[i];
@@ -726,22 +772,47 @@ public class WorldTextRenderer {
         return a < 26 ? 0 : a << 24 | rgb;
     }
 
+    private static int textColor(WorldTextRenderer.Piece p, int wordIndex, long now) {
+        float t = p.words.length > 1 ? (float)wordIndex / (p.words.length - 1) : p.colorT;
+        return switch (ModSettings.lyricColorMode) {
+            case ModSettings.LYRIC_COLOR_CLIENT -> ClientAccent.gradientColor(t, 255.0F) & 16777215;
+            case ModSettings.LYRIC_COLOR_CUSTOM -> ModSettings.lyricColor & 16777215;
+            case ModSettings.LYRIC_COLOR_GRADIENT -> Colors.mixRgb(ModSettings.lyricColor, ModSettings.lyricColor2, t);
+            case ModSettings.LYRIC_COLOR_RAINBOW -> rainbow(t, now);
+            default -> 16777215;
+        };
+    }
+
+    private static int rainbow(float offset, long now) {
+        double phase = now * Math.max(0.1F, ModSettings.rainbowSpeed) / RAINBOW_CYCLE_MS + offset * 0.35F;
+        float hue = (float)(phase - Math.floor(phase));
+        return Color.HSBtoRGB(hue, ModSettings.rainbowSaturation, 1.0F) & 16777215;
+    }
+
     private static Component styled(String word, boolean bold) {
         Style style = switch (ModSettings.lyricFont) {
-            case 0 -> Style.EMPTY.withBold(bold);
-            case 1 -> Compat.withFont(Style.EMPTY, UNIFORM_FONT).withBold(bold);
+            case ModSettings.FONT_MINECRAFT -> Style.EMPTY.withBold(bold);
+            case ModSettings.FONT_SMOOTH -> Compat.withFont(Style.EMPTY, UNIFORM_FONT).withBold(bold);
+            case ModSettings.FONT_AQUIRE -> Compat.withFont(Style.EMPTY, bold ? AQUIRE_FONT_BOLD : AQUIRE_FONT);
+            case ModSettings.FONT_MONTSERRAT -> Compat.withFont(Style.EMPTY, bold ? MONTSERRAT_FONT_BOLD : MONTSERRAT_FONT);
+            case ModSettings.FONT_GALACTIC -> Compat.withFont(Style.EMPTY, GALACTIC_FONT).withBold(bold);
+            case ModSettings.FONT_RUNIC -> Compat.withFont(Style.EMPTY, RUNIC_FONT).withBold(bold);
             default -> Compat.withFont(Style.EMPTY, bold ? LYRIC_FONT_BOLD : LYRIC_FONT);
-            case 3 -> Compat.withFont(Style.EMPTY, bold ? AQUIRE_FONT_BOLD : AQUIRE_FONT);
         };
         return Component.literal(word).setStyle(style);
     }
 
+    private static boolean smoothFont() {
+        int font = ModSettings.lyricFont;
+        return font != ModSettings.FONT_MINECRAFT && font != ModSettings.FONT_GALACTIC && font != ModSettings.FONT_RUNIC;
+    }
+
     private static float stretch() {
-        return ModSettings.lyricFont == 2 ? 1.3F : 1.0F;
+        return ModSettings.lyricFont == ModSettings.FONT_WIDE ? 1.3F : 1.0F;
     }
 
     private static float worldScale() {
-        float fontFactor = ModSettings.lyricFont == 2 ? 0.75F : 1.0F;
+        float fontFactor = ModSettings.lyricFont == ModSettings.FONT_WIDE ? 0.75F : 1.0F;
         return ModSettings.lyricSize * 0.28F * fontFactor;
     }
 
@@ -771,7 +842,7 @@ public class WorldTextRenderer {
     private record Passes(MultiBufferSource glow, MultiBufferSource outline, MultiBufferSource main, float outlineStrength) {
     }
 
-    private record Pending(String word, long sungAt, long fadeAt, int index) {
+    private record Pending(String word, long sungAt, long fadeAt, int index, float colorT) {
     }
 
     private static final class Piece {
@@ -785,10 +856,26 @@ public class WorldTextRenderer {
         final float fit;
         final double halfWidth;
         final double halfHeight;
+        final float colorT;
+        final boolean sky;
+        final float sizeMultiplier;
         final float driftSeed = WorldTextRenderer.RNG.nextFloat() * 6.28F;
         long fadeAt = Long.MAX_VALUE;
 
-        Piece(String[] words, long[] sungAt, Vec3 pos, float yaw, float pitch, float roll, float fit, double halfWidth, double halfHeight) {
+        Piece(
+            String[] words,
+            long[] sungAt,
+            Vec3 pos,
+            float yaw,
+            float pitch,
+            float roll,
+            float fit,
+            double halfWidth,
+            double halfHeight,
+            float colorT,
+            boolean sky,
+            float sizeMultiplier
+        ) {
             this.words = words;
             this.sungAt = sungAt;
             this.pos = pos;
@@ -798,6 +885,9 @@ public class WorldTextRenderer {
             this.fit = fit;
             this.halfWidth = halfWidth;
             this.halfHeight = halfHeight;
+            this.colorT = colorT;
+            this.sky = sky;
+            this.sizeMultiplier = sizeMultiplier;
         }
     }
 }
