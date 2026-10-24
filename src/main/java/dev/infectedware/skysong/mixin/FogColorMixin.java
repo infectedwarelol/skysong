@@ -17,7 +17,7 @@ abstract class FogColorMixin {
     private void skysong$skyFog(Camera camera, float tickDelta, ClientLevel world, int viewDistance, float skyDarkness, CallbackInfoReturnable<Vector4f> cir) {
         if (SkyFx.active() && camera.getFluidInCamera() == FogType.NONE && !SkyFx.hidesSky(camera)) {
             float[] c = SkyFx.fogColor();
-            cir.setReturnValue(new Vector4f(c[0], c[1], c[2], ((Vector4f)cir.getReturnValue()).w()));
+            cir.setReturnValue(new Vector4f(c[0], c[1], c[2], cir.getReturnValue().w()));
         }
     }
 }

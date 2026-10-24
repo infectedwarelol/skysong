@@ -1103,7 +1103,7 @@ public final class KillFx {
     }
 
     private static float[] whiter(float[] t, float w) {
-        float[] o = (float[])t.clone();
+        float[] o = t.clone();
 
         for (int i = 0; i < o.length; i++) {
             o[i] += (1.0F - o[i]) * w;

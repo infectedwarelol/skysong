@@ -34,15 +34,13 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,18 +139,10 @@ public class SkysongClient implements ClientModInitializer {
                 Fx.reset(client.level == null ? "left the world" : "new world");
             }
         });
-        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
-            @Override
-            public Identifier getFabricId() {
-                return Ids.of("skysong", "shader_reset");
-            }
-
-            @Override
-            public void onResourceManagerReload(ResourceManager manager) {
-                Shader.reloadAll();
-                StarGlyphs.clear();
-                Fx.reset("resources reloaded");
-            }
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(Ids.of("skysong", "shader_reset"), (ResourceManagerReloadListener)manager -> {
+            Shader.reloadAll();
+            StarGlyphs.clear();
+            Fx.reset("resources reloaded");
         });
         KillFx.init();
         DeathFx.init();

@@ -42,7 +42,7 @@ public final class Crosshair {
         StringBuilder sb = new StringBuilder(225);
 
         for (boolean b : cells) {
-            sb.append((char)(b ? '1' : '0'));
+            sb.append(b ? '1' : '0');
         }
 
         ModSettings.crosshairPixels = sb.toString();
@@ -106,7 +106,7 @@ public final class Crosshair {
         StringBuilder sb = new StringBuilder();
 
         for (boolean b : g) {
-            sb.append((char)(b ? '1' : '0'));
+            sb.append(b ? '1' : '0');
         }
 
         return sb.toString();

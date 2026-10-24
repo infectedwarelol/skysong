@@ -10,13 +10,14 @@ import java.util.List;
 import java.util.Locale;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.Holder;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 
 public final class PotionsComp extends ListHudComp {
-    private static final Object[] PREVIEW = new Object[]{MobEffects.SPEED, MobEffects.JUMP_BOOST, MobEffects.REGENERATION, MobEffects.FIRE_RESISTANCE};
+    private static final List<Holder<MobEffect>> PREVIEW = List.of(MobEffects.SPEED, MobEffects.JUMP_BOOST, MobEffects.REGENERATION, MobEffects.FIRE_RESISTANCE);
     private static final int NEGATIVE = Colors.lerp(-3355444, -53714, 0.32F);
     private long previewSwitch;
     private int previewIndex;
@@ -36,7 +37,7 @@ public final class PotionsComp extends ListHudComp {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
             for (MobEffectInstance e : mc.player.getActiveEffects()) {
-                Object type = e.getEffect();
+                Holder<MobEffect> type = e.getEffect();
                 String name = ChatFormatting.stripFormatting(Compat.effect(type).getDisplayName().getString());
                 if (e.getAmplifier() > 0) {
                     name = name + " " + (e.getAmplifier() + 1);
@@ -54,7 +55,7 @@ public final class PotionsComp extends ListHudComp {
         return rows;
     }
 
-    private static boolean isNegative(Object type) {
+    private static boolean isNegative(Holder<MobEffect> type) {
         MobEffect effect = Compat.effect(type);
         return effect.getCategory() == MobEffectCategory.HARMFUL || effect == Compat.effect(MobEffects.SLOW_FALLING);
     }
@@ -68,7 +69,7 @@ public final class PotionsComp extends ListHudComp {
         return s / 60 + ":" + String.format(Locale.ROOT, "%02d", s % 60);
     }
 
-    private static void icon(GuiGraphics c, Object type, float x, float y, float size, float a) {
+    private static void icon(GuiGraphics c, Holder<MobEffect> type, float x, float y, float size, float a) {
         float inset = (size - 8.0F) / 2.0F;
         HudItems.effect(c, type, x + inset, y + inset, 8.0F, a);
     }
@@ -90,11 +91,11 @@ public final class PotionsComp extends ListHudComp {
     private ListHudComp.Row preview() {
         long now = System.currentTimeMillis();
         if (now - this.previewSwitch >= 1000L) {
-            this.previewIndex = (this.previewIndex + 1) % PREVIEW.length;
+            this.previewIndex = (this.previewIndex + 1) % PREVIEW.size();
             this.previewSwitch = now;
         }
 
-        Object type = PREVIEW[this.previewIndex];
+        Holder<MobEffect> type = PREVIEW.get(this.previewIndex);
         return new ListHudComp.Row("preview", "Example effect", "**:**", (c, x, y, size, a) -> icon(c, type, x, y, size, a));
     }
 }

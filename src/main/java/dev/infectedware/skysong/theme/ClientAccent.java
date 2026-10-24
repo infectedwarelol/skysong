@@ -179,7 +179,7 @@ public final class ClientAccent {
         lastCustomSecond = ModSettings.rectUseSecondColor;
         if (wanted != mode || customChanged) {
             fromShades = ThemeManager.unpack(currentShadesNow());
-            fromPalette = framePalette != null ? (int[])framePalette.clone() : desiredPalette();
+            fromPalette = framePalette != null ? framePalette.clone() : desiredPalette();
             fromClosed = mode == ClientAccent.Mode.RAINBOW ? 1.0F : 0.0F;
             mode = wanted;
             switchStart = System.currentTimeMillis();

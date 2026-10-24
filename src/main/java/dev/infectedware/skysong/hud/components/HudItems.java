@@ -27,8 +27,8 @@ public final class HudItems {
         }
     }
 
-    public static void effect(GuiGraphics c, Object effect, float x, float y, float size, float alpha) {
-        Identifier sprite = Gui.getMobEffectSprite((Holder<MobEffect>)effect);
+    public static void effect(GuiGraphics c, Holder<MobEffect> effect, float x, float y, float size, float alpha) {
+        Identifier sprite = Gui.getMobEffectSprite(effect);
         c.pose().pushPose();
         c.pose().translate(x, y, 0.0F);
         c.pose().scale(size / 18.0F, size / 18.0F, 1.0F);

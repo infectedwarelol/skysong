@@ -51,7 +51,7 @@ public enum ClientTheme {
 
     ClientTheme(String displayName, int... palette) {
         this.displayName = displayName;
-        this.palette = (int[])palette.clone();
+        this.palette = palette.clone();
         int base = palette[0] & 16777215;
         this.accent = base;
         this.accentBright = lighten(base, 0.65F, 1.15F, 0.1F);
