@@ -5,6 +5,7 @@ import dev.infectedware.skysong.compat.Hooks;
 import dev.infectedware.skysong.compat.Ids;
 import dev.infectedware.skysong.compat.Shader;
 import dev.infectedware.skysong.gui.HudEditorScreen;
+import dev.infectedware.skysong.gui.LyricsScreen;
 import dev.infectedware.skysong.gui.click.ClickGuiScreen;
 import dev.infectedware.skysong.hud.DragSystem;
 import dev.infectedware.skysong.hud.InfoHud;
@@ -172,6 +173,7 @@ public class SkysongClient implements ClientModInitializer {
         KeyMapping volumeUpKey = Compat.registerKey(Compat.keyMapping("key.skysong.volume_up", UNBOUND));
         KeyMapping volumeDownKey = Compat.registerKey(Compat.keyMapping("key.skysong.volume_down", UNBOUND));
         KeyMapping likeKey = Compat.registerKey(Compat.keyMapping("key.skysong.like_track", UNBOUND));
+        KeyMapping lyricsKey = Compat.registerKey(Compat.keyMapping("key.skysong.open_lyrics", UNBOUND));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (editorKeybind.consumeClick()) {
                 client.setScreen(new HudEditorScreen());
@@ -199,6 +201,12 @@ public class SkysongClient implements ClientModInitializer {
 
             while (likeKey.consumeClick()) {
                 spotifyManager.toggleLike();
+            }
+
+            while (lyricsKey.consumeClick()) {
+                if (client.screen == null) {
+                    client.setScreen(new LyricsScreen());
+                }
             }
         });
     }

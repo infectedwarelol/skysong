@@ -6,6 +6,7 @@ import dev.infectedware.skysong.Profiles;
 import dev.infectedware.skysong.SpotifyManager;
 import dev.infectedware.skysong.SkysongClient;
 import dev.infectedware.skysong.gui.HudEditorScreen;
+import dev.infectedware.skysong.gui.LyricsScreen;
 import dev.infectedware.skysong.gui.click.CrosshairEditorScreen;
 import dev.infectedware.skysong.gui.click.SettingsPopup;
 import dev.infectedware.skysong.hud.Crosshair;
@@ -38,6 +39,7 @@ public final class ModuleRegistry {
             v -> ModSettings.enable3DLyrics = v,
             () -> ModSettings.SHOW_NAMES[ModSettings.lyricShowMode],
             () -> List.of(
+                new Setting.Action("Open full lyrics", () -> Minecraft.getInstance().setScreen(new LyricsScreen())),
                 new Setting.Header("Text"),
                 new Setting.Choice("Show", ModSettings.SHOW_NAMES, () -> ModSettings.lyricShowMode, v -> ModSettings.lyricShowMode = v),
                 new Setting.Choice("Layout", ModSettings.LAYOUT_NAMES, () -> ModSettings.lyricLayout, v -> ModSettings.lyricLayout = v),
