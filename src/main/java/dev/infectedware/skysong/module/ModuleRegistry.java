@@ -15,6 +15,7 @@ import dev.infectedware.skysong.render.fx.DeathFx;
 import dev.infectedware.skysong.render.fx.Fx;
 import dev.infectedware.skysong.render.fx.KillFx;
 import dev.infectedware.skysong.render.fx.MotionBlur;
+import dev.infectedware.skysong.theme.SavedThemes;
 import dev.infectedware.skysong.viewmodel.ViewModel;
 import dev.infectedware.skysong.viewmodel.ViewModelEditScreen;
 import java.util.ArrayList;
@@ -979,6 +980,24 @@ public final class ModuleRegistry {
 
     private static List<Setting> interfaceSettings() {
         List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("My themes"));
+        s.add(new Setting.Info(() -> "Saves colors, glass and lyric look."));
+        s.add(new Setting.Input("Theme name…", "Save theme", name -> {
+            SavedThemes.save(name);
+            SettingsPopup.rebuildSoon();
+        }));
+        List<String> themeNames = SavedThemes.names();
+        if (themeNames.isEmpty()) {
+            s.add(new Setting.Info(() -> "No saved themes yet: type a name and save."));
+        }
+
+        for (String n : themeNames) {
+            s.add(new Setting.ListRow(n, () -> SavedThemes.isActive(n), () -> SavedThemes.load(n), () -> {
+                SavedThemes.delete(n);
+                SettingsPopup.rebuildSoon();
+            }));
+        }
+
         s.add(new Setting.Header("Client rect"));
         s.add(new Setting.Slide("Corner radius", 2.0F, 10.0F, 1.0F, 7.0, () -> ModSettings.rectCornerRadius, v -> ModSettings.rectCornerRadius = (float)v));
         s.add(new Setting.Header("Backdrop"));
