@@ -10,6 +10,7 @@ import dev.infectedware.skysong.gui.click.ClickGuiScreen;
 import dev.infectedware.skysong.hud.DragSystem;
 import dev.infectedware.skysong.hud.InfoHud;
 import dev.infectedware.skysong.hud.NameTags;
+import dev.infectedware.skysong.hud.SongTags;
 import dev.infectedware.skysong.hud.Notifications;
 import dev.infectedware.skysong.lyrics.LyricsManager;
 import dev.infectedware.skysong.module.Binds;
@@ -77,6 +78,7 @@ public class SkysongClient implements ClientModInitializer {
             .register(
                 client -> {
                     spotifyManager.tickClipboardCheck();
+                    SongTags.tick(spotifyManager);
                     spotifyManager.tickLocalSource();
                     if (!spotifyManager.getCurrentTrackName().isEmpty()) {
                         lyricsManager.fetchLyrics(spotifyManager.getCurrentTrackName(), spotifyManager.getCurrentArtist(), spotifyManager.getDurationMs());
@@ -123,6 +125,8 @@ public class SkysongClient implements ClientModInitializer {
             }
         };
         Hooks.afterEntities(worldTextRenderer::afterEntities);
+        SongTags.init();
+        Hooks.afterEntities(SongTags::render);
         Hooks.last(ctx -> NameTags.get().afterWorld(ctx));
         Fx.registerShaders();
         ClientTickEvents.START_CLIENT_TICK.register(client -> {

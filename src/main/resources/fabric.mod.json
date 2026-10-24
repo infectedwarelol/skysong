@@ -21,9 +21,12 @@
   },
   "license": "MIT",
   "icon": "assets/skysong/icon.png",
-  "environment": "client",
+  "environment": "*",
   "accessWidener": "skysong.accesswidener",
   "entrypoints": {
+    "main": [
+      "dev.infectedware.skysong.SkysongCommon"
+    ],
     "client": [
       "dev.infectedware.skysong.SkysongClient"
     ]
