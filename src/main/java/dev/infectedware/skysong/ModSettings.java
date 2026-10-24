@@ -74,6 +74,13 @@ public final class ModSettings {
     public static float lyricSkyAngle = 35.0F;
     public static float lyricSkyScale = 1.0F;
     public static boolean lyricRealTiming = true;
+    public static final int LYRIC_PULSE_OFF = 0;
+    public static final int LYRIC_PULSE_WORDS = 1;
+    public static final int LYRIC_PULSE_TEMPO = 2;
+    public static final String[] LYRIC_PULSE_NAMES = new String[]{"Off", "Sung words", "Tempo (BPM)"};
+    public static int lyricPulseMode = 1;
+    public static float lyricPulseAmount = 0.5F;
+    public static float lyricBpm = 120.0F;
     public static int lyricShowMode = 0;
     public static int lyricLayout = 0;
     public static int lyricFont = 0;

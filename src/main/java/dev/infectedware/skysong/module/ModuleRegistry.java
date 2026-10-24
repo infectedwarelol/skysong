@@ -52,6 +52,16 @@ public final class ModuleRegistry {
                 new Setting.Slide("Outline", 0.0F, 1.0F, 0.01F, 0.0, () -> ModSettings.lyricOutline, v -> ModSettings.lyricOutline = (float)v),
                 new Setting.Slide("Bounce", 0.0F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricBounce, v -> ModSettings.lyricBounce = (float)v),
                 new Setting.Toggle("Flicker effect", () -> ModSettings.lyricFlicker, v -> ModSettings.lyricFlicker = v),
+                new Setting.Header("Pulse"),
+                new Setting.Choice("Pulse to", ModSettings.LYRIC_PULSE_NAMES, () -> ModSettings.lyricPulseMode, v -> ModSettings.lyricPulseMode = v),
+                new Setting.Shown(
+                    () -> ModSettings.lyricPulseMode != ModSettings.LYRIC_PULSE_OFF,
+                    new Setting.Slide("Pulse strength", 0.0F, 1.0F, 0.05F, 0.5, () -> ModSettings.lyricPulseAmount, v -> ModSettings.lyricPulseAmount = (float)v)
+                ),
+                new Setting.Shown(
+                    () -> ModSettings.lyricPulseMode == ModSettings.LYRIC_PULSE_TEMPO,
+                    new Setting.Slide("BPM", 60.0F, 200.0F, 1.0F, 120.0, () -> ModSettings.lyricBpm, v -> ModSettings.lyricBpm = (float)v)
+                ),
                 new Setting.Header("Colors"),
                 new Setting.Choice("Text color", ModSettings.LYRIC_COLOR_NAMES, () -> ModSettings.lyricColorMode, v -> ModSettings.lyricColorMode = v),
                 new Setting.Shown(

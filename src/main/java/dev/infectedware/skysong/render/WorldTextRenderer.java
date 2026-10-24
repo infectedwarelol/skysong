@@ -88,6 +88,8 @@ public class WorldTextRenderer {
     private long currentLineKey = Long.MIN_VALUE;
     private CameraType lastPerspective;
     private int lastLayoutKey = -1;
+    private float framePulse;
+    private static final float PULSE_DECAY_MS = 200.0F;
 
     private static Vec3 worldPos(WorldTextRenderer.Piece p) {
         return !ModSettings.lyricFollowPlayer ? p.pos : p.pos.add(followPos.subtract(p.anchor));
@@ -548,6 +550,7 @@ public class WorldTextRenderer {
                     return;
                 }
 
+                this.framePulse = this.pulse(now);
                 boolean walls = ModSettings.lyricThroughWalls;
                 boolean smooth = smoothFont();
                 float daylight = 1.0F - Mth.clamp(mc.level.getSkyDarken() / 11.0F, 0.0F, 1.0F);
@@ -570,6 +573,41 @@ public class WorldTextRenderer {
             this.mainBuffers.endBatch();
             this.renderMirror(context, mc, now);
         }
+    }
+
+    private float pulse(long now) {
+        float amount = ModSettings.lyricPulseAmount;
+        if (amount <= 0.0F) {
+            return 0.0F;
+        }
+
+        if (ModSettings.lyricPulseMode == ModSettings.LYRIC_PULSE_WORDS) {
+            long lastOnset = Long.MIN_VALUE;
+
+            for (WorldTextRenderer.Piece p : this.pieces) {
+                for (long sung : p.sungAt) {
+                    if (sung <= now && sung > lastOnset) {
+                        lastOnset = sung;
+                    }
+                }
+            }
+
+            return lastOnset == Long.MIN_VALUE ? 0.0F : amount * (float)Math.exp(-(now - lastOnset) / PULSE_DECAY_MS);
+        }
+
+        if (ModSettings.lyricPulseMode == ModSettings.LYRIC_PULSE_TEMPO) {
+            SpotifyManager spotify = SkysongClient.getSpotifyManager();
+            if (spotify == null || !spotify.isPlaying()) {
+                return 0.0F;
+            }
+
+            double beatMs = 60000.0 / Math.max(1.0F, ModSettings.lyricBpm);
+            long progress = spotify.getSmoothedProgressMs() + ModSettings.lyricOffsetMs;
+            double sinceBeat = Math.floorMod(progress, Math.max(1L, Math.round(beatMs)));
+            return amount * (float)Math.exp(-sinceBeat / PULSE_DECAY_MS);
+        }
+
+        return 0.0F;
     }
 
     private void renderMirror(WorldCtx context, Minecraft mc, long now) {
@@ -614,6 +652,7 @@ public class WorldTextRenderer {
                 float blur = ModSettings.lyricBlur * Math.max(1.0F - appear, fade);
                 float popScale = 1.0F - 0.6F * bounce * (1.0F - RenderUtil.easeOutBack(appear, 2.0F));
                 popScale *= 1.0F - 0.15F * fade;
+                popScale *= 1.0F + 0.12F * this.framePulse;
                 double rise = -0.4 * bounce * (1.0F - RenderUtil.easeOutCubic(appear)) * p.sizeMultiplier;
                 double drift = Math.sin(now / 700.0 + p.driftSeed) * 0.05 * bounce * p.sizeMultiplier;
                 Vec3 cam = Compat.camPos(context.camera());
@@ -681,10 +720,17 @@ public class WorldTextRenderer {
                         }
                     }
 
+                    if (this.framePulse > 0.0F) {
+                        color = Colors.mixRgb(color, 16777215, 0.3F * this.framePulse);
+                    }
+
+                    float glowStrength = ModSettings.lyricGlow * (1.0F + this.framePulse);
                     m.pushPose();
                     m.translate(x + w / 2.0F, 0.0F, 0.0F);
                     m.scale(wordPop, wordPop, 1.0F);
-                    this.drawWord(tr, texts[i], -w / 2.0F, y, wordAlpha, blur, color, m.last().pose(), passes, glitch(now, p.driftSeed + i * 1.7F));
+                    this.drawWord(
+                        tr, texts[i], -w / 2.0F, y, wordAlpha, blur, color, m.last().pose(), passes, glitch(now, p.driftSeed + i * 1.7F), glowStrength
+                    );
                     m.popPose();
                     x += w + space;
                 }
@@ -709,7 +755,17 @@ public class WorldTextRenderer {
     }
 
     private void drawWord(
-        Font tr, Component text, float x, float y, float alpha, float blur, int color, Matrix4f mat, WorldTextRenderer.Passes passes, float glitch
+        Font tr,
+        Component text,
+        float x,
+        float y,
+        float alpha,
+        float blur,
+        int color,
+        Matrix4f mat,
+        WorldTextRenderer.Passes passes,
+        float glitch,
+        float glowStrength
     ) {
         DisplayMode layer = DisplayMode.NORMAL;
         if (glitch > 0.0F) {
@@ -717,7 +773,7 @@ public class WorldTextRenderer {
             alpha *= 0.55F + 0.3F * glitch;
         }
 
-        float glow = ModSettings.lyricGlow;
+        float glow = glowStrength;
         if (glow > 0.02F) {
             int glowRgb = switch (ModSettings.lyricGlowMode) {
                 case ModSettings.LYRIC_GLOW_MATCH -> color;
