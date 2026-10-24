@@ -225,3 +225,14 @@ vmOffScale
 vmOffY
 vmOffYaw
 vmOffZ
+lyricColorMode
+lyricColor
+lyricColor2
+lyricHighlight
+lyricHighlightColor
+lyricGlowMode
+lyricGlowColor
+lyricOutlineColor
+lyricSkyDistance
+lyricSkyAngle
+lyricSkyScale
