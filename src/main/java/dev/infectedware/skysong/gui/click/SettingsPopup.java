@@ -45,6 +45,12 @@ public final class SettingsPopup {
         rebuildSoon = true;
     }
 
+    static boolean takeRebuild() {
+        boolean pending = rebuildSoon;
+        rebuildSoon = false;
+        return pending;
+    }
+
     public boolean isOpen() {
         return this.open;
     }

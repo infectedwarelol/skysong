@@ -75,6 +75,7 @@ public final class ModSettings {
     public static float lyricSkyAngle = 35.0F;
     public static float lyricSkyScale = 1.0F;
     public static boolean lyricRealTiming = true;
+    public static boolean classicMenu = false;
     public static boolean shareMySong = false;
     public static boolean showOthersSongs = true;
     public static String lyricCustomFont = "";

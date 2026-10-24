@@ -7,6 +7,7 @@ import dev.infectedware.skysong.compat.Shader;
 import dev.infectedware.skysong.gui.HudEditorScreen;
 import dev.infectedware.skysong.gui.LyricsScreen;
 import dev.infectedware.skysong.gui.click.ClickGuiScreen;
+import dev.infectedware.skysong.gui.click.LiveEditorScreen;
 import dev.infectedware.skysong.hud.DragSystem;
 import dev.infectedware.skysong.hud.InfoHud;
 import dev.infectedware.skysong.hud.NameTags;
@@ -106,6 +107,11 @@ public class SkysongClient implements ClientModInitializer {
                         long progress = spotifyManager.getSmoothedProgressMs() + ModSettings.lyricOffsetMs;
                         textRenderer.setCurrentLyric(lyricsManager.getLyricAtTime(progress));
                         worldTextRenderer.setCurrentLine(lyricsManager.getLineAtTime(progress), progress);
+                    } else if (client.screen instanceof LiveEditorScreen) {
+                        long preview = System.currentTimeMillis() % LiveEditorScreen.PREVIEW_LOOP_MS;
+                        LyricsManager.LyricLine line = LiveEditorScreen.previewLine(preview);
+                        textRenderer.setCurrentLyric(line.text);
+                        worldTextRenderer.setCurrentLine(line, preview);
                     } else {
                         textRenderer.setCurrentLyric("");
                         worldTextRenderer.setCurrentLine(null, 0L);
@@ -166,7 +172,7 @@ public class SkysongClient implements ClientModInitializer {
             Minecraft mc = Minecraft.getInstance();
             Compat.later(() -> {
                 if (mc.screen == null && mc.player != null) {
-                    mc.setScreen(ClickGuiScreen.shared());
+                    mc.setScreen(ModSettings.classicMenu ? ClickGuiScreen.shared() : new LiveEditorScreen());
                 }
             });
         };

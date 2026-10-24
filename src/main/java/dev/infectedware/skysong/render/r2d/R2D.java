@@ -21,6 +21,7 @@ public final class R2D {
     private static final Shader msdf = Shader.of("r2d_msdf", DefaultVertexFormat.POSITION_TEX_COLOR);
     private static final Shader glass = Shader.of("r2d_glass", DefaultVertexFormat.POSITION_TEX_COLOR);
     private static int[] paletteOverride;
+    public static boolean squareCorners;
 
     private R2D() {
     }
@@ -99,6 +100,10 @@ public final class R2D {
         int br,
         int bl
     ) {
+        if (squareCorners) {
+            rTL = rTR = rBR = rBL = 0.0F;
+        }
+
         Compat.flush(c);
         Matrix4f m = c.pose().last().pose();
         float pad = pixel(m) * 2.0F;
@@ -335,6 +340,10 @@ public final class R2D {
     private static void glassQuad(
         GuiGraphics c, float x, float y, float w, float h, float rTL, float rTR, float rBR, float rBL, float alpha, float mode, float expand
     ) {
+        if (squareCorners) {
+            rTL = rTR = rBR = rBL = 0.0F;
+        }
+
         Compat.flush(c);
         Matrix4f m = c.pose().last().pose();
         float pad = pixel(m) * 2.0F + expand;

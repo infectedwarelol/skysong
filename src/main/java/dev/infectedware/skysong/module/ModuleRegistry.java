@@ -1056,6 +1056,9 @@ public final class ModuleRegistry {
 
     private static List<Setting> interfaceSettings() {
         List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Menu"));
+        s.add(new Setting.Toggle("Classic menu", () -> ModSettings.classicMenu, v -> ModSettings.classicMenu = v));
+        s.add(new Setting.Info(() -> "Off: Live editor. Applies next time you open it."));
         s.add(new Setting.Header("My themes"));
         s.add(new Setting.Info(() -> "Saves colors, glass and lyric look."));
         s.add(new Setting.Input("Theme name…", "Save theme", name -> {
