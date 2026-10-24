@@ -2,5 +2,11 @@
   "category.skysong.main": "Skysong",
   "key.category.skysong.main": "Skysong",
   "key.skysong.open_gui": "Open Skysong menu",
-  "key.skysong.open_hud_editor": "Edit HUD layout"
+  "key.skysong.open_hud_editor": "Edit HUD layout",
+  "key.skysong.play_pause": "Play / pause music",
+  "key.skysong.next_track": "Next track",
+  "key.skysong.previous_track": "Previous track",
+  "key.skysong.volume_up": "Music volume up",
+  "key.skysong.volume_down": "Music volume down",
+  "key.skysong.like_track": "Like / unlike song"
 }

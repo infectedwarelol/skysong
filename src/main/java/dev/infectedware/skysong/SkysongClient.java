@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 public class SkysongClient implements ClientModInitializer {
     public static final String MOD_ID = "skysong";
     public static final Logger LOGGER = LoggerFactory.getLogger("skysong");
+    private static final int UNBOUND = -1;
     private static SpotifyManager spotifyManager;
     private static LyricsManager lyricsManager;
     private static CinematicTextRenderer textRenderer;
@@ -165,9 +166,39 @@ public class SkysongClient implements ClientModInitializer {
             });
         };
         KeyMapping editorKeybind = Compat.registerKey(Compat.keyMapping("key.skysong.open_hud_editor", 345));
+        KeyMapping playPauseKey = Compat.registerKey(Compat.keyMapping("key.skysong.play_pause", UNBOUND));
+        KeyMapping nextKey = Compat.registerKey(Compat.keyMapping("key.skysong.next_track", UNBOUND));
+        KeyMapping previousKey = Compat.registerKey(Compat.keyMapping("key.skysong.previous_track", UNBOUND));
+        KeyMapping volumeUpKey = Compat.registerKey(Compat.keyMapping("key.skysong.volume_up", UNBOUND));
+        KeyMapping volumeDownKey = Compat.registerKey(Compat.keyMapping("key.skysong.volume_down", UNBOUND));
+        KeyMapping likeKey = Compat.registerKey(Compat.keyMapping("key.skysong.like_track", UNBOUND));
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (editorKeybind.consumeClick()) {
                 client.setScreen(new HudEditorScreen());
+            }
+
+            while (playPauseKey.consumeClick()) {
+                spotifyManager.togglePlayback();
+            }
+
+            while (nextKey.consumeClick()) {
+                spotifyManager.nextTrack();
+            }
+
+            while (previousKey.consumeClick()) {
+                spotifyManager.previousTrack();
+            }
+
+            while (volumeUpKey.consumeClick()) {
+                spotifyManager.changeVolume(1);
+            }
+
+            while (volumeDownKey.consumeClick()) {
+                spotifyManager.changeVolume(-1);
+            }
+
+            while (likeKey.consumeClick()) {
+                spotifyManager.toggleLike();
             }
         });
     }

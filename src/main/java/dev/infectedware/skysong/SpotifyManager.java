@@ -7,6 +7,7 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.platform.NativeImage.Format;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Ids;
+import dev.infectedware.skysong.hud.Feedback;
 import dev.infectedware.skysong.media.LocalMediaSource;
 import dev.infectedware.skysong.media.WindowsMediaReader;
 import dev.infectedware.skysong.theme.AlbumPalette;
@@ -29,6 +30,7 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
@@ -76,6 +78,10 @@ public class SpotifyManager {
     private long lastUpdateTime = 0L;
     private static final String EXPIRED_MESSAGE = "§eYour Spotify login expired. Press §lRight Shift§r§e → Spotify → §lConnect Spotify§r§e.";
     private static final int ALBUM_ART_SIZE = 128;
+    private static final String SCOPES = "user-read-playback-state user-read-currently-playing user-modify-playback-state user-library-read user-library-modify";
+    private static final String API = "https://api.spotify.com/v1";
+    private static final int VOLUME_STEP = 10;
+    private volatile String currentTrackId = "";
 
     public long getSmoothedProgressMs() {
         if (this.isPlaying && this.lastUpdateTime != 0L) {
@@ -330,7 +336,7 @@ public class SpotifyManager {
                 + state
                 + "&code_challenge_method=S256&code_challenge="
                 + codeChallenge
-                + "&scope=user-read-playback-state%20user-read-currently-playing";
+                + "&scope=" + URLEncoder.encode(SCOPES, StandardCharsets.UTF_8).replace("+", "%20");
             Util.getPlatform().openUri(URI.create(authUrl));
             this.status = "Waiting for login";
             if (automatic) {
@@ -544,6 +550,7 @@ public class SpotifyManager {
                                         JsonObject item = json.getAsJsonObject("item");
                                         this.currentTrackName = item.get("name").getAsString();
                                         this.currentArtist = item.getAsJsonArray("artists").get(0).getAsJsonObject().get("name").getAsString();
+                                        this.currentTrackId = item.has("id") && !item.get("id").isJsonNull() ? item.get("id").getAsString() : "";
                                         this.progressMs = json.get("progress_ms").getAsLong();
                                         this.durationMs = item.get("duration_ms").getAsLong();
                                         this.isPlaying = json.get("is_playing").getAsBoolean();
@@ -662,6 +669,139 @@ public class SpotifyManager {
         g.drawImage(scaled, 0, 0, null);
         g.dispose();
         return out;
+    }
+
+    public void togglePlayback() {
+        boolean pause = this.isPlaying;
+        this.control("PUT", pause ? "/me/player/pause" : "/me/player/play", () -> {
+            this.progressMs = this.getSmoothedProgressMs();
+            this.lastUpdateTime = System.currentTimeMillis();
+            this.isPlaying = !pause;
+            Feedback.show(pause ? "Paused" : "Playing", 1200L);
+        });
+    }
+
+    public void nextTrack() {
+        this.control("POST", "/me/player/next", () -> Feedback.show("Next track", 1200L));
+    }
+
+    public void previousTrack() {
+        this.control("POST", "/me/player/previous", () -> Feedback.show("Previous track", 1200L));
+    }
+
+    public void seekTo(long positionMs) {
+        long clamped = Math.max(0L, this.durationMs > 0L ? Math.min(positionMs, this.durationMs) : positionMs);
+        this.control("PUT", "/me/player/seek?position_ms=" + clamped, () -> {
+            this.progressMs = clamped;
+            this.lastUpdateTime = System.currentTimeMillis();
+        });
+    }
+
+    public void changeVolume(int direction) {
+        if (!this.canControl()) {
+            return;
+        }
+
+        this.send("GET", "/me/player").thenAccept(response -> {
+            if (response == null || response.statusCode() != 200) {
+                this.reportControlFailure(response);
+                return;
+            }
+
+            try {
+                JsonObject device = JsonParser.parseString(response.body()).getAsJsonObject().getAsJsonObject("device");
+                if (device == null || !device.has("volume_percent") || device.get("volume_percent").isJsonNull()) {
+                    Feedback.show("This Spotify device has no volume control", 2000L);
+                    return;
+                }
+
+                int volume = Math.max(0, Math.min(100, device.get("volume_percent").getAsInt() + Integer.signum(direction) * VOLUME_STEP));
+                this.control("PUT", "/me/player/volume?volume_percent=" + volume, () -> Feedback.show("Volume " + volume + "%", 1200L));
+            } catch (RuntimeException e) {
+                SkysongClient.LOGGER.warn("[Skysong] Could not read Spotify volume: " + e.getMessage());
+            }
+        });
+    }
+
+    public void toggleLike() {
+        String id = this.currentTrackId;
+        if (!this.canControl()) {
+            return;
+        }
+
+        if (id.isEmpty()) {
+            Feedback.show("This track can't be liked", 2000L);
+            return;
+        }
+
+        this.send("GET", "/me/tracks/contains?ids=" + id).thenAccept(response -> {
+            if (response == null || response.statusCode() != 200) {
+                this.reportControlFailure(response);
+                return;
+            }
+
+            try {
+                boolean liked = JsonParser.parseString(response.body()).getAsJsonArray().get(0).getAsBoolean();
+                this.control(liked ? "DELETE" : "PUT", "/me/tracks?ids=" + id, () -> Feedback.show(liked ? "Removed from Liked Songs" : "Added to Liked Songs", 2000L));
+            } catch (RuntimeException e) {
+                SkysongClient.LOGGER.warn("[Skysong] Could not read liked state: " + e.getMessage());
+            }
+        });
+    }
+
+    private boolean canControl() {
+        if (this.accessToken == null) {
+            Feedback.show("Connect Spotify first: Right Shift → Spotify → Connect Spotify", 3500L);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void control(String method, String path, Runnable onSuccess) {
+        if (this.canControl()) {
+            this.send(method, path).thenAccept(response -> {
+                if (response != null && response.statusCode() >= 200 && response.statusCode() < 300) {
+                    Minecraft.getInstance().execute(onSuccess);
+                    this.updatePlaybackState();
+                } else {
+                    this.reportControlFailure(response);
+                }
+            });
+        }
+    }
+
+    private CompletableFuture<HttpResponse<String>> send(String method, String path) {
+        HttpRequest request = HttpRequest.newBuilder()
+            .uri(URI.create(API + path))
+            .header("Authorization", "Bearer " + this.accessToken)
+            .method(method, method.equals("GET") ? BodyPublishers.noBody() : BodyPublishers.ofString(""))
+            .build();
+        return this.httpClient.sendAsync(request, BodyHandlers.ofString()).exceptionally(error -> {
+            SkysongClient.LOGGER.warn("[Skysong] Spotify request failed: " + error.getMessage());
+            return null;
+        });
+    }
+
+    private void reportControlFailure(HttpResponse<String> response) {
+        if (response == null) {
+            Feedback.show("Couldn't reach Spotify", 2000L);
+            return;
+        }
+
+        String body = response.body() == null ? "" : response.body().toLowerCase(Locale.ROOT);
+        switch (response.statusCode()) {
+            case 401 -> {
+                this.refreshAccessToken();
+                Feedback.show("Spotify login refreshed, try again", 2000L);
+            }
+            case 403 -> Feedback.show(
+                body.contains("scope") ? "Reconnect Spotify to allow controls: Right Shift → Spotify" : "Spotify Premium is needed for playback controls", 3500L
+            );
+            case 404 -> Feedback.show("No active Spotify device: start playing first", 2500L);
+            case 429 -> Feedback.show("Spotify says slow down, try again soon", 2000L);
+            default -> Feedback.show("Spotify refused that (" + response.statusCode() + ")", 2000L);
+        }
     }
 
     public Identifier getAlbumArtId() {
