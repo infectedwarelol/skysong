@@ -37,7 +37,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public final class KillFx {
-    public static final String[] EFFECTS = new String[]{"Shatter", "Soul Rift", "Thunderclap", "Black Hole", "Disintegrate", "Judgement", "Random"};
+    public static final String[] EFFECTS = new String[]{"Shatter", "Soul Rift", "Thunderclap", "Black Hole", "Disintegrate", "Judgement", "Firework", "Frostbite", "Inferno", "Blossom", "Ender Warp", "Random"};
     public static final String[] COLORS = new String[]{"Theme", "White", "Custom", "Two colors"};
     public static final int SHATTER = 0;
     public static final int SOUL = 1;
@@ -45,9 +45,24 @@ public final class KillFx {
     public static final int VOID = 3;
     public static final int DUST = 4;
     public static final int SWORD = 5;
-    public static final int RANDOM = 6;
-    private static final int KINDS = 6;
-    private static final float[] LIFE = new float[]{1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F};
+    public static final int FIREWORK = 6;
+    public static final int FROST = 7;
+    public static final int INFERNO = 8;
+    public static final int BLOSSOM = 9;
+    public static final int WARP = 10;
+    public static final int RANDOM = 11;
+    private static final int KINDS = 11;
+    private static final float[] LIFE = new float[]{1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F, 1.9F, 2.0F, 2.2F, 2.6F, 1.2F};
+    private static final float FIREWORK_RISE = 0.35F;
+    private static final float FIREWORK_HEIGHT = 5.0F;
+    private static final float FROST_FREEZE = 0.45F;
+    private static final float WARP_TIME = 0.35F;
+    private static final float[] FIRE6 = new float[]{1.0F, 0.62F, 0.12F, 1.0F, 0.16F, 0.05F};
+    private static final float[] ICE6 = new float[]{0.8F, 0.96F, 1.0F, 0.42F, 0.7F, 1.0F};
+    private static final float[] PINK6 = new float[]{1.0F, 0.76F, 0.88F, 1.0F, 0.45F, 0.7F};
+    private static final float[] ENDER6 = new float[]{0.78F, 0.38F, 1.0F, 0.3F, 0.92F, 0.86F};
+    private static final List<Integer> randomBag = new ArrayList<>();
+    private static int lastRandom = -1;
     private static final int SHARD = 10;
     private static final float VOID_PULL = 0.78F;
     private static final float SWORD_DROP = 0.22F;
@@ -104,7 +119,7 @@ public final class KillFx {
     }
 
     public static void preview(int type) {
-        previewType = type >= 0 && type < 6 ? type : pick();
+        previewType = type >= 0 && type < KINDS ? type : nextRandom();
     }
 
     public static int lastCount() {
@@ -121,7 +136,35 @@ public final class KillFx {
 
     private static int pick() {
         int t = ModSettings.killEffectType;
-        return t >= 0 && t < 6 ? t : RNG.nextInt(6);
+        return t >= 0 && t < KINDS ? t : nextRandom();
+    }
+
+    static int nextRandom() {
+        if (randomBag.isEmpty()) {
+            for (int i = 0; i < KINDS; i++) {
+                randomBag.add(i);
+            }
+
+            java.util.Collections.shuffle(randomBag, RNG);
+            if (randomBag.size() > 1 && randomBag.get(randomBag.size() - 1) == lastRandom) {
+                java.util.Collections.swap(randomBag, 0, randomBag.size() - 1);
+            }
+        }
+
+        lastRandom = randomBag.remove(randomBag.size() - 1);
+        return lastRandom;
+    }
+
+    private static boolean usesModel(int type) {
+        return type == SHATTER || type == SOUL || type == VOID || type == DUST || type == FROST || type == INFERNO || type == BLOSSOM || type == WARP;
+    }
+
+    private static boolean usesShards(int type) {
+        return type == SHATTER || type == DUST || type == FROST || type == INFERNO;
+    }
+
+    private static float[] themed(float[] palette, float[] tint) {
+        return ModSettings.killEffectColor == 0 ? palette : tint;
     }
 
     static void forget() {
@@ -207,9 +250,11 @@ public final class KillFx {
                                 float t = (float)(now - e.born) / 1000.0F;
                                 switch (e.type) {
                                     case 0 -> drawShatter(e, t, cam);
-                                    case 1 -> drawSoul(e, t, cam);
+                                    case 1, BLOSSOM -> drawSoul(e, t, cam);
                                     case 3 -> drawVoid(e, t, cam);
-                                    case 4 -> drawDust(e, t, cam);
+                                    case 4, INFERNO -> drawDust(e, t, cam);
+                                    case FROST -> drawFrost(e, t, cam);
+                                    case WARP -> drawWarp(e, t, cam);
                                     default -> {
                                     }
                                 }
@@ -235,6 +280,11 @@ public final class KillFx {
                                 case 4 -> {
                                 }
                                 case 5 -> drawSword(e, t, cam, tint);
+                                case FIREWORK -> drawFirework(e, t, cam, themed(WHITE6, tint));
+                                case FROST -> drawFrostLight(e, t, cam, themed(ICE6, tint));
+                                case INFERNO -> drawInferno(e, t, cam, themed(FIRE6, tint));
+                                case BLOSSOM -> drawBlossom(e, t, cam, themed(PINK6, tint));
+                                case WARP -> drawWarpLight(e, t, cam, themed(ENDER6, tint));
                                 default -> drawShatterFlash(e, t, cam, tint);
                             }
                         }
@@ -276,9 +326,9 @@ public final class KillFx {
         float windAngle = RNG.nextFloat() * (float) (Math.PI * 2);
         e.windX = Mth.cos(windAngle);
         e.windZ = Mth.sin(windAngle);
-        if (type == 0 || type == 1 || type == 3 || type == 4) {
+        if (usesModel(type)) {
             e.parts = ModelSnapshot.record(mc, victim, tickDelta);
-            if (type == 0 || type == 4) {
+            if (usesShards(type)) {
                 buildShards(e);
             }
 
@@ -341,7 +391,7 @@ public final class KillFx {
                 s[o] = cx;
                 s[o + 1] = cy;
                 s[o + 2] = cz;
-                if (e.type == 4) {
+                if (e.type == DUST || e.type == INFERNO) {
                     s[o + 3] = (1.0F - Mth.clamp(cy / Math.max(0.1F, e.height), 0.0F, 1.0F)) * 0.75F + r.nextFloat() * 0.15F;
                     s[o + 4] = 0.5F + r.nextFloat() * 0.9F;
                     s[o + 5] = 0.6F + r.nextFloat() * 0.8F;
@@ -364,7 +414,54 @@ public final class KillFx {
     }
 
     private static void drawShatter(KillFx.Effect e, float t, Vec3 cam) {
-        float k = t / LIFE[0];
+        shatterParts(e, t, LIFE[e.type], cam);
+    }
+
+    private static void drawFrost(KillFx.Effect e, float t, Vec3 cam) {
+        if (t >= FROST_FREEZE) {
+            shatterParts(e, t - FROST_FREEZE, LIFE[FROST] - FROST_FREEZE, cam);
+            return;
+        }
+
+        float shake = t > FROST_FREEZE - 0.15F ? Mth.sin(t * 90.0F) * 0.025F : 0.0F;
+        float ox = (float)(e.x - cam.x) + shake;
+        float oy = (float)(e.y - cam.y);
+        float oz = (float)(e.z - cam.z);
+
+        for (ModelSnapshot.Part part : e.parts) {
+            ModelSnapshot.draw(part, capture, (v, pos, n) -> {
+                pos[0] += ox;
+                pos[1] += oy;
+                pos[2] += oz;
+            }, 255);
+        }
+    }
+
+    private static void drawWarp(KillFx.Effect e, float t, Vec3 cam) {
+        float k = Mth.clamp(t / WARP_TIME, 0.0F, 1.0F);
+        int alpha = alpha(1.0F - smooth(0.7F, 1.0F, k));
+        if (alpha <= 1) {
+            return;
+        }
+
+        float squeeze = 1.0F - k * k;
+        float stretch = 1.0F + 1.6F * k * k;
+        float pivot = e.height * 0.5F;
+        float ox = (float)(e.x - cam.x);
+        float oy = (float)(e.y - cam.y);
+        float oz = (float)(e.z - cam.z);
+
+        for (ModelSnapshot.Part part : e.parts) {
+            ModelSnapshot.draw(part, capture, (v, pos, n) -> {
+                pos[0] = pos[0] * squeeze + ox;
+                pos[1] = pivot + (pos[1] - pivot) * stretch + oy;
+                pos[2] = pos[2] * squeeze + oz;
+            }, alpha);
+        }
+    }
+
+    private static void shatterParts(KillFx.Effect e, float t, float life, Vec3 cam) {
+        float k = t / life;
         int alpha = alpha(1.0F - smooth(0.5F, 1.0F, k));
         float scale = 1.0F - 0.65F * k;
         float gravity = 7.5F;
@@ -407,7 +504,7 @@ public final class KillFx {
     }
 
     private static void drawDust(KillFx.Effect e, float t, Vec3 cam) {
-        int alpha = alpha(1.0F - smooth(0.85F, 1.0F, t / LIFE[4]));
+        int alpha = alpha(1.0F - smooth(0.85F, 1.0F, t / LIFE[e.type]));
         float ox = (float)(e.x - cam.x);
         float oy = (float)(e.y - cam.y);
         float oz = (float)(e.z - cam.z);
@@ -468,7 +565,7 @@ public final class KillFx {
     }
 
     private static void drawSoul(KillFx.Effect e, float t, Vec3 cam) {
-        float k = t / LIFE[1];
+        float k = t / LIFE[e.type];
         float fade = smooth(0.0F, 0.12F, t) * (1.0F - smooth(0.55F, 1.0F, k));
         if (!(fade <= 0.01F)) {
             int alpha = alpha(fade);
@@ -510,6 +607,116 @@ public final class KillFx {
             }
 
             ring(base.add(0.0, 0.05, 0.0), 0.9F + 0.4F * smooth(0.0F, 0.4F, t), 0.9F, tint, 0.35F * env);
+        }
+    }
+
+    private static void drawFirework(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 feet = new Vec3(e.x, e.y + 0.1, e.z).subtract(cam);
+        if (t < FIREWORK_RISE) {
+            float q = easeOut(t / FIREWORK_RISE);
+            Vec3 rocket = feet.add(0.0, FIREWORK_HEIGHT * q, 0.0);
+            List<Vec3> trail = List.of(feet.add(0.0, FIREWORK_HEIGHT * q * 0.35, 0.0), rocket);
+            ribbon(trail, 0.14F, tint, 0.8F, null);
+            ribbon(trail, 0.05F, WHITE6, 1.0F, null);
+            return;
+        }
+
+        float q = Mth.clamp((t - FIREWORK_RISE) / (LIFE[FIREWORK] - FIREWORK_RISE), 0.0F, 1.0F);
+        float a = (1.0F - q) * (1.0F - q);
+        Vec3 burst = feet.add(0.0, FIREWORK_HEIGHT, 0.0);
+
+        for (int i = 0; i < 3; i++) {
+            float qi = Mth.clamp(q * (1.0F + i * 0.4F), 0.0F, 1.0F);
+            facingRing(burst, 0.3F + 4.2F * easeOut(qi), 0.22F * (1.0F - qi) + 0.04F, tint, a * (1.0F - i * 0.25F));
+        }
+
+        Random r = new Random(e.seed);
+
+        for (int s = 0; s < 14; s++) {
+            double yaw = r.nextDouble() * Math.PI * 2.0;
+            double pitch = (r.nextDouble() - 0.35) * Math.PI;
+            Vec3 dir = new Vec3(Math.cos(yaw) * Math.cos(pitch), Math.sin(pitch), Math.sin(yaw) * Math.cos(pitch));
+            float reach = 3.2F + r.nextFloat() * 1.6F;
+            List<Vec3> spoke = new ArrayList<>();
+
+            for (int j = 0; j <= 6; j++) {
+                float f = j / 6.0F;
+                float travel = reach * easeOut(q) * (0.4F + 0.6F * f);
+                spoke.add(burst.add(dir.scale(travel)).add(0.0, -1.8F * q * q * f, 0.0));
+            }
+
+            ribbon(spoke, 0.07F, tint, 0.85F * a, null);
+        }
+
+        if (q < 0.15F) {
+            facingRing(burst, 0.6F, 0.6F * (1.0F - q / 0.15F), WHITE6, 1.0F - q / 0.15F);
+        }
+    }
+
+    private static void drawFrostLight(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 feet = new Vec3(e.x, e.y + 0.05, e.z).subtract(cam);
+        float grow = smooth(0.0F, FROST_FREEZE, t);
+        float fade = 1.0F - smooth(FROST_FREEZE + 0.6F, LIFE[FROST], t);
+        ring(feet, 0.3F + 1.4F * grow, 0.5F, tint, 0.55F * fade);
+        ring(feet, 0.2F + 1.2F * grow, 0.06F, WHITE6, 0.7F * fade);
+        if (t >= FROST_FREEZE) {
+            float q = (t - FROST_FREEZE) / 0.45F;
+            if (q < 1.0F) {
+                float a = (1.0F - q) * (1.0F - q);
+                Vec3 chest = new Vec3(e.x, e.y + e.height * 0.5, e.z).subtract(cam);
+                facingRing(chest, 0.3F + 2.6F * easeOut(q), 0.2F * (1.0F - q) + 0.04F, tint, a);
+                ring(feet, 0.4F + 3.4F * easeOut(q), 0.3F * (1.0F - q) + 0.05F, tint, a);
+            }
+        }
+    }
+
+    private static void drawInferno(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = smooth(0.0F, 0.15F, t) * (1.0F - smooth(1.4F, LIFE[INFERNO], t));
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 base = new Vec3(e.x, e.y, e.z).subtract(cam);
+        float flicker = 0.8F + 0.2F * Mth.sin(t * 37.0F) * Mth.sin(t * 23.0F + 1.3F);
+        beam(base, 4.5F + e.height, 1.25F, tint, 0.5F * env * flicker);
+        beam(base, 2.5F + e.height, 0.45F, whiter(tint, 0.5F), 0.7F * env * flicker);
+        ring(base.add(0.0, 0.05, 0.0), 0.8F + 0.5F * smooth(0.0F, 0.5F, t), 0.7F, tint, 0.45F * env);
+    }
+
+    private static void drawBlossom(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = smooth(0.0F, 0.25F, t) * (1.0F - smooth(1.6F, LIFE[BLOSSOM], t));
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 base = new Vec3(e.x, e.y, e.z).subtract(cam);
+        beam(base, 9.0F, 0.7F, tint, 0.25F * env);
+
+        for (int i = 0; i < 3; i++) {
+            float rt = t - i * 0.4F;
+            if (rt > 0.0F && rt < 1.6F) {
+                float q = rt / 1.6F;
+                ring(base.add(0.0, 0.1 + 3.5F * q, 0.0), 1.2F * (1.0F - q) + 0.3F, 0.12F, tint, (1.0F - q) * env);
+            }
+        }
+
+        ring(base.add(0.0, 0.05, 0.0), 1.0F + 1.2F * smooth(0.0F, 1.0F, t), 0.35F, tint, 0.4F * env);
+    }
+
+    private static void drawWarpLight(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 base = new Vec3(e.x, e.y, e.z).subtract(cam);
+        Vec3 chest = new Vec3(e.x, e.y + e.height * 0.5, e.z).subtract(cam);
+        float k = Mth.clamp(t / WARP_TIME, 0.0F, 1.0F);
+        if (k < 1.0F) {
+            facingRing(chest, 1.4F * (1.0F - k) + 0.1F, 0.12F, tint, 0.8F * k);
+        }
+
+        float q = (t - WARP_TIME) / (LIFE[WARP] - WARP_TIME);
+        if (q > 0.0F && q < 1.0F) {
+            float a = (1.0F - q) * (1.0F - q);
+            beam(base, 7.0F * (1.0F - q) + 2.0F, 0.35F, tint, a);
+            beam(base, 5.0F * (1.0F - q) + 1.0F, 0.1F, WHITE6, a);
+            facingRing(chest, 0.2F + 2.8F * easeOut(q), 0.15F * (1.0F - q) + 0.03F, tint, a);
         }
     }
 
@@ -933,6 +1140,30 @@ public final class KillFx {
                 sound(mc, SoundEvents.BLAZE_SHOOT, e, 0.5F, 0.55F);
                 sound(mc, SoundEvents.AMETHYST_BLOCK_CHIME, e, 1.0F, 0.6F);
                 break;
+            case FIREWORK:
+                particles(mc, ParticleTypes.FIREWORK, e.x, e.y + 0.2, e.z, 8, 0.05);
+                sound(mc, SoundEvents.FIREWORK_ROCKET_LAUNCH, e, 1.0F, 1.0F);
+                break;
+            case FROST:
+                particles(mc, ParticleTypes.SNOWFLAKE, e.x, cy, e.z, 24, 0.12);
+                sound(mc, SoundEvents.PLAYER_HURT_FREEZE, e, 1.0F, 0.8F);
+                sound(mc, SoundEvents.POWDER_SNOW_BREAK, e, 1.0F, 0.7F);
+                break;
+            case INFERNO:
+                particles(mc, ParticleTypes.FLAME, e.x, e.y + 0.2, e.z, 30, 0.12);
+                particles(mc, ParticleTypes.LAVA, e.x, e.y + 0.3, e.z, 8, 0.2);
+                sound(mc, SoundEvents.FIRECHARGE_USE, e, 1.0F, 0.6F);
+                sound(mc, SoundEvents.BLAZE_SHOOT, e, 0.6F, 0.5F);
+                break;
+            case BLOSSOM:
+                particles(mc, ParticleTypes.CHERRY_LEAVES, e.x, cy, e.z, 30, 0.15);
+                sound(mc, SoundEvents.CHERRY_LEAVES_BREAK, e, 1.0F, 0.8F);
+                sound(mc, SoundEvents.AMETHYST_BLOCK_RESONATE, e, 1.0F, 1.2F);
+                break;
+            case WARP:
+                particles(mc, ParticleTypes.REVERSE_PORTAL, e.x, cy, e.z, 30, 0.3);
+                sound(mc, SoundEvents.CHORUS_FRUIT_TELEPORT, e, 1.0F, 0.9F);
+                break;
             default:
                 sound(mc, SoundEvents.ARROW_SHOOT, e, 0.8F, 0.45F);
         }
@@ -945,6 +1176,33 @@ public final class KillFx {
             particles(mc, ParticleTypes.END_ROD, e.x, cy, e.z, 30, 0.6);
             particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
             sound(mc, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), e, 1.0F, 1.4F);
+        }
+
+        if (e.type == FIREWORK && t >= FIREWORK_RISE && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            double top = e.y + 0.1 + FIREWORK_HEIGHT;
+            particles(mc, ParticleTypes.FIREWORK, e.x, top, e.z, 60, 0.35);
+            particles(mc, Compat.flash(), e.x, top, e.z, 1, 0.0);
+            sound(mc, SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, e, 1.0F, 1.0F);
+        }
+
+        if (e.type == FIREWORK && t >= FIREWORK_RISE + 0.35F && (e.fired & 2) == 0) {
+            e.fired |= 2;
+            sound(mc, SoundEvents.FIREWORK_ROCKET_TWINKLE, e, 1.0F, 1.0F);
+        }
+
+        if (e.type == FROST && t >= FROST_FREEZE && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, ParticleTypes.SNOWFLAKE, e.x, cy, e.z, 40, 0.35);
+            particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
+            sound(mc, SoundEvents.GLASS_BREAK, e, 1.0F, 0.9F);
+            sound(mc, SoundEvents.AMETHYST_BLOCK_BREAK, e, 1.0F, 1.4F);
+        }
+
+        if (e.type == WARP && t >= WARP_TIME && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, ParticleTypes.PORTAL, e.x, cy, e.z, 50, 0.8);
+            sound(mc, SoundEvents.ENDERMAN_TELEPORT, e, 1.0F, 1.2F);
         }
 
         if (e.type == 5 && t >= 0.22F && (e.fired & 1) == 0) {
@@ -976,6 +1234,26 @@ public final class KillFx {
                         double dy = (RNG.nextDouble() - 0.5) * 3.0;
                         double dz = (RNG.nextDouble() - 0.5) * 4.0;
                         mc.particleEngine.createParticle(ParticleTypes.PORTAL, e.x, cy, e.z, dx, dy, dz);
+                    }
+                } else if (e.type == INFERNO && t < 1.6F) {
+                    for (int i = 0; i < 3; i++) {
+                        double px = e.x + (RNG.nextDouble() - 0.5) * 0.9;
+                        double pz = e.z + (RNG.nextDouble() - 0.5) * 0.9;
+                        mc.particleEngine.createParticle(ParticleTypes.FLAME, px, e.y + RNG.nextDouble() * e.height, pz, 0.0, 0.04, 0.0);
+                        mc.particleEngine.createParticle(ParticleTypes.SMOKE, px, e.y + e.height, pz, 0.0, 0.06, 0.0);
+                    }
+                } else if (e.type == BLOSSOM && t < 2.0F) {
+                    for (int i = 0; i < 2; i++) {
+                        mc.particleEngine
+                            .createParticle(
+                                ParticleTypes.CHERRY_LEAVES,
+                                e.x + (RNG.nextDouble() - 0.5) * 2.0,
+                                e.y + e.height + RNG.nextDouble() * 2.0,
+                                e.z + (RNG.nextDouble() - 0.5) * 2.0,
+                                0.0,
+                                0.0,
+                                0.0
+                            );
                     }
                 } else if (e.type == 4 && t < 1.4F) {
                     for (int i = 0; i < 3; i++) {
