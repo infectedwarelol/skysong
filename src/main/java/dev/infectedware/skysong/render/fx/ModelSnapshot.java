@@ -52,7 +52,7 @@ final class ModelSnapshot {
             recording = false;
         }
 
-        ArrayList list = new ArrayList();
+        List<ModelSnapshot.Part> list = new ArrayList<>();
 
         for (ModelSnapshot.Part part : parts.values()) {
             if (part.vertices >= 4) {

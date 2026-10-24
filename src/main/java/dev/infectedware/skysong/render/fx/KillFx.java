@@ -206,19 +206,12 @@ public final class KillFx {
                             for (KillFx.Effect e : effects) {
                                 float t = (float)(now - e.born) / 1000.0F;
                                 switch (e.type) {
-                                    case 0:
-                                        drawShatter(e, t, cam);
-                                        break;
-                                    case 1:
-                                        drawSoul(e, t, cam);
-                                    case 2:
-                                    default:
-                                        break;
-                                    case 3:
-                                        drawVoid(e, t, cam);
-                                        break;
-                                    case 4:
-                                        drawDust(e, t, cam);
+                                    case 0 -> drawShatter(e, t, cam);
+                                    case 1 -> drawSoul(e, t, cam);
+                                    case 3 -> drawVoid(e, t, cam);
+                                    case 4 -> drawDust(e, t, cam);
+                                    default -> {
+                                    }
                                 }
                             }
 
@@ -236,21 +229,13 @@ public final class KillFx {
                         for (KillFx.Effect e : effects) {
                             float t = (float)(now - e.born) / 1000.0F;
                             switch (e.type) {
-                                case 1:
-                                    drawBeam(e, t, cam, tint);
-                                    break;
-                                case 2:
-                                    drawThunder(e, t, cam, tint);
-                                    break;
-                                case 3:
-                                    drawVoidLight(e, t, cam, tint);
-                                case 4:
-                                    break;
-                                case 5:
-                                    drawSword(e, t, cam, tint);
-                                    break;
-                                default:
-                                    drawShatterFlash(e, t, cam, tint);
+                                case 1 -> drawBeam(e, t, cam, tint);
+                                case 2 -> drawThunder(e, t, cam, tint);
+                                case 3 -> drawVoidLight(e, t, cam, tint);
+                                case 4 -> {
+                                }
+                                case 5 -> drawSword(e, t, cam, tint);
+                                default -> drawShatterFlash(e, t, cam, tint);
                             }
                         }
 
