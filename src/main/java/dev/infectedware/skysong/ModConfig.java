@@ -27,7 +27,7 @@ public final class ModConfig {
     private static final Class<?>[] HOLDERS = new Class<?>[]{ModSettings.class};
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Field, Object> DEFAULTS = captureDefaults();
-    private static final Set<String> PERSONAL = Set.of("spotifyClientId", "popupPositions");
+    private static final Set<String> PERSONAL = Set.of("spotifyClientId", "popupPositions", "shareMySong");
 
     private ModConfig() {
     }
