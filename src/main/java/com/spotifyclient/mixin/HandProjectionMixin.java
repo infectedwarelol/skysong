@@ -33,8 +33,9 @@ abstract class HandProjectionMixin {
         }
     }
 
+    @Unique
     private boolean versefall$isHands() {
-        return this == Minecraft.getInstance().gameRenderer.hud3dProjectionMatrixBuffer;
+        return (Object)this == Minecraft.getInstance().gameRenderer.hud3dProjectionMatrixBuffer;
     }
 
     @ModifyArg(
