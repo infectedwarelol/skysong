@@ -1041,6 +1041,16 @@ public final class ModuleRegistry {
             }));
         }
 
+        s.add(new Setting.Action("Copy my theme code", SavedThemes::copyCode));
+        s.add(new Setting.Action("Use the theme code I copied", () -> {
+            SavedThemes.importClipboard();
+            SettingsPopup.rebuildSoon();
+        }));
+        s.add(new Setting.Input("Or paste a theme code…", "Use code", code -> {
+            SavedThemes.importCode(code);
+            SettingsPopup.rebuildSoon();
+        }));
+
         s.add(new Setting.Header("Client rect"));
         s.add(new Setting.Slide("Corner radius", 2.0F, 10.0F, 1.0F, 7.0, () -> ModSettings.rectCornerRadius, v -> ModSettings.rectCornerRadius = (float)v));
         s.add(new Setting.Header("Backdrop"));

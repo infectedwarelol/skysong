@@ -5,25 +5,34 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.SkysongClient;
 import dev.infectedware.skysong.hud.Feedback;
 import dev.infectedware.skysong.render.fx.Fx;
+import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.zip.DataFormatException;
+import java.util.zip.Deflater;
+import java.util.zip.Inflater;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 
 public final class SavedThemes {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skysong_themes.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final int MAX_NAME = 24;
+    private static final String CODE_PREFIX = "SKT1-";
+    private static final int MAX_CODE_BYTES = 65536;
     private static final List<String> THEME_PREFIXES = List.of(
         "theme", "clientColorMode", "gui", "rainbow", "rect", "gradientStyle", "dynamic", "lyric", "shaderColor", "shaderGlass",
         "textDropShadows", "cinematicFades", "nowPlayingStyle", "hudLyricsStyle", "hudIcons"
@@ -96,6 +105,106 @@ public final class SavedThemes {
             }
 
             Feedback.show("Deleted theme " + name, 2500L);
+        }
+    }
+
+    public static String exportCode() {
+        JsonObject root = new JsonObject();
+        root.addProperty("name", active == null ? "Shared theme" : active);
+        root.add("settings", capture());
+        byte[] json = GSON.toJson(root).getBytes(StandardCharsets.UTF_8);
+        Deflater deflater = new Deflater(Deflater.BEST_COMPRESSION);
+
+        try {
+            deflater.setInput(json);
+            deflater.finish();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+
+            while (!deflater.finished()) {
+                out.write(buffer, 0, deflater.deflate(buffer));
+            }
+
+            return CODE_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(out.toByteArray());
+        } finally {
+            deflater.end();
+        }
+    }
+
+    public static void copyCode() {
+        Minecraft.getInstance().keyboardHandler.setClipboard(exportCode());
+        Feedback.show("Theme code copied", 2500L);
+    }
+
+    public static boolean importClipboard() {
+        return importCode(Minecraft.getInstance().keyboardHandler.getClipboard());
+    }
+
+    public static boolean importCode(String text) {
+        JsonObject root = decode(text);
+        if (root == null) {
+            Feedback.show("That is not a Skysong theme code", 2500L);
+            return false;
+        }
+
+        String name = cleanName(root.get("name") != null && root.get("name").isJsonPrimitive() ? root.get("name").getAsString() : "");
+        if (name.isEmpty()) {
+            name = "Shared theme";
+        }
+
+        SavedThemes.Theme theme = new SavedThemes.Theme(name, onlyThemeFields(root.getAsJsonObject("settings")));
+        int at = indexOf(name);
+        if (at >= 0) {
+            all().set(at, theme);
+        } else {
+            all().add(theme);
+        }
+
+        write();
+        return load(name);
+    }
+
+    private static JsonObject decode(String text) {
+        if (text == null) {
+            return null;
+        }
+
+        String code = text.trim();
+        if (!code.startsWith(CODE_PREFIX)) {
+            return null;
+        }
+
+        Inflater inflater = new Inflater();
+
+        try {
+            inflater.setInput(Base64.getUrlDecoder().decode(code.substring(CODE_PREFIX.length())));
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+
+            while (!inflater.finished()) {
+                int read = inflater.inflate(buffer);
+                if (read == 0 && (inflater.needsInput() || inflater.needsDictionary())) {
+                    return null;
+                }
+
+                out.write(buffer, 0, read);
+                if (out.size() > MAX_CODE_BYTES) {
+                    return null;
+                }
+            }
+
+            JsonElement parsed = JsonParser.parseString(out.toString(StandardCharsets.UTF_8));
+            if (!parsed.isJsonObject()) {
+                return null;
+            }
+
+            JsonObject root = parsed.getAsJsonObject();
+            JsonElement settings = root.get("settings");
+            return settings != null && settings.isJsonObject() ? root : null;
+        } catch (IllegalArgumentException | DataFormatException | JsonParseException e) {
+            return null;
+        } finally {
+            inflater.end();
         }
     }
 
