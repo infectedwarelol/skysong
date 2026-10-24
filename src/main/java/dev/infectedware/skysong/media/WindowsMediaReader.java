@@ -11,7 +11,7 @@ import com.sun.jna.ptr.LongByReference;
 import com.sun.jna.ptr.PointerByReference;
 import java.util.Locale;
 
-public final class WindowsMediaReader {
+public final class WindowsMediaReader implements MediaReader {
     private static final GUID IID_MANAGER_STATICS = GUID.fromString("{2050c4ee-11a0-57de-aed7-c97c70338245}");
     private static final GUID IID_ASYNC_INFO = GUID.fromString("{00000036-0000-0000-C000-000000000046}");
     private static final String MANAGER_CLASS = "Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager";
@@ -45,6 +45,7 @@ public final class WindowsMediaReader {
         return System.getProperty("os.name", "").toLowerCase(Locale.ROOT).startsWith("windows");
     }
 
+    @Override
     public boolean open() {
         try {
             if (combase == null) {
@@ -86,7 +87,8 @@ public final class WindowsMediaReader {
         }
     }
 
-    public WindowsMediaReader.Snapshot read() {
+    @Override
+    public MediaSnapshot read() {
         if (this.manager == null) {
             return null;
         }
@@ -148,12 +150,13 @@ public final class WindowsMediaReader {
 
             long sampledAt = lastUpdated > 0L ? lastUpdated / 10000L - 11644473600000L : System.currentTimeMillis();
             sampledAt = Math.min(sampledAt, System.currentTimeMillis());
-            return new WindowsMediaReader.Snapshot(title, artist, album, (position - start) / 10000L, (end - start) / 10000L, status.getValue() == 4, sampledAt);
+            return new MediaSnapshot(title, artist, album, (position - start) / 10000L, (end - start) / 10000L, status.getValue() == 4, sampledAt, "", "");
         } finally {
             release(session);
         }
     }
 
+    @Override
     public void close() {
         release(this.manager);
         this.manager = null;
@@ -274,13 +277,6 @@ public final class WindowsMediaReader {
     private static void check(int hresult, String what) {
         if (hresult < 0) {
             throw new IllegalStateException(what + " failed: 0x" + Integer.toHexString(hresult));
-        }
-    }
-
-    public record Snapshot(String title, String artist, String album, long positionMs, long durationMs, boolean playing, long sampledAt) {
-        public long positionNow() {
-            long p = this.playing ? this.positionMs + (System.currentTimeMillis() - this.sampledAt) : this.positionMs;
-            return Math.max(0L, this.durationMs > 0L ? Math.min(p, this.durationMs) : p);
         }
     }
 }

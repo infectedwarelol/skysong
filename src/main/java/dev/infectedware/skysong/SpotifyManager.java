@@ -9,7 +9,8 @@ import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Ids;
 import dev.infectedware.skysong.hud.Feedback;
 import dev.infectedware.skysong.media.LocalMediaSource;
-import dev.infectedware.skysong.media.WindowsMediaReader;
+import dev.infectedware.skysong.media.MediaCommand;
+import dev.infectedware.skysong.media.MediaSnapshot;
 import dev.infectedware.skysong.theme.AlbumPalette;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -108,7 +109,7 @@ public class SpotifyManager {
             }
         } else {
             this.local.start();
-            WindowsMediaReader.Snapshot snap = this.local.latest();
+            MediaSnapshot snap = this.local.latest();
             if (snap == null) {
                 if (this.usingLocal) {
                     this.stopUsingLocal();
@@ -133,9 +134,25 @@ public class SpotifyManager {
 
                 this.localRawPosition = snap.positionMs();
                 this.isPlaying = snap.playing();
+                if (!snap.trackId().isEmpty()) {
+                    this.currentTrackId = snap.trackId();
+                }
+
                 if (newTrack) {
                     this.extractPaletteFromImage(this.currentTrackName);
-                    this.fetchArtworkByName(snap.title(), snap.artist());
+                    if (snap.trackId().isEmpty()) {
+                        this.currentTrackId = "";
+                    }
+
+                    String art = snap.artUrl();
+                    if (art.startsWith("https://")) {
+                        if (!art.equals(this.albumImageUrl)) {
+                            this.albumImageUrl = art;
+                            this.fetchAlbumArt(art);
+                        }
+                    } else {
+                        this.fetchArtworkByName(snap.title(), snap.artist());
+                    }
                 }
             }
         }
@@ -590,7 +607,7 @@ public class SpotifyManager {
                                 }
 
                                 SkysongClient.LOGGER.warn("[Skysong] Spotify refused the request (403): " + response.body());
-                                if (ModSettings.useLocalMedia && WindowsMediaReader.isSupported()) {
+                                if (ModSettings.useLocalMedia && LocalMediaSource.isSupported()) {
                                     this.reportProblem(
                                         "blocked",
                                         "§eSpotify's online API refused this account ("
@@ -671,8 +688,23 @@ public class SpotifyManager {
         return out;
     }
 
+    private boolean localControl(MediaCommand command, long value, Runnable onDone) {
+        if (!this.usingLocal || !this.local.supportsControls()) {
+            return false;
+        }
+
+        return this.local.control(command, value, () -> Minecraft.getInstance().execute(onDone));
+    }
+
     public void togglePlayback() {
         boolean pause = this.isPlaying;
+        if (this.localControl(MediaCommand.PLAY_PAUSE, 0L, () -> Feedback.show(pause ? "Paused" : "Playing", 1200L))) {
+            this.progressMs = this.getSmoothedProgressMs();
+            this.lastUpdateTime = System.currentTimeMillis();
+            this.isPlaying = !pause;
+            return;
+        }
+
         this.control("PUT", pause ? "/me/player/pause" : "/me/player/play", () -> {
             this.progressMs = this.getSmoothedProgressMs();
             this.lastUpdateTime = System.currentTimeMillis();
@@ -682,15 +714,30 @@ public class SpotifyManager {
     }
 
     public void nextTrack() {
+        if (this.localControl(MediaCommand.NEXT, 0L, () -> Feedback.show("Next track", 1200L))) {
+            return;
+        }
+
         this.control("POST", "/me/player/next", () -> Feedback.show("Next track", 1200L));
     }
 
     public void previousTrack() {
+        if (this.localControl(MediaCommand.PREVIOUS, 0L, () -> Feedback.show("Previous track", 1200L))) {
+            return;
+        }
+
         this.control("POST", "/me/player/previous", () -> Feedback.show("Previous track", 1200L));
     }
 
     public void seekTo(long positionMs) {
         long clamped = Math.max(0L, this.durationMs > 0L ? Math.min(positionMs, this.durationMs) : positionMs);
+        if (this.localControl(MediaCommand.SEEK_TO, clamped, () -> {
+        })) {
+            this.progressMs = clamped;
+            this.lastUpdateTime = System.currentTimeMillis();
+            return;
+        }
+
         this.control("PUT", "/me/player/seek?position_ms=" + clamped, () -> {
             this.progressMs = clamped;
             this.lastUpdateTime = System.currentTimeMillis();
@@ -698,6 +745,10 @@ public class SpotifyManager {
     }
 
     public void changeVolume(int direction) {
+        if (this.localControl(MediaCommand.VOLUME_STEP, direction, () -> Feedback.show(direction > 0 ? "Volume up" : "Volume down", 1200L))) {
+            return;
+        }
+
         if (!this.canControl()) {
             return;
         }
