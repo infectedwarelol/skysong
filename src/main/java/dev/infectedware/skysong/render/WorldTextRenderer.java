@@ -91,6 +91,9 @@ public class WorldTextRenderer {
     private CameraType lastPerspective;
     private int lastLayoutKey = -1;
     private float framePulse;
+    private static final float TRANSLATION_SCALE = 0.6F;
+    private static final float TRANSLATION_GAP = 1.25F;
+    private static final int TRANSLATION_TINT = 12107984;
     private float frameDaylight = 1.0F;
     private static final double SKY_ARC_LIFT_DEGREES = 7.0;
     private static final float SKY_DRIFT_MS = 2600.0F;
@@ -165,6 +168,7 @@ public class WorldTextRenderer {
                         float pitch = Compat.camPitch(camera);
                         boolean scatter = ModSettings.lyricLayout == ModSettings.LAYOUT_SCATTER;
                         boolean sky = ModSettings.lyricLayout == ModSettings.LAYOUT_SKY;
+                        Vec3 anchor = null;
                         if (ModSettings.lyricShowMode == 1) {
                             Vec3 pos = sky
                                 ? skyPos(eye, yaw)
@@ -173,6 +177,7 @@ public class WorldTextRenderer {
                                     scatter ? this.scatterPos(eye, yaw, pitch, words, sungAt[0], line.endMs - progressMs) : this.centerPos(eye, yaw, pitch)
                                 );
                             this.addPiece(words, sungAt, pos, eye, yaw, scatter, 1.0F, 0.5F, sky).emphasized = emphasized;
+                            anchor = pos;
                         } else if (scatter) {
                             long wordGap = words.length > 1 ? (sungAt[words.length - 1] - sungAt[0]) / (words.length - 1) : 300L;
                             long lifetime = Math.max(1200L, Math.min(2400L, 4L * wordGap));
@@ -195,6 +200,7 @@ public class WorldTextRenderer {
 
                             Vec3 right = Vec3.directionFromRotation(0.0F, yaw + 90.0F);
                             Vec3 center = sky ? skyPos(eye, yaw) : inFront(eye, this.centerPos(eye, yaw, pitch));
+                            anchor = center;
                             boolean arc = sky && ModSettings.lyricSkyArc;
                             float rowFit = (float)Math.min(
                                 1.0, 2.0 * center.distanceTo(eye) * Math.tan(Math.toRadians(horizontalFov() * (arc ? 0.55 : 0.38))) / Math.max(total * unit, 0.001)
@@ -214,6 +220,8 @@ public class WorldTextRenderer {
                             }
                         }
 
+                        this.addTranslation(line, anchor, eye, yaw, pitch, sky, sungAt[0]);
+
                         while (this.pieces.size() > 32) {
                             this.pieces.remove(0);
                         }
@@ -221,6 +229,20 @@ public class WorldTextRenderer {
                 }
             }
         }
+    }
+
+    private void addTranslation(LyricsManager.LyricLine line, Vec3 anchor, Vec3 eye, float yaw, float pitch, boolean sky, long showAt) {
+        String translation = line.translation;
+        if (!ModSettings.lyricTranslate || translation == null || translation.isBlank()) {
+            return;
+        }
+
+        String text = ModSettings.lyricUppercase ? translation.toUpperCase(Locale.ROOT) : translation;
+        Vec3 base = anchor != null ? anchor : inFront(eye, this.centerPos(eye, yaw, pitch));
+        double gap = 9.0F * worldScale() * (sky ? skySizeMultiplier() : 1.0F) * TRANSLATION_GAP;
+        WorldTextRenderer.Piece piece = this.addPiece(new String[]{text}, new long[]{showAt}, base.add(0.0, -gap, 0.0), eye, yaw, false, 1.0F, 0.5F, sky);
+        piece.translation = true;
+        piece.textScale = TRANSLATION_SCALE;
     }
 
     static boolean[] emphasized(String[] originalWords, int count) {
@@ -758,7 +780,7 @@ public class WorldTextRenderer {
                 m.mulPose(com.mojang.math.Axis.YP.rotationDegrees(-p.yaw));
                 m.mulPose(com.mojang.math.Axis.XP.rotationDegrees(p.pitch));
                 m.mulPose(com.mojang.math.Axis.ZP.rotationDegrees(p.roll));
-                float s = worldScale() * p.sizeMultiplier * p.fit * popScale;
+                float s = worldScale() * p.sizeMultiplier * p.textScale * p.fit * popScale;
                 m.scale(-s * stretch(), -s, s);
                 boolean karaoke = p.words.length > 1;
                 int current = -1;
@@ -800,6 +822,11 @@ public class WorldTextRenderer {
                         color = karaoke ? highlight : Colors.mixRgb(highlight, base, (float)(now - p.sungAt[i]) / HIGHLIGHT_FADE_MS);
                     }
 
+                    if (p.translation) {
+                        color = Colors.mixRgb(base, TRANSLATION_TINT, 0.4F);
+                        wordAlpha *= 0.85F;
+                    }
+
                     if (karaoke && i == current) {
                         float sung = RenderUtil.clamp01((float)(now - p.sungAt[i]) / 250.0F);
                         if (sung < 1.0F) {
@@ -823,9 +850,9 @@ public class WorldTextRenderer {
                     m.pushPose();
                     m.translate(x + w / 2.0F, 0.0F, 0.0F);
                     m.scale(wordPop, wordPop, 1.0F);
-                    if (p.sky && constellation()) {
+                    if (p.sky && constellation() && !p.translation) {
                         this.drawConstellation(tr, p.words[i], i == current, -w / 2.0F, y, wordAlpha, color, m, passes, glowStrength, now, p.driftSeed + i);
-                    } else if (ModSettings.lyricEffect == ModSettings.LYRIC_EFFECT_NONE && !shake) {
+                    } else if (p.translation || ModSettings.lyricEffect == ModSettings.LYRIC_EFFECT_NONE && !shake) {
                         this.drawWord(tr, texts[i], -w / 2.0F, y, wordAlpha, blur, color, m.last().pose(), passes, glitchAmount, glowStrength);
                     } else {
                         this.drawLetters(
@@ -835,7 +862,7 @@ public class WorldTextRenderer {
                     }
 
                     m.popPose();
-                    if (!mirror && ModSettings.lyricParticles != ModSettings.LYRIC_PARTICLES_NONE && i >= p.particleWords && now >= wordStart) {
+                    if (!mirror && !p.translation && ModSettings.lyricParticles != ModSettings.LYRIC_PARTICLES_NONE && i >= p.particleWords && now >= wordStart) {
                         p.particleWords = i + 1;
                         spawnParticles(p, at, x + w / 2.0F, s);
                     }
@@ -1211,6 +1238,8 @@ public class WorldTextRenderer {
         long fadeAt = Long.MAX_VALUE;
         boolean[] emphasized = new boolean[0];
         int particleWords;
+        boolean translation;
+        float textScale = 1.0F;
 
         Piece(
             String[] words,

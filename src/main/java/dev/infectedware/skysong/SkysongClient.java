@@ -78,6 +78,7 @@ public class SkysongClient implements ClientModInitializer {
                     spotifyManager.tickLocalSource();
                     if (!spotifyManager.getCurrentTrackName().isEmpty()) {
                         lyricsManager.fetchLyrics(spotifyManager.getCurrentTrackName(), spotifyManager.getCurrentArtist(), spotifyManager.getDurationMs());
+                        lyricsManager.tickTranslation();
                     }
 
                     this.tickCounter++;

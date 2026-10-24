@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.SkysongClient;
-import dev.infectedware.skysong.hud.Notifications;
+import dev.infectedware.skysong.hud.Feedback;
 import dev.infectedware.skysong.render.fx.Fx;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -68,13 +68,13 @@ public final class SavedThemes {
 
         write();
         active = name;
-        Notifications.notify((replaced ? "Updated theme " : "Saved theme ") + name, 2500L);
+        Feedback.show((replaced ? "Updated theme " : "Saved theme ") + name, 2500L);
     }
 
     public static boolean load(String name) {
         int at = indexOf(name);
         if (at < 0) {
-            Notifications.notify("No theme named " + name, 2500L);
+            Feedback.show("No theme named " + name, 2500L);
             return false;
         }
 
@@ -82,7 +82,7 @@ public final class SavedThemes {
         ModConfig.save();
         Fx.reset("theme changed");
         active = all().get(at).name();
-        Notifications.notify("Loaded theme " + active, 2500L);
+        Feedback.show("Loaded theme " + active, 2500L);
         return true;
     }
 
@@ -95,7 +95,7 @@ public final class SavedThemes {
                 active = null;
             }
 
-            Notifications.notify("Deleted theme " + name, 2500L);
+            Feedback.show("Deleted theme " + name, 2500L);
         }
     }
 

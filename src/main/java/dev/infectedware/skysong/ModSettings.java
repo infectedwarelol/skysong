@@ -74,6 +74,8 @@ public final class ModSettings {
     public static float lyricSkyAngle = 35.0F;
     public static float lyricSkyScale = 1.0F;
     public static boolean lyricRealTiming = true;
+    public static boolean lyricTranslate = false;
+    public static int lyricTranslateLanguage = 1;
     public static final int LYRIC_SKY_TEXT = 0;
     public static final int LYRIC_SKY_CONSTELLATION = 1;
     public static final String[] LYRIC_SKY_STYLE_NAMES = new String[]{"Text", "Constellation"};

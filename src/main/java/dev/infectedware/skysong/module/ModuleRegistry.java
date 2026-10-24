@@ -10,6 +10,7 @@ import dev.infectedware.skysong.gui.click.CrosshairEditorScreen;
 import dev.infectedware.skysong.gui.click.SettingsPopup;
 import dev.infectedware.skysong.hud.Crosshair;
 import dev.infectedware.skysong.hud.InfoHud;
+import dev.infectedware.skysong.lyrics.LyricTranslator;
 import dev.infectedware.skysong.render.AspectRatio;
 import dev.infectedware.skysong.render.fx.DeathFx;
 import dev.infectedware.skysong.render.fx.Fx;
@@ -88,6 +89,15 @@ public final class ModuleRegistry {
                     new Setting.ColorPick("Glow", () -> ModSettings.lyricGlowColor, v -> ModSettings.lyricGlowColor = v)
                 ),
                 new Setting.ColorPick("Outline color", () -> ModSettings.lyricOutlineColor, v -> ModSettings.lyricOutlineColor = v),
+                new Setting.Header("Translation"),
+                new Setting.Toggle("Show translation", () -> ModSettings.lyricTranslate, v -> ModSettings.lyricTranslate = v),
+                new Setting.Shown(
+                    () -> ModSettings.lyricTranslate,
+                    new Setting.Choice(
+                        "Translate to", LyricTranslator.LANGUAGE_NAMES, () -> ModSettings.lyricTranslateLanguage, v -> ModSettings.lyricTranslateLanguage = v
+                    )
+                ),
+                new Setting.Shown(() -> ModSettings.lyricTranslate, new Setting.Info(() -> "Lyrics are sent to MyMemory (free, daily limit).")),
                 new Setting.Header("Timing"),
                 new Setting.Slide(
                     "Sync offset (ms)", -2000.0F, 2000.0F, 50.0F, 0.0, () -> ModSettings.lyricOffsetMs, v -> ModSettings.lyricOffsetMs = (int)Math.round(v)

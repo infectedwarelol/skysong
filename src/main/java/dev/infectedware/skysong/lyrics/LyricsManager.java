@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.SkysongClient;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -26,6 +27,7 @@ public class LyricsManager {
     private static final Pattern LRC_OFFSET = Pattern.compile("\\[offset:([+-]?\\d+)\\]", 2);
     private volatile List<LyricsManager.LyricLine> currentLyrics = List.of();
     private volatile String currentTrackKey = "";
+    private volatile String translationKey = "";
 
     public void fetchLyrics(String trackName, String artistName, long durationMs) {
         String key = trackName + "\u0000" + artistName;
@@ -244,6 +246,30 @@ public class LyricsManager {
         }
 
         return out;
+    }
+
+    public void tickTranslation() {
+        if (!ModSettings.lyricTranslate) {
+            this.translationKey = "";
+            return;
+        }
+
+        List<LyricsManager.LyricLine> lines = this.currentLyrics;
+        if (lines.isEmpty()) {
+            return;
+        }
+
+        String code = LyricTranslator.languageCode(ModSettings.lyricTranslateLanguage);
+        String key = this.currentTrackKey + "\u0000" + code;
+        if (!key.equals(this.translationKey)) {
+            this.translationKey = key;
+
+            for (LyricsManager.LyricLine line : lines) {
+                line.translation = null;
+            }
+
+            LyricTranslator.translateAsync(lines, code, () -> key.equals(this.translationKey) && ModSettings.lyricTranslate);
+        }
     }
 
     public List<LyricsManager.LyricLine> lines() {
