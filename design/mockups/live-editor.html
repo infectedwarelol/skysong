@@ -1,0 +1,147 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Skysong Live editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root{--a:#8a7dff;--b:#ff4fa3;--ink:#f4f5fb;--dim:#9aa0b8;--glass:rgba(16,18,28,.74);--line:rgba(255,255,255,.1);--hl:rgba(138,125,255,.22)}
+*{box-sizing:border-box;margin:0;padding:0;border-radius:0!important}
+body{width:1600px;height:960px;font-family:Montserrat,sans-serif;color:var(--ink);overflow:hidden;
+background:linear-gradient(180deg,#2c4f8c 0%,#7ea3d4 46%,#5f7f3f 47%,#425c2a 70%,#2f2419 100%)}
+.shade{position:absolute;inset:0;background:rgba(6,8,14,.5);backdrop-filter:blur(7px)}
+.wrap{position:absolute;inset:50px 70px;display:flex;flex-direction:column;gap:10px}
+.top{display:flex;align-items:center;gap:14px;padding:10px 14px}
+.brand{font-family:Silkscreen;font-size:18px;letter-spacing:2px;display:flex;align-items:center;gap:10px}
+.cube{width:16px;height:16px;background:linear-gradient(135deg,var(--a),var(--b))}
+.crumb{color:var(--dim);font-size:12px}
+.crumb b{color:var(--ink);font-weight:600}
+.search{margin-left:auto;width:300px;display:flex;gap:8px;align-items:center;padding:8px 10px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:12px;color:var(--dim)}
+.key{font-size:10px;padding:3px 6px;border:1px solid var(--line);color:var(--dim)}
+.now{display:flex;align-items:center;gap:10px;padding-left:14px;border-left:1px solid var(--line);font-size:11.5px}
+.art{width:30px;height:30px;background:conic-gradient(from 200deg,#3a1c71,#d76d77,#ffaf7b,#3a1c71)}
+.ctr{display:flex;gap:8px;margin-left:6px}
+.ctr span{width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.panel{background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(16px);box-shadow:0 12px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.05)}
+.body{flex:1;display:flex;gap:10px;min-height:0}
+.list{width:230px;padding:12px 10px;display:flex;flex-direction:column;gap:2px;font-size:12.5px}
+.list h4{font-size:10px;letter-spacing:2px;color:var(--dim);margin:12px 6px 6px}
+.list h4:first-child{margin-top:2px}
+.item{display:flex;align-items:center;gap:10px;padding:8px 8px;border-left:2px solid transparent}
+.item.act{background:var(--hl);border-left-color:var(--a)}
+.item .ic{width:30px;height:30px;display:grid;place-items:center;background:rgba(255,255,255,.06);border:1px solid var(--line);color:#cfd3e6}
+.item .ic img{width:18px;height:18px;display:block;image-rendering:pixelated}
+.item.act .ic{background:linear-gradient(135deg,var(--a),var(--b));border-color:transparent;color:#fff}
+.item .nm{flex:1}
+.item .ar{color:var(--dim)}
+.tog{width:30px;height:16px;background:rgba(255,255,255,.12);border:1px solid var(--line);position:relative;flex:none}
+.tog::after{content:"";position:absolute;top:2px;left:2px;width:10px;height:10px;background:#c7cbdc}
+.tog.on{background:linear-gradient(90deg,var(--a),var(--b));border-color:transparent}
+.tog.on::after{left:16px;background:#fff}
+.preview{flex:1;position:relative;overflow:hidden;border:1px solid var(--line);
+background:linear-gradient(180deg,#0f1630 0%,#2a3f78 40%,#6d8fc9 62%,#5d7a3d 63%,#3a4e25 100%)}
+.stars{position:absolute;inset:0 0 40% 0;background-image:radial-gradient(1.5px 1.5px at 12% 20%,#fff,transparent),radial-gradient(1px 1px at 30% 12%,#fff,transparent),radial-gradient(1.5px 1.5px at 66% 18%,#e4e0ff,transparent),radial-gradient(1px 1px at 82% 30%,#fff,transparent),radial-gradient(1px 1px at 48% 34%,#fff,transparent),radial-gradient(1.5px 1.5px at 90% 10%,#ffd6ec,transparent),radial-gradient(1px 1px at 5% 40%,#fff,transparent)}
+.bar{position:absolute;left:0;right:0;top:0;display:flex;gap:8px;padding:10px;align-items:center}
+.tag{font-size:10.5px;padding:4px 8px;background:rgba(0,0,0,.35);border:1px solid var(--line)}
+.tag.live{display:flex;gap:6px;align-items:center}
+.tag.live::before{content:"";width:7px;height:7px;background:#ff4f6d;box-shadow:0 0 8px #ff4f6d}
+.bar .r{margin-left:auto;display:flex;gap:6px}
+.word{position:absolute;font-weight:800;font-size:44px;letter-spacing:1px;text-shadow:0 0 22px rgba(201,194,255,.95),0 0 4px rgba(255,255,255,.6),0 3px 0 rgba(0,0,0,.35)}
+.tr{position:absolute;left:0;right:0;top:46%;text-align:center;font-size:15px;color:#e2e6f8;opacity:.85;text-shadow:0 2px 8px rgba(0,0,0,.5)}
+.time{position:absolute;left:14px;right:14px;bottom:14px;display:flex;align-items:center;gap:10px;font-size:11px;color:#dfe3f2}
+.track{flex:1;height:5px;background:rgba(255,255,255,.18);position:relative}
+.track i{position:absolute;left:0;top:0;bottom:0;width:46%;background:linear-gradient(90deg,var(--a),var(--b))}
+.track b{position:absolute;left:46%;top:-4px;width:6px;height:13px;background:#fff;transform:translateX(-3px)}
+.insp{width:300px;padding:14px;display:flex;flex-direction:column;gap:14px;font-size:12px;overflow:hidden}
+.insp .hd{display:flex;align-items:center;justify-content:space-between}
+.insp .hd h3{font-size:15px}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs span{padding:7px 10px;font-size:11px;color:var(--dim);border-bottom:2px solid transparent}
+.tabs span.on{color:#fff;border-bottom-color:var(--a)}
+.f{display:flex;flex-direction:column;gap:6px}
+.f label{font-size:10.5px;color:var(--dim);display:flex;justify-content:space-between}
+.f label em{font-style:normal;color:var(--ink)}
+.seg{display:flex;border:1px solid var(--line)}
+.seg span{flex:1;text-align:center;padding:6px 0;font-size:11px;color:var(--dim);border-right:1px solid var(--line)}
+.seg span:last-child{border-right:0}
+.seg span.on{background:rgba(138,125,255,.3);color:#fff}
+.sw{display:flex;gap:6px}
+.sw i{width:26px;height:26px;display:block;border:1px solid var(--line)}
+.sw i.sel{outline:2px solid #fff;outline-offset:2px}
+.sl{height:6px;background:rgba(255,255,255,.12);position:relative;margin:4px 0}
+.sl i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--a),var(--b))}
+.sl b{position:absolute;top:-4px;width:8px;height:14px;background:#fff;transform:translateX(-4px)}
+.rowt{display:flex;justify-content:space-between;align-items:center;font-size:11.5px}
+.btns{margin-top:auto;display:flex;gap:8px}
+.btn{flex:1;text-align:center;padding:9px 0;font-size:11.5px;border:1px solid var(--line);background:rgba(255,255,255,.05)}
+.btn.p{background:linear-gradient(90deg,var(--a),var(--b));border-color:transparent;font-weight:600}
+.i{width:1em;height:1em;display:inline-block;vertical-align:-0.15em}
+.foot{display:flex;gap:16px;padding:8px 14px;font-size:10.5px;color:var(--dim)}
+.foot b{color:var(--ink);font-weight:600}
+</style>
+</head>
+<body>
+<div class="shade"></div>
+<div class="wrap">
+  <div class="panel top">
+    <div class="brand"><div class="cube"></div>SKYSONG</div>
+    <div class="crumb">Visuals / <b>Lyrics Text</b></div>
+    <div class="search"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-5-5"/></svg>Search modules and settings<span class="key" style="margin-left:auto">CTRL F</span></div>
+    <div class="now"><div class="art"></div><div><b>Midnight City</b><div style="color:var(--dim);font-size:10.5px">M83</div></div>
+      <div class="ctr">
+        <span><svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></span>
+        <span><svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></span>
+        <span><svg class="i" viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></span>
+        <span><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/></svg></span>
+      </div></div>
+  </div>
+
+  <div class="body">
+    <div class="panel list">
+      <h4>VISUALS</h4>
+      <div class="item act"><div class="ic"><img src="items/music_disc_cat.png"></div><div class="nm">Lyrics Text</div><div class="tog on"></div></div>
+      <div class="item"><div class="ic"><img src="items/spyglass.png"></div><div class="nm">HUD Lyrics</div><div class="tog"></div></div>
+      <div class="item"><div class="ic"><img src="items/name_tag.png"></div><div class="nm">Name Tags</div><div class="tog"></div></div>
+      <div class="item"><div class="ic"><img src="items/blaze_powder.png"></div><div class="nm">Shader Hands</div><div class="tog"></div></div>
+      <div class="item"><div class="ic"><img src="items/netherite_sword.png"></div><div class="nm">Kill Effects</div><div class="tog on"></div></div>
+      <div class="item"><div class="ic"><img src="items/nether_star.png"></div><div class="nm">World Shader</div><div class="tog on"></div></div>
+      <h4>DISPLAY</h4>
+      <div class="item"><div class="ic"><img src="items/music_disc_pigstep.png"></div><div class="nm">Now Playing</div><div class="tog"></div></div>
+      <div class="item"><div class="ic"><img src="items/painting.png"></div><div class="nm">Interface</div><div class="ar">›</div></div>
+      <h4>UTILS</h4>
+      <div class="item"><div class="ic"><img src="items/goat_horn.png"></div><div class="nm">Spotify</div><div class="ar">›</div></div>
+      <div class="item"><div class="ic"><img src="items/comparator.png"></div><div class="nm">Config</div><div class="ar">›</div></div>
+    </div>
+
+    <div class="preview"><div class="stars"></div>
+      <div class="bar"><span class="tag live">LIVE PREVIEW</span><span class="tag">Sky · Arc · Constellation off</span>
+        <div class="r"><span class="tag">1st person</span><span class="tag">Night</span><span class="tag">Reset view</span></div></div>
+      <div class="word" style="left:20%;top:26%;color:#d6d0ff;transform:rotate(-5deg)">WAITING</div>
+      <div class="word" style="left:43%;top:18%;color:#e9c8ff">IN</div>
+      <div class="word" style="left:52%;top:22%;color:#ffc4e1;transform:rotate(3deg)">A</div>
+      <div class="word" style="left:60%;top:27%;color:#ffb0d6;transform:rotate(6deg)">CAR</div>
+      <div class="tr">en attendant dans une voiture</div>
+      <div class="time">1:52<div class="track"><i></i><b></b></div>4:03</div>
+    </div>
+
+    <div class="panel insp">
+      <div class="hd"><h3>Lyrics Text</h3><div class="tog on"></div></div>
+      <div class="tabs"><span class="on">Style</span><span>Effects</span><span>Sky</span><span>Timing</span></div>
+      <div class="f"><label>Layout</label><div class="seg"><span>Scatter</span><span>Center</span><span class="on">Sky</span></div></div>
+      <div class="f"><label>Font</label><div class="seg"><span>Minecraft</span><span class="on">Exo</span><span>Aquire</span><span>File</span></div></div>
+      <div class="f"><label>Text color</label><div class="seg"><span>White</span><span class="on">Gradient</span><span>Rainbow</span><span>Album</span></div></div>
+      <div class="f"><label>Colors</label><div class="sw"><i class="sel" style="background:#c9c2ff"></i><i style="background:#ffb3d6"></i><i style="background:#9b5cff"></i><i style="background:#5fd4ff"></i><i style="background:#ffffff"></i><i style="background:transparent;display:grid;place-items:center;color:var(--dim);font-size:14px">+</i></div></div>
+      <div class="f"><label>Line size <em>0.17</em></label><div class="sl"><i style="width:30%"></i><b style="left:30%"></b></div></div>
+      <div class="f"><label>Glow <em>100%</em></label><div class="sl"><i style="width:100%"></i><b style="left:100%"></b></div></div>
+      <div class="f"><label>Outline <em>0%</em></label><div class="sl"><i style="width:0%"></i><b style="left:0%"></b></div></div>
+      <div class="rowt">Uppercase<div class="tog on"></div></div>
+      <div class="rowt">Highlight sung word<div class="tog on"></div></div>
+      <div class="rowt">Show translation<div class="tog on"></div></div>
+      <div class="btns"><div class="btn">Reset</div><div class="btn p">Save as theme</div></div>
+    </div>
+  </div>
+
+  <div class="panel foot"><span><b>Right Shift</b> close</span><span><b>Ctrl F</b> search</span><span><b>Drag</b> in preview to look around</span><span style="margin-left:auto">Changes apply live</span></div>
+</div>
+</body>
+</html>
