@@ -72,6 +72,7 @@ public final class ModSettings {
     public static float lyricSkyDistance = 40.0F;
     public static float lyricSkyAngle = 35.0F;
     public static float lyricSkyScale = 1.0F;
+    public static boolean lyricRealTiming = true;
     public static int lyricShowMode = 0;
     public static int lyricLayout = 0;
     public static int lyricFont = 0;

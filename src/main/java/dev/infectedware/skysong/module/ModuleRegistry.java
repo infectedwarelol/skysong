@@ -78,6 +78,8 @@ public final class ModuleRegistry {
                     "Sync offset (ms)", -2000.0F, 2000.0F, 50.0F, 0.0, () -> ModSettings.lyricOffsetMs, v -> ModSettings.lyricOffsetMs = (int)Math.round(v)
                 ),
                 new Setting.Info(() -> "+ earlier, - later"),
+                new Setting.Toggle("Real word timing", () -> ModSettings.lyricRealTiming, v -> ModSettings.lyricRealTiming = v),
+                new Setting.Info(() -> "Uses word timestamps when the lyrics have them."),
                 new Setting.Header("Position"),
                 new Setting.Shown(
                     () -> ModSettings.lyricLayout != ModSettings.LAYOUT_SKY,

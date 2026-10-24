@@ -22,7 +22,7 @@ public class LyricsManager {
     private static final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5L)).build();
     private static final String API = "https://lrclib.net/api/";
     private static final Pattern LRC_STAMP = Pattern.compile("\\[(\\d{1,3}):(\\d{2})(?:[.:](\\d{1,3}))?\\]");
-    private static final Pattern WORD_STAMP = Pattern.compile("<\\d{1,3}:\\d{2}(?:[.:]\\d{1,3})?>");
+    private static final Pattern WORD_STAMP = Pattern.compile("<(\\d{1,3}):(\\d{2})(?:[.:](\\d{1,3}))?>");
     private static final Pattern LRC_OFFSET = Pattern.compile("\\[offset:([+-]?\\d+)\\]", 2);
     private volatile List<LyricsManager.LyricLine> currentLyrics = List.of();
     private volatile String currentTrackKey = "";
@@ -154,6 +154,7 @@ public class LyricsManager {
         long offset = offsetTag.find() ? Long.parseLong(offsetTag.group(1)) : 0L;
         List<long[]> stamps = new ArrayList<>();
         List<String> texts = new ArrayList<>();
+        List<long[]> wordTimes = new ArrayList<>();
 
         for (String raw : lrc.split("\n")) {
             String line = raw.trim();
@@ -162,15 +163,13 @@ public class LyricsManager {
 
             int pos;
             for (pos = 0; m.find() && m.start() == pos; pos = m.end()) {
-                long min = Long.parseLong(m.group(1));
-                long sec = Long.parseLong(m.group(2));
-                String frac = m.group(3);
-                long ms = frac == null ? 0L : Long.parseLong(frac) * (frac.length() == 1 ? 100 : (frac.length() == 2 ? 10 : 1));
-                lineTimes.add(Math.max(0L, min * 60000L + sec * 1000L + ms - offset));
+                lineTimes.add(Math.max(0L, stampMs(m.group(1), m.group(2), m.group(3)) - offset));
             }
 
             if (!lineTimes.isEmpty()) {
-                texts.add(WORD_STAMP.matcher(line.substring(pos)).replaceAll("").replaceAll("\\s+", " ").trim());
+                String body = line.substring(pos);
+                texts.add(WORD_STAMP.matcher(body).replaceAll("").replaceAll("\\s+", " ").trim());
+                wordTimes.add(lineTimes.size() == 1 ? parseWordTimes(body, offset) : null);
 
                 for (long t : lineTimes) {
                     stamps.add(new long[]{t, texts.size() - 1});
@@ -187,12 +186,68 @@ public class LyricsManager {
                 long time = stamps.get(i)[0];
                 long end = i + 1 < stamps.size() ? stamps.get(i + 1)[0] : time + 5000L;
                 if (end > time) {
-                    parsed.add(new LyricsManager.LyricLine(time, end, text));
+                    LyricsManager.LyricLine parsedLine = new LyricsManager.LyricLine(time, end, text);
+                    parsedLine.wordTimes = wordTimes.get((int)stamps.get(i)[1]);
+                    parsed.add(parsedLine);
                 }
             }
         }
 
         return parsed;
+    }
+
+    private static long stampMs(String minutes, String seconds, String fraction) {
+        long ms = fraction == null ? 0L : Long.parseLong(fraction) * (fraction.length() == 1 ? 100 : (fraction.length() == 2 ? 10 : 1));
+        return Long.parseLong(minutes) * 60000L + Long.parseLong(seconds) * 1000L + ms;
+    }
+
+    static long[] parseWordTimes(String body, long offset) {
+        Matcher stamp = WORD_STAMP.matcher(body);
+        List<Long> times = new ArrayList<>();
+        long segmentTime = -1L;
+        int segmentStart = 0;
+        boolean any = false;
+
+        while (true) {
+            boolean found = stamp.find();
+            int segmentEnd = found ? stamp.start() : body.length();
+            String segment = body.substring(segmentStart, segmentEnd).trim();
+            if (!segment.isEmpty()) {
+                if (segmentTime < 0L) {
+                    return null;
+                }
+
+                for (String word : segment.split("\\s+")) {
+                    if (!word.isEmpty()) {
+                        times.add(segmentTime);
+                    }
+                }
+            }
+
+            if (!found) {
+                break;
+            }
+
+            any = true;
+            segmentTime = Math.max(0L, stampMs(stamp.group(1), stamp.group(2), stamp.group(3)) - offset);
+            segmentStart = stamp.end();
+        }
+
+        if (!any || times.isEmpty()) {
+            return null;
+        }
+
+        long[] out = new long[times.size()];
+
+        for (int i = 0; i < out.length; i++) {
+            out[i] = times.get(i);
+        }
+
+        return out;
+    }
+
+    public List<LyricsManager.LyricLine> lines() {
+        return this.currentLyrics;
     }
 
     public LyricsManager.LyricLine getLineAtTime(long timeMs) {
@@ -222,6 +277,8 @@ public class LyricsManager {
         public long timeMs;
         public long endMs;
         public String text;
+        public long[] wordTimes;
+        public volatile String translation;
 
         public LyricLine(long timeMs, long endMs, String text) {
             this.timeMs = timeMs;

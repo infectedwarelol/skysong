@@ -130,7 +130,9 @@ public class WorldTextRenderer {
                     if (words.length != 0 && !words[0].isEmpty()) {
                         long lineStart = now - (progressMs - line.timeMs);
                         long lineLength = line.endMs - line.timeMs;
-                        long[] sungAt = wordTimes(words, lineStart, lineLength);
+                        long[] sungAt = ModSettings.lyricRealTiming && line.wordTimes != null && line.wordTimes.length == words.length
+                            ? realWordTimes(line.wordTimes, now, progressMs)
+                            : wordTimes(words, lineStart, lineLength);
                         Camera camera = mc.gameRenderer.getMainCamera();
                         Vec3 eye = Compat.camPos(camera);
                         float yaw = Compat.camYaw(camera);
@@ -187,6 +189,16 @@ public class WorldTextRenderer {
                 }
             }
         }
+    }
+
+    static long[] realWordTimes(long[] songTimes, long now, long progressMs) {
+        long[] at = new long[songTimes.length];
+
+        for (int i = 0; i < songTimes.length; i++) {
+            at[i] = now - (progressMs - songTimes[i]) - WORD_LEAD_MS;
+        }
+
+        return at;
     }
 
     public static long[] wordTimes(String[] words, long lineStart, long lineLength) {
