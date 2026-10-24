@@ -1,0 +1,8 @@
+{
+    "vertex": "skysong:core/fx_text",
+    "fragment": "skysong:core/fx_text",
+    "samplers": [ { "name": "Sampler0" } ],
+    "uniforms": [
+        { "name": "TextMode", "type": "float", "count": 1, "values": [ 0.0 ] }
+    ]
+}

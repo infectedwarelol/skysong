@@ -1,6 +1,0 @@
-{
-    "vertex": "spotify_mod:core/position_color",
-    "fragment": "spotify_mod:core/position_color",
-    "samplers": [],
-    "uniforms": []
-}

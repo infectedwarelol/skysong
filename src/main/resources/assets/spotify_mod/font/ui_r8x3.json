@@ -1,7 +1,0 @@
-{
-  "providers": [
-    {"type": "ttf", "file": "spotify_mod:montserrat-500-latin.ttf", "size": 8.0, "oversample": 3.0, "shift": [0, 0]},
-    {"type": "ttf", "file": "spotify_mod:montserrat-500-cyrillic.ttf", "size": 8.0, "oversample": 3.0, "shift": [0, 0]},
-    {"type": "reference", "id": "minecraft:default"}
-  ]
-}

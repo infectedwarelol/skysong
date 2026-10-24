@@ -1,6 +1,0 @@
-{
-    "vertex": "spotify_mod:core/position_tex",
-    "fragment": "spotify_mod:core/position_tex",
-    "samplers": [ { "name": "Sampler0" } ],
-    "uniforms": []
-}

@@ -1,0 +1,77 @@
+{
+  "ui.open": {
+    "sounds": [
+      "skysong:ui/open-gui"
+    ]
+  },
+  "ui.close": {
+    "sounds": [
+      "skysong:ui/close-gui"
+    ]
+  },
+  "ui.select_category": {
+    "sounds": [
+      "skysong:ui/select-category"
+    ]
+  },
+  "ui.slider": {
+    "sounds": [
+      "skysong:ui/slider"
+    ]
+  },
+  "ui.search_typing": {
+    "sounds": [
+      "skysong:ui/searchtyping"
+    ]
+  },
+  "ui.settings_open": {
+    "sounds": [
+      "skysong:ui/settings-open"
+    ]
+  },
+  "ui.settings_close": {
+    "sounds": [
+      "skysong:ui/settings-close"
+    ]
+  },
+  "ui.module_settings_open": {
+    "sounds": [
+      "skysong:ui/module_settings_open"
+    ]
+  },
+  "ui.module_settings_close": {
+    "sounds": [
+      "skysong:ui/module_settings_close"
+    ]
+  },
+  "ui.switch_left": {
+    "sounds": [
+      "skysong:ui/switch-left"
+    ]
+  },
+  "ui.switch_right": {
+    "sounds": [
+      "skysong:ui/switch-right"
+    ]
+  },
+  "ui.button": {
+    "sounds": [
+      "skysong:ui/buttonclick"
+    ]
+  },
+  "ui.no_settings": {
+    "sounds": [
+      "skysong:ui/no-settings"
+    ]
+  },
+  "ui.module_on": {
+    "sounds": [
+      "skysong:ui/module_on"
+    ]
+  },
+  "ui.module_off": {
+    "sounds": [
+      "skysong:ui/module_off"
+    ]
+  }
+}

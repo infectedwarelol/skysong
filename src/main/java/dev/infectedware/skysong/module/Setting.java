@@ -1,0 +1,116 @@
+package dev.infectedware.skysong.module;
+
+import java.util.Locale;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+import java.util.function.Supplier;
+
+public sealed interface Setting
+    permits Setting.Header,
+    Setting.Choice,
+    Setting.Multi,
+    Setting.Slide,
+    Setting.Toggle,
+    Setting.Action,
+    Setting.Info,
+    Setting.ColorPick,
+    Setting.Input,
+    Setting.KeyPick,
+    Setting.ListRow,
+    Setting.Shown {
+    static Setting unwrap(Setting s) {
+        while (s instanceof Setting.Shown) {
+            Setting.Shown shown = (Setting.Shown)s;
+            s = shown.setting();
+        }
+
+        return s;
+    }
+
+    static boolean visible(Setting s) {
+        while (s instanceof Setting.Shown) {
+            Setting.Shown shown = (Setting.Shown)s;
+            if (!shown.when().getAsBoolean()) {
+                return false;
+            }
+
+            s = shown.setting();
+        }
+
+        return true;
+    }
+
+    record Action(String label, Runnable run) implements Setting {
+    }
+
+    record Choice(String label, String[] options, IntSupplier get, IntConsumer set) implements Setting {
+    }
+
+    record ColorPick(String label, IntSupplier get, IntConsumer set) implements Setting {
+    }
+
+    record Header(String title) implements Setting {
+    }
+
+    record Info(Supplier<String> text) implements Setting {
+    }
+
+    record Input(String placeholder, String button, Consumer<String> submit) implements Setting {
+    }
+
+    record KeyPick(String label, IntSupplier get, IntConsumer set) implements Setting {
+    }
+
+    record ListRow(String label, BooleanSupplier active, Runnable click, Runnable remove) implements Setting {
+    }
+
+    record Multi(String label, String[] options, IntSupplier mask, IntConsumer set) implements Setting {
+    }
+
+    record Shown(BooleanSupplier when, Setting setting) implements Setting {
+    }
+
+    record Slide(String label, float min, float max, float step, double resetTo, DoubleSupplier get, DoubleConsumer set) implements Setting {
+        public Slide(String label, float min, float max, float step, DoubleSupplier get, DoubleConsumer set) {
+            this(label, min, max, step, get.getAsDouble(), get, set);
+        }
+
+        public float fraction() {
+            return (float)Math.max(0.0, Math.min(1.0, (this.get.getAsDouble() - this.min) / (this.max - this.min)));
+        }
+
+        public void setFraction(float f) {
+            double v = this.min + Math.max(0.0F, Math.min(1.0F, f)) * (this.max - this.min);
+            if (this.step > 0.0F) {
+                v = (float)Math.round(v / this.step) * this.step;
+            }
+
+            this.set.accept(Math.max(this.min, Math.min(this.max, v)));
+        }
+
+        public String text() {
+            double v = this.get.getAsDouble();
+            if (this.step >= 1.0F) {
+                return String.format(Locale.ROOT, "%.0f", v);
+            }
+
+            int decimals = 1;
+            if (this.step <= 0.0F) {
+                decimals = 2;
+            } else {
+                while (decimals < 3 && Math.abs(this.step * Math.pow(10.0, decimals) - Math.round(this.step * Math.pow(10.0, decimals))) > 1.0E-4) {
+                    decimals++;
+                }
+            }
+
+            return String.format(Locale.ROOT, "%." + decimals + "f", v);
+        }
+    }
+
+    record Toggle(String label, BooleanSupplier get, Consumer<Boolean> set) implements Setting {
+    }
+}

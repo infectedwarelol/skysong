@@ -1,0 +1,63 @@
+{
+    "vertex": "skysong:core/fx_quad",
+    "fragment": "skysong:core/fx_sky_aurora",
+    "samplers": [],
+    "uniforms": [
+        {
+            "name": "InvViewProj",
+            "type": "matrix4x4",
+            "count": 16,
+            "values": [
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ]
+        },
+        {
+            "name": "Misc",
+            "type": "float",
+            "count": 4,
+            "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "name": "SkyCol",
+            "type": "float",
+            "count": 4,
+            "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "name": "SkyCol2",
+            "type": "float",
+            "count": 4,
+            "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        }
+    ]
+}

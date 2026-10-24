@@ -1,0 +1,28 @@
+{
+    "vertex": "skysong:core/fx_quad",
+    "fragment": "skysong:core/fx_mask",
+    "samplers": [
+        {
+            "name": "Sampler0"
+        },
+        {
+            "name": "Sampler1"
+        },
+        {
+            "name": "Sampler2"
+        }
+    ],
+    "uniforms": [
+        {
+            "name": "Flags",
+            "type": "float",
+            "count": 4,
+            "values": [
+                0.0,
+                0.0,
+                0.0,
+                0.0
+            ]
+        }
+    ]
+}

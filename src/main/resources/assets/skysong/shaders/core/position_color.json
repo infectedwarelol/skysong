@@ -1,0 +1,6 @@
+{
+    "vertex": "skysong:core/position_color",
+    "fragment": "skysong:core/position_color",
+    "samplers": [],
+    "uniforms": []
+}

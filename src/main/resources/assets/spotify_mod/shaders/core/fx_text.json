@@ -1,8 +1,0 @@
-{
-    "vertex": "spotify_mod:core/fx_text",
-    "fragment": "spotify_mod:core/fx_text",
-    "samplers": [ { "name": "Sampler0" } ],
-    "uniforms": [
-        { "name": "TextMode", "type": "float", "count": 1, "values": [ 0.0 ] }
-    ]
-}

@@ -1,0 +1,6 @@
+{
+    "vertex": "skysong:core/position_tex",
+    "fragment": "skysong:core/position_tex",
+    "samplers": [ { "name": "Sampler0" } ],
+    "uniforms": []
+}

@@ -1,27 +1,31 @@
 {
   "schemaVersion": 1,
-  "id": "spotify_mod",
+  "id": "skysong",
   "version": "${version}",
-  "name": "Versefall",
-  "description": "Lyrics that fall into your world: the song you play on Spotify floats around you as 3D lyrics, with a glass HUD and shader visuals.",
+  "name": "Skysong",
+  "description": "Sing along in your world: the song you play on Spotify floats around you or across the sky as 3D lyrics, with custom colors and fonts, a glass HUD and shader visuals. Based on Versefall by VerseFall-Development.",
   "authors": [
-    "VerseFall-Development"
+    "infectedwarelol"
   ],
   "contributors": [
+    "infectedwarelol",
+    "VerseFall-Development",
     "LIMTDD",
     "PoppedByKid",
     "OkaySleepyX"
   ],
   "contact": {
-    "repo": "https://github.com/example/spotify-mod"
+    "homepage": "https://github.com/infectedwarelol/skysong",
+    "sources": "https://github.com/infectedwarelol/skysong",
+    "issues": "https://github.com/infectedwarelol/skysong/issues"
   },
   "license": "MIT",
-  "icon": "assets/spotify_mod/icon.png",
+  "icon": "assets/skysong/icon.png",
   "environment": "client",
-  "accessWidener": "spotify_mod.accesswidener",
+  "accessWidener": "skysong.accesswidener",
   "entrypoints": {
     "client": [
-      "com.spotifyclient.SpotifyModClient"
+      "dev.infectedware.skysong.SkysongClient"
     ]
   },
   "depends": {
@@ -31,6 +35,6 @@
     "fabric-api": "*"
   },
   "mixins": [
-    "spotify_mod.mixins.json"
+    "skysong.mixins.json"
   ]
 }
