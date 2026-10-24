@@ -56,7 +56,8 @@ public final class ModSettings {
     public static final int LYRIC_COLOR_CUSTOM = 2;
     public static final int LYRIC_COLOR_GRADIENT = 3;
     public static final int LYRIC_COLOR_RAINBOW = 4;
-    public static final String[] LYRIC_COLOR_NAMES = new String[]{"White", "Client", "Custom", "Gradient", "Rainbow"};
+    public static final int LYRIC_COLOR_ALBUM = 5;
+    public static final String[] LYRIC_COLOR_NAMES = new String[]{"White", "Client", "Custom", "Gradient", "Rainbow", "Album art"};
     public static final int LYRIC_GLOW_DEFAULT = 0;
     public static final int LYRIC_GLOW_MATCH = 1;
     public static final int LYRIC_GLOW_CUSTOM = 2;

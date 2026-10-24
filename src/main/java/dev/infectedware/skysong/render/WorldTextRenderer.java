@@ -3,6 +3,8 @@ package dev.infectedware.skysong.render;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.infectedware.skysong.ModSettings;
+import dev.infectedware.skysong.SkysongClient;
+import dev.infectedware.skysong.SpotifyManager;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Gpu;
 import dev.infectedware.skysong.compat.Ids;
@@ -791,8 +793,18 @@ public class WorldTextRenderer {
             case ModSettings.LYRIC_COLOR_CUSTOM -> ModSettings.lyricColor & 16777215;
             case ModSettings.LYRIC_COLOR_GRADIENT -> Colors.mixRgb(ModSettings.lyricColor, ModSettings.lyricColor2, t);
             case ModSettings.LYRIC_COLOR_RAINBOW -> rainbow(t, now);
+            case ModSettings.LYRIC_COLOR_ALBUM -> albumColor(t);
             default -> 16777215;
         };
+    }
+
+    private static int albumColor(float t) {
+        SpotifyManager spotify = SkysongClient.getSpotifyManager();
+        if (spotify == null || !spotify.hasAlbumPalette()) {
+            return 16777215;
+        }
+
+        return Colors.mixRgb(spotify.getSongColor(), spotify.getSecondaryColor(), t);
     }
 
     private static int rainbow(float offset, long now) {

@@ -9,6 +9,7 @@ import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Ids;
 import dev.infectedware.skysong.media.LocalMediaSource;
 import dev.infectedware.skysong.media.WindowsMediaReader;
+import dev.infectedware.skysong.theme.AlbumPalette;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -61,6 +62,8 @@ public class SpotifyManager {
     private boolean isPlaying = false;
     private int primaryColor = -14829228;
     private int secondaryColor = -15133676;
+    private volatile boolean hasAlbumPalette = false;
+    private String paletteTrack = "";
     private final HttpClient httpClient;
     private volatile String codeVerifier = null;
     private final AtomicBoolean exchanging = new AtomicBoolean(false);
@@ -615,6 +618,10 @@ public class SpotifyManager {
                         }
 
                         buffered = downscale(buffered, 128);
+                        int[] palette = AlbumPalette.extract(buffered);
+                        this.primaryColor = palette[0];
+                        this.secondaryColor = palette[1];
+                        this.hasAlbumPalette = true;
                         int w = buffered.getWidth();
                         int h = buffered.getHeight();
                         NativeImage image = new NativeImage(Format.RGBA, w, h, false);
@@ -697,8 +704,16 @@ public class SpotifyManager {
         return this.secondaryColor;
     }
 
+    public boolean hasAlbumPalette() {
+        return this.hasAlbumPalette;
+    }
+
     private void extractPaletteFromImage(String trackId) {
-        int[] colors = new int[]{-43213, -13369513, -13412353, -52235, -655565};
-        this.primaryColor = colors[Math.abs(this.currentTrackName.hashCode()) % colors.length];
+        if (!trackId.equals(this.paletteTrack)) {
+            this.paletteTrack = trackId;
+            this.hasAlbumPalette = false;
+            int[] colors = new int[]{-43213, -13369513, -13412353, -52235, -655565};
+            this.primaryColor = colors[Math.abs(trackId.hashCode()) % colors.length];
+        }
     }
 }
