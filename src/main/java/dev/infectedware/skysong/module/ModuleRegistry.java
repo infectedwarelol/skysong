@@ -52,6 +52,11 @@ public final class ModuleRegistry {
                 new Setting.Slide("Outline", 0.0F, 1.0F, 0.01F, 0.0, () -> ModSettings.lyricOutline, v -> ModSettings.lyricOutline = (float)v),
                 new Setting.Slide("Bounce", 0.0F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricBounce, v -> ModSettings.lyricBounce = (float)v),
                 new Setting.Toggle("Flicker effect", () -> ModSettings.lyricFlicker, v -> ModSettings.lyricFlicker = v),
+                new Setting.Header("Word effects"),
+                new Setting.Choice("Effect", ModSettings.LYRIC_EFFECT_NAMES, () -> ModSettings.lyricEffect, v -> ModSettings.lyricEffect = v),
+                new Setting.Toggle("Shake loud words", () -> ModSettings.lyricShakeEmphasis, v -> ModSettings.lyricShakeEmphasis = v),
+                new Setting.Info(() -> "Loud words: ALL CAPS or ending with !"),
+                new Setting.Choice("Particles", ModSettings.LYRIC_PARTICLE_NAMES, () -> ModSettings.lyricParticles, v -> ModSettings.lyricParticles = v),
                 new Setting.Header("Pulse"),
                 new Setting.Choice("Pulse to", ModSettings.LYRIC_PULSE_NAMES, () -> ModSettings.lyricPulseMode, v -> ModSettings.lyricPulseMode = v),
                 new Setting.Shown(
