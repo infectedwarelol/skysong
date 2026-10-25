@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.media;
 
+import java.util.concurrent.TimeUnit;
 import dev.infectedware.skysong.SkysongClient;
 
 public final class LocalMediaSource {
@@ -82,14 +83,14 @@ public final class LocalMediaSource {
                 if (!reader.open()) {
                     this.latest = null;
                     this.active = null;
-                    Thread.sleep(RETRY_MS);
+                    TimeUnit.MILLISECONDS.sleep(RETRY_MS);
                 } else {
                     this.active = reader;
 
                     try {
                         while (this.running) {
                             this.latest = reader.read();
-                            Thread.sleep(POLL_MS);
+                            TimeUnit.MILLISECONDS.sleep(POLL_MS);
                         }
                     } catch (InterruptedException e) {
                         throw e;
@@ -102,7 +103,7 @@ public final class LocalMediaSource {
                         this.latest = null;
                         this.active = null;
                         reader.close();
-                        Thread.sleep(RETRY_MS);
+                        TimeUnit.MILLISECONDS.sleep(RETRY_MS);
                     }
                 }
             }

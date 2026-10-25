@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.media;
 
+import java.util.concurrent.TimeUnit;
 import com.sun.jna.Function;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
@@ -221,7 +222,7 @@ public final class WindowsMediaReader implements MediaReader {
                         return null;
                     }
 
-                    Thread.sleep(5L);
+                    TimeUnit.MILLISECONDS.sleep(5L);
                 }
             } finally {
                 release(info);
