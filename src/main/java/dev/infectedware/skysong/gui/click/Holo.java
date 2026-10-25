@@ -12,20 +12,20 @@ public final class Holo {
     private static final float PUSH = 36.0F;
     private static final float FLY = 260.0F;
     private static final float STAGGER = 0.05F;
-    private static final float SWAY = 0.07F;
     private static final float CORNER = 6.0F;
     private static float viewW = 1.0F;
     private static float viewH = 1.0F;
     private static float scale = 1.0F;
     private static float appear = 1.0F;
-    private static float sway;
+    private static float viewYaw;
+    private static float viewPitch;
     private static float time;
     private static long lastNs = System.nanoTime();
 
     private Holo() {
     }
 
-    static void frame(float vw, float vh, float s, float open, float mouseX) {
+    static void frame(float vw, float vh, float s, float open, float yaw, float pitch) {
         long now = System.nanoTime();
         float dt = Math.min(0.1F, (now - lastNs) / 1.0E9F);
         lastNs = now;
@@ -34,8 +34,8 @@ public final class Holo {
         scale = s;
         appear = open;
         time += dt;
-        float target = (mouseX / viewW - 0.5F) * 2.0F * SWAY;
-        sway = Anim.follow(sway, Math.clamp(target, -SWAY, SWAY), dt, 4.0F);
+        viewYaw = yaw;
+        viewPitch = pitch;
     }
 
     static Matrix4f place(float x, float y, float w, float h, int index, float lift) {
@@ -45,12 +45,12 @@ public final class Holo {
         float radius = eye * RADIUS;
         float ax = x + w / 2.0F;
         float ay = y + h / 2.0F;
-        float theta = (ax - cx) / radius + sway;
+        float theta = (ax - cx) / radius - viewYaw;
         float p = Anim.clamp01(appear * (1.0F + STAGGER * 8.0F) - index * STAGGER);
         float eased = 1.0F - (1.0F - p) * (1.0F - p) * (1.0F - p);
         float bob = (float)Math.sin(time * 1.3F + index * 0.8F) * 1.1F;
         float ox = radius * (float)Math.sin(theta);
-        float oy = ay - cy + bob + lift;
+        float oy = ay - cy + bob + lift - eye * (float)Math.tan(viewPitch);
         float oz = radius * (1.0F - (float)Math.cos(theta)) - PUSH - FLY * (1.0F - eased);
         float rx = (float)Math.cos(theta);
         float rz = (float)Math.sin(theta);
@@ -64,6 +64,11 @@ public final class Holo {
             0.0F, 0.0F, 0.0F, 0.0F,
             px0 + cx * w0, py0 + cy * w0, 0.0F, w0
         );
+    }
+
+    static boolean behind(float x, float w) {
+        float theta = (x + w / 2.0F - viewW / 2.0F) / (viewW * EYE * RADIUS) - viewYaw;
+        return Math.cos(theta) <= 0.25 || Math.abs(viewPitch) >= 1.2F;
     }
 
     static void begin(Matrix4f virtualTransform) {
@@ -98,19 +103,29 @@ public final class Holo {
         return p != null && Ui.inside(p[0], p[1], x, y, w, h) ? p : null;
     }
 
-    static int cyan(float alpha) {
-        return Colors.rgba(92, 230, 255, alpha);
+    static int accent(float alpha) {
+        return Widget.flatFill(alpha);
+    }
+
+    private static int shade(float factor, float alpha) {
+        int rgb = Widget.flatFill(255.0F);
+        int r = Math.round((rgb >> 16 & 0xFF) * factor);
+        int g = Math.round((rgb >> 8 & 0xFF) * factor);
+        int b = Math.round((rgb & 0xFF) * factor);
+        return Colors.rgba(r, g, b, alpha);
     }
 
     static void backing(GuiGraphics c, float x, float y, float w, float h, float a, int index) {
         float flicker = 0.93F + 0.07F * (float)Math.sin(time * 6.0F + index * 1.7F);
         float fa = a * flicker;
-        R2D.rect(c, x, y, w, h, 0.0F, Colors.rgba(8, 34, 46, 175.0F * fa), Colors.rgba(8, 34, 46, 175.0F * fa), Colors.rgba(4, 14, 22, 165.0F * fa), Colors.rgba(4, 14, 22, 165.0F * fa));
-        R2D.outline(c, x, y, w, h, 0.0F, 0.5F, cyan(90.0F * fa));
-        R2D.rect(c, x, y, w, 1.0F, 0.0F, cyan(230.0F * fa));
+        int top = shade(0.16F, 185.0F * fa);
+        int bottom = shade(0.07F, 175.0F * fa);
+        R2D.rect(c, x, y, w, h, 0.0F, top, top, bottom, bottom);
+        R2D.outline(c, x, y, w, h, 0.0F, 0.5F, accent(90.0F * fa));
+        R2D.rect(c, x, y, w, 1.0F, 0.0F, accent(230.0F * fa));
         float sweep = (time * 0.35F + index * 0.23F) % 1.0F;
-        R2D.rect(c, x, y + sweep * h, w, 0.6F, 0.0F, cyan(28.0F * fa));
-        int edge = cyan(220.0F * fa);
+        R2D.rect(c, x, y + sweep * h, w, 0.6F, 0.0F, accent(28.0F * fa));
+        int edge = accent(220.0F * fa);
         R2D.rect(c, x - 1.0F, y + h - CORNER, 1.0F, CORNER + 1.0F, 0.0F, edge);
         R2D.rect(c, x - 1.0F, y + h, CORNER, 1.0F, 0.0F, edge);
         R2D.rect(c, x + w, y + h - CORNER, 1.0F, CORNER + 1.0F, 0.0F, edge);

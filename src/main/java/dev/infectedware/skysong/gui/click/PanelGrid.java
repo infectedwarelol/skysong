@@ -230,6 +230,10 @@ public final class PanelGrid {
     }
 
     private boolean visibleIn(Box b, float[] p) {
+        if (this.holo && Holo.behind(b.x(), b.w())) {
+            return false;
+        }
+
         float top = Math.max(this.y, b.y());
         float bottom = Math.min(this.y + this.height, b.y() + b.h());
         return Ui.inside(p[0], p[1], b.x(), top, b.w(), bottom - top);
@@ -252,7 +256,7 @@ public final class PanelGrid {
             Box b = boxes.get(i);
             float top = Math.max(this.y, b.y());
             float bottom = Math.min(this.y + this.height, b.y() + b.h());
-            if (bottom <= top) {
+            if (bottom <= top || Holo.behind(b.x(), b.w())) {
                 continue;
             }
 
@@ -261,7 +265,7 @@ public final class PanelGrid {
             try {
                 Clip.push(c, b.x() - 2.0F, top - 2.0F, b.x() + b.w() + 2.0F, bottom + 2.0F);
                 Holo.backing(c, b.x(), b.y(), b.w(), b.h(), a, i + 3);
-                R2D.text(c, MsdfFont.Font.SEMIBOLD, b.group().title(), b.x() + 5.0F, b.y() + 4.5F, 6.5F, Holo.cyan(250.0F * a));
+                R2D.text(c, MsdfFont.Font.SEMIBOLD, b.group().title(), b.x() + 5.0F, b.y() + 4.5F, 6.5F, Holo.accent(250.0F * a));
                 for (Slot s : layout.slots()) {
                     if (s.box() == i) {
                         s.widget().render(c, s.x(), s.y(), s.w(), a, m[0], m[1]);
@@ -490,15 +494,15 @@ public final class PanelGrid {
         return false;
     }
 
-    public boolean typing() {
+    public boolean idle() {
         for (Group g : this.groups) {
             for (Widget w : g.widgets()) {
                 if (w.focused()) {
-                    return true;
+                    return false;
                 }
             }
         }
 
-        return false;
+        return true;
     }
 }

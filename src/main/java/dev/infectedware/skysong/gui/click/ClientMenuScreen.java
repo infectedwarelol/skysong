@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.Profiles;
@@ -26,10 +27,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -77,11 +82,15 @@ public class ClientMenuScreen extends VScreen {
     private float my;
     private float rawMx;
     private float rawMy;
+    private float openYaw;
+    private float openPitch;
+    private boolean walking;
 
     private enum View {
         VISUALS("Visuals", Items.ENDER_EYE, Category.VISUALS),
         DISPLAY("Display", Items.PAINTING, Category.DISPLAY),
         UTILS("Utils", Items.COMPARATOR, Category.UTILS),
+        PVP("PvP", Items.IRON_SWORD, Category.PVP),
         THEMES("Themes", Items.GLOW_INK_SAC, null),
         PROFILES("Profiles", Items.WRITABLE_BOOK, null);
 
@@ -129,6 +138,11 @@ public class ClientMenuScreen extends VScreen {
         this.openAnim.forwards(true);
         this.lastNs = System.nanoTime();
         this.menuKeyReleased = InputEvents.isUp(Binds.key(MENU_MODULE));
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (player != null && this.openAnim.linear() <= 0.05F) {
+            this.openYaw = player.getYRot();
+            this.openPitch = player.getXRot();
+        }
         this.openView(this.view);
     }
 
@@ -146,7 +160,46 @@ public class ClientMenuScreen extends VScreen {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        Minecraft mc = Minecraft.getInstance();
+        boolean walk = ModSettings.menu3d && !this.closing && !this.search.isTyping() && this.grid.idle() && !this.bind.isOpen() && mc.player != null;
+        if (walk || this.walking) {
+            for (KeyMapping key : movementKeys(mc)) {
+                InputConstants.Key bound = KeyBindingHelper.getBoundKeyOf(key);
+                key.setDown(walk && bound.getType() == InputConstants.Type.KEYSYM && InputConstants.isKeyDown(mc.getWindow(), bound.getValue()));
+            }
+        }
+
+        this.walking = walk;
+    }
+
+    private static KeyMapping[] movementKeys(Minecraft mc) {
+        return new KeyMapping[]{mc.options.keyUp, mc.options.keyDown, mc.options.keyLeft, mc.options.keyRight, mc.options.keyJump, mc.options.keyShift, mc.options.keySprint};
+    }
+
+    @Override
+    public boolean onDrag(double mouseX, double mouseY, int button, double dx, double dy) {
+        LocalPlayer player = Minecraft.getInstance().player;
+        if (ModSettings.menu3d && button == 1 && player != null) {
+            double gui = Minecraft.getInstance().getWindow().getGuiScale();
+            player.turn(dx * gui * 1.4, dy * gui * 1.4);
+            return true;
+        }
+
+        return super.onDrag(mouseX, mouseY, button, dx, dy);
+    }
+
+    @Override
     public void removed() {
+        if (this.walking) {
+            for (KeyMapping key : movementKeys(Minecraft.getInstance())) {
+                key.setDown(false);
+            }
+
+            this.walking = false;
+        }
+
         Backdrop.release();
         ModConfig.save();
     }
@@ -387,7 +440,7 @@ public class ClientMenuScreen extends VScreen {
 
         try {
             if (ModSettings.menu3d) {
-                R2D.rect(ctx, -5.0F, -5.0F, this.vw() + 10.0F, this.vh() + 10.0F, 0.0F, Colors.rgba(2, 10, 16, 150.0F * a));
+                R2D.rect(ctx, -5.0F, -5.0F, this.vw() + 10.0F, this.vh() + 10.0F, 0.0F, Colors.rgba(0, 0, 0, 45.0F * a));
                 this.drawHolo(ctx, a);
                 if (this.bind.isVisible()) {
                     this.bind.render(ctx, a, this.mx, this.my);
@@ -451,7 +504,7 @@ public class ClientMenuScreen extends VScreen {
         float[][] areas = this.holoAreas(this.tabs());
         for (int i = 0; i < areas.length; i++) {
             float[] r = areas[i];
-            float[] p = Holo.inside(Holo.place(r[0], r[1], r[2], r[3], i, HOLO_LIFT[i]), x, y, r[0] - 3.0F, r[1] - 3.0F, r[2] + 6.0F, r[3] + 6.0F);
+            float[] p = Holo.behind(r[0], r[2]) ? null : Holo.inside(Holo.place(r[0], r[1], r[2], r[3], i, HOLO_LIFT[i]), x, y, r[0] - 3.0F, r[1] - 3.0F, r[2] + 6.0F, r[3] + 6.0F);
             if (p != null) {
                 return p;
             }
@@ -461,11 +514,18 @@ public class ClientMenuScreen extends VScreen {
     }
 
     private void drawHolo(GuiGraphics c, float a) {
-        Holo.frame(this.vw(), this.vh(), this.scale(), a, this.rawMx);
+        LocalPlayer player = Minecraft.getInstance().player;
+        float yaw = player == null ? 0.0F : (float)Math.toRadians(Mth.wrapDegrees(player.getYRot() - this.openYaw));
+        float pitch = player == null ? 0.0F : (float)Math.toRadians(player.getXRot() - this.openPitch);
+        Holo.frame(this.vw(), this.vh(), this.scale(), a, yaw, pitch);
         List<Tab> tabs = this.tabs();
         float[][] areas = this.holoAreas(tabs);
         for (int i = 0; i < areas.length; i++) {
             float[] r = areas[i];
+            if (Holo.behind(r[0], r[2])) {
+                continue;
+            }
+
             Matrix4f t = Holo.place(r[0], r[1], r[2], r[3], i, HOLO_LIFT[i]);
             float[] m = Holo.unproject(t, this.rawMx, this.rawMy);
             this.mx = m == null ? AWAY[0] : m[0];
@@ -505,8 +565,8 @@ public class ClientMenuScreen extends VScreen {
         float y = cy - 6.0F;
         boolean hover = Ui.inside(this.mx, this.my, x, y, TOGGLE_3D_W, 12.0F);
         if (ModSettings.menu3d) {
-            R2D.rect(c, x, y, TOGGLE_3D_W, 12.0F, 0.0F, Holo.cyan((hover ? 120.0F : 80.0F) * a));
-            R2D.outline(c, x, y, TOGGLE_3D_W, 12.0F, 0.0F, 0.6F, Holo.cyan(230.0F * a));
+            R2D.rect(c, x, y, TOGGLE_3D_W, 12.0F, 0.0F, Holo.accent((hover ? 120.0F : 80.0F) * a));
+            R2D.outline(c, x, y, TOGGLE_3D_W, 12.0F, 0.0F, 0.6F, Holo.accent(230.0F * a));
         } else {
             Widget.flatField(c, x, y, TOGGLE_3D_W, 12.0F, a, hover);
         }
@@ -963,7 +1023,7 @@ public class ClientMenuScreen extends VScreen {
             return true;
         }
 
-        if (!this.search.isTyping() && !this.grid.typing() && Character.isLetterOrDigit(chr)) {
+        if (!this.search.isTyping() && this.grid.idle() && Character.isLetterOrDigit(chr)) {
             this.search.focus();
         }
 
