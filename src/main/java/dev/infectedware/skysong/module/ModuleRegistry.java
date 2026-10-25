@@ -1092,8 +1092,9 @@ public final class ModuleRegistry {
         }
 
         s.add(new Setting.Header("Relay"));
-        s.add(new Setting.Info(() -> ModSettings.partyRelayUrl.isBlank() ? "No relay address set" : ModSettings.partyRelayUrl));
-        s.add(new Setting.Input("Relay address…", "Use relay", url -> {
+        s.add(new Setting.Info(() -> ModSettings.partyRelayUrl.isBlank() ? "Built-in Skysong relay" : ModSettings.partyRelayUrl));
+        s.add(new Setting.Info(() -> "Leave empty and press Use relay for the built-in one."));
+        s.add(new Setting.Input("Own relay address…", "Use relay", url -> {
             ModSettings.partyRelayUrl = url.trim();
             ModConfig.save();
             PartyClient.reconnect();

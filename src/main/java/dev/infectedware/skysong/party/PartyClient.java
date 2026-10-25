@@ -26,6 +26,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.User;
 
 public final class PartyClient {
+    public static final String DEFAULT_RELAY = "https://skysong-relay.developingjules.workers.dev";
     private static final long PING_SECONDS = 25L;
     private static final long MIN_RETRY_SECONDS = 5L;
     private static final long MAX_RETRY_SECONDS = 120L;
@@ -130,7 +131,7 @@ public final class PartyClient {
             return;
         }
 
-        boolean want = ModSettings.partyEnabled && !relayUrl().isEmpty();
+        boolean want = ModSettings.partyEnabled;
         String url = relayUrl();
         IO.execute(() -> reconcile(want, url));
         if (connected) {
@@ -181,10 +182,8 @@ public final class PartyClient {
     }
 
     private static String relayUrl() {
-        String raw = ModSettings.partyRelayUrl == null ? "" : ModSettings.partyRelayUrl.trim();
-        if (raw.isEmpty()) {
-            return "";
-        }
+        String custom = ModSettings.partyRelayUrl == null ? "" : ModSettings.partyRelayUrl.trim();
+        String raw = custom.isEmpty() ? DEFAULT_RELAY : custom;
 
         String url = raw.replaceFirst("^https://", "wss://").replaceFirst("^http://", "ws://");
         if (!url.startsWith("ws://") && !url.startsWith("wss://")) {
@@ -216,7 +215,7 @@ public final class PartyClient {
                 closeSocket();
             }
 
-            setStatus(ModSettings.partyEnabled ? "Set the relay address below" : "Off");
+            setStatus("Off");
             return;
         }
 
