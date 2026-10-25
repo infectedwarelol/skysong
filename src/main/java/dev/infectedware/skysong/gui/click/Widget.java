@@ -574,9 +574,7 @@ public abstract class Widget {
                 case 86:
                     if (Compat.controlDown()) {
                         String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-                        if (clip != null) {
-                            this.text = this.text + clip.replace("\n", "").trim();
-                        }
+                        this.text = this.text + clip.replace("\n", "").trim();
 
                         if (this.text.length() > 65536) {
                             this.text = this.text.substring(0, 65536);

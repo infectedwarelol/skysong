@@ -21,7 +21,7 @@ public final class HandFx {
     }
 
     public static boolean active() {
-        return Fx.allowed() && (ModSettings.shaderHands || ViewModel.editing() || SwingTrail.active()) && ShapeFx.ready();
+        return Fx.allowed() && (ModSettings.shaderHands || ViewModel.editing() || SwingTrail.active());
     }
 
     public static boolean coveredAt(float guiX, float guiY, float guiW, float guiH) {

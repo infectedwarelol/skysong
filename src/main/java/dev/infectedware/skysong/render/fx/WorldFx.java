@@ -14,11 +14,7 @@ public final class WorldFx {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.worldShader && ModSettings.shaderBlocks && Fx.grade != null;
-    }
-
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
+        return Fx.allowed() && ModSettings.worldShader && ModSettings.shaderBlocks;
     }
 
     public static void apply() {

@@ -163,7 +163,7 @@ public final class R2D {
 
     public static void text(GuiGraphics c, MsdfFont.Font font, String s, float x, float y, float size, int tl, int tr, int br, int bl) {
         MsdfFont f = font.get();
-        if (f != null && s != null && !s.isEmpty() && msdf != null && (tl | tr | br | bl) >>> 24 != 0) {
+        if (f != null && s != null && !s.isEmpty() && (tl | tr | br | bl) >>> 24 != 0) {
             MsdfFont.Font fallback = fallback(font);
             if (fallback != null && !covers(f, s)) {
                 float cursor = x;

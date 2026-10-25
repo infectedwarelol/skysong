@@ -27,19 +27,7 @@ public final class MotionBlur {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.motionBlur && Fx.motion != null;
-    }
-
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
-    }
-
-    public static float lastScale() {
-        return lastScale;
-    }
-
-    public static float lastShift() {
-        return lastShift;
+        return Fx.allowed() && ModSettings.motionBlur;
     }
 
     static void forget() {

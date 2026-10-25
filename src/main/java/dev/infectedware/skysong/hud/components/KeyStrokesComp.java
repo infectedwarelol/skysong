@@ -110,7 +110,7 @@ public final class KeyStrokesComp extends Draggable {
 
     private static String label(KeyMapping key) {
         String t = key.saveString();
-        if (t != null && !t.isBlank()) {
+        if (!t.isBlank()) {
             if (t.startsWith("key.keyboard.")) {
                 t = t.substring("key.keyboard.".length());
             } else if (t.startsWith("key.mouse.")) {

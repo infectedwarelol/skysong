@@ -111,7 +111,7 @@ public final class KillFx {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.killEffects && Fx.ghostGeo != null && Fx.echo != null && Fx.blur != null;
+        return Fx.allowed() && ModSettings.killEffects;
     }
 
     public static boolean hides(Entity e) {

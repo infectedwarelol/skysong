@@ -20,15 +20,7 @@ public final class SwingTrail {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.swingTrail && Fx.trailAcc != null && Fx.echo != null && Fx.blur != null;
-    }
-
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
-    }
-
-    public static float lastSwing() {
-        return lastSwing;
+        return Fx.allowed() && ModSettings.swingTrail;
     }
 
     static void apply(RenderTarget hands, RenderTarget main) {

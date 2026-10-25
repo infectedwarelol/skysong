@@ -31,7 +31,7 @@ public final class Afterimages {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.afterimages && Fx.ghostGeo != null && Fx.echo != null && Fx.blur != null;
+        return Fx.allowed() && ModSettings.afterimages;
     }
 
     public static boolean recording() {

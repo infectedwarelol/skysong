@@ -20,14 +20,10 @@ public final class Sounds {
 
     public static void play(String id, float volume) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.getSoundManager() != null) {
-            if (id.equals("search_typing")) {
-                long now = System.currentTimeMillis();
-                if (now - lastTypingSound < 45L) {
-                    return;
-                }
-
-                lastTypingSound = now;
+        if (id.equals("search_typing")) {
+            long now = System.currentTimeMillis();
+            if (now - lastTypingSound < 45L) {
+                return;
             }
 
             SoundEvent event = EVENTS.computeIfAbsent(id, k -> SoundEvent.createVariableRangeEvent(Ids.of("skysong", "ui." + k)));

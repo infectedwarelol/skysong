@@ -112,9 +112,7 @@ public final class MacSpotifyReader implements MediaReader {
             return null;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            if (process != null) {
-                process.destroyForcibly();
-            }
+            process.destroyForcibly();
 
             return null;
         }

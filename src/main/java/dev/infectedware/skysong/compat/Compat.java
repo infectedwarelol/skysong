@@ -314,7 +314,7 @@ public final class Compat {
         CameraRenderState state = new CameraRenderState();
         state.pos = camPos(cam);
         state.blockPos = camBlockPos(cam);
-        state.entityPos = camEntity(cam) != null ? camEntity(cam).position() : state.pos;
+        state.entityPos = camEntity(cam).position();
         state.orientation = new Quaternionf(cam.rotation());
         state.initialized = true;
         return state;

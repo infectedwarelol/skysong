@@ -34,7 +34,7 @@ public final class EntityFx {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.shaderEntities && ShapeFx.ready();
+        return Fx.allowed() && ModSettings.shaderEntities;
     }
 
     public static boolean capturing() {

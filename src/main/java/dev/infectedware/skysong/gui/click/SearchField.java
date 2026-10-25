@@ -274,10 +274,8 @@ public final class SearchField {
                     return true;
                 case 86:
                     String clip = mc.keyboardHandler.getClipboard();
-                    if (clip != null) {
-                        this.deleteSelection();
-                        this.insert(clip.replaceAll("[\\r\\n]", ""));
-                    }
+                    this.deleteSelection();
+                    this.insert(clip.replaceAll("[\\r\\n]", ""));
 
                     return true;
                 case 88:

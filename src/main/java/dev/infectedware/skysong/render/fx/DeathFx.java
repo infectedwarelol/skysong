@@ -100,11 +100,7 @@ public final class DeathFx {
     }
 
     public static boolean active() {
-        return Fx.allowed() && ModSettings.deathEffect && Fx.death != null;
-    }
-
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
+        return Fx.allowed() && ModSettings.deathEffect;
     }
 
     public static float seconds() {

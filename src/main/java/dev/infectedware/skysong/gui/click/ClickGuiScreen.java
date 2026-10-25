@@ -430,7 +430,7 @@ public class ClickGuiScreen extends VScreen {
         float ay = y + (rowH - avatar) / 2.0F;
         this.drawAvatar(c, ax, ay, avatar, a);
         Minecraft mc = Minecraft.getInstance();
-        String name = mc.getUser() != null ? mc.getUser().getName() : "Player";
+        String name = mc.getUser().getName();
         SpotifyManager spotify = SkysongClient.getSpotifyManager();
         String role = spotify != null && spotify.isPlaying() && !spotify.getCurrentTrackName().isEmpty() ? spotify.getCurrentTrackName() : "Skysong";
         role = trim(role, 90.0F, 5.0F);

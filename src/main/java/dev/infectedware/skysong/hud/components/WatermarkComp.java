@@ -145,7 +145,7 @@ public final class WatermarkComp extends Draggable {
 
     private static String playerName() {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.getUser() != null && !mc.getUser().getName().isBlank()) {
+        if (!mc.getUser().getName().isBlank()) {
             return mc.getUser().getName();
         } else {
             return mc.player != null ? Compat.name(mc.player.getGameProfile()) : "Player";
