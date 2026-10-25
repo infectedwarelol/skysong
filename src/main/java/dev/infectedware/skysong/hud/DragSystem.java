@@ -422,7 +422,7 @@ public final class DragSystem implements HudLayer {
                             d.drag().setTarget(Float.parseFloat(xy[0]), Float.parseFloat(xy[1]));
                             d.drag().syncToTarget();
                             d.placed = true;
-                        } catch (NumberFormatException var10) {
+                        } catch (NumberFormatException ignored) {
                         }
                     }
                 }

@@ -45,7 +45,7 @@ final class SpotifyAuthServer {
             if (this.socket != null) {
                 this.socket.close();
             }
-        } catch (IOException var2) {
+        } catch (IOException ignored) {
         }
     }
 
@@ -58,7 +58,7 @@ final class SpotifyAuthServer {
                 if (this.handle(client)) {
                     break;
                 }
-            } catch (SocketTimeoutException var8) {
+            } catch (SocketTimeoutException ignored) {
             } catch (IOException e) {
                 if (this.running) {
                     SkysongClient.LOGGER.warn("[Skysong] Login receiver error: {}", e.getMessage());

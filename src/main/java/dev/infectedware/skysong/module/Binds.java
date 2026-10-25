@@ -152,7 +152,7 @@ public final class Binds {
                         if (name.equals("Click GUI") || ModuleRegistry.byName(name) != null) {
                             BINDS.put(name, new Binds.Bind(key, hold));
                         }
-                    } catch (NumberFormatException var10) {
+                    } catch (NumberFormatException ignored) {
                     }
                 }
             }

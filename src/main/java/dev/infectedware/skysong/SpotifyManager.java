@@ -264,7 +264,7 @@ public class SpotifyManager {
 
         try {
             Files.deleteIfExists(TOKEN_FILE.toPath());
-        } catch (Exception var3) {
+        } catch (Exception ignored) {
         }
     }
 

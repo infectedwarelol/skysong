@@ -132,7 +132,7 @@ public final class ModConfig {
 
                             count++;
                         }
-                    } catch (Exception var13) {
+                    } catch (Exception ignored) {
                     }
                 }
             }
@@ -190,7 +190,7 @@ public final class ModConfig {
                 if (isSetting(f)) {
                     try {
                         defaults.put(f, f.get(null));
-                    } catch (IllegalAccessException var10) {
+                    } catch (IllegalAccessException ignored) {
                     }
                 }
             }
