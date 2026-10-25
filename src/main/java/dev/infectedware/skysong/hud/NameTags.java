@@ -267,16 +267,16 @@ public final class NameTags implements HudLayer {
             out.add(new NameTags.Run(sb.toString(), color[0]));
         }
 
-        while (!out.isEmpty() && out.get(0).text().isBlank()) {
-            out.remove(0);
+        while (!out.isEmpty() && out.getFirst().text().isBlank()) {
+            out.removeFirst();
         }
 
-        while (!out.isEmpty() && out.get(out.size() - 1).text().isBlank()) {
-            out.remove(out.size() - 1);
+        while (!out.isEmpty() && out.getLast().text().isBlank()) {
+            out.removeLast();
         }
 
         if (!out.isEmpty()) {
-            out.set(0, new NameTags.Run(out.get(0).text().stripLeading(), out.get(0).color()));
+            out.set(0, new NameTags.Run(out.getFirst().text().stripLeading(), out.getFirst().color()));
             int last = out.size() - 1;
             out.set(last, new NameTags.Run(out.get(last).text().stripTrailing(), out.get(last).color()));
         }

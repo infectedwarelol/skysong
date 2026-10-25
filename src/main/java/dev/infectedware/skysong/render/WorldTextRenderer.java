@@ -224,7 +224,7 @@ public class WorldTextRenderer {
                         this.addTranslation(line, anchor, eye, yaw, pitch, sky, sungAt[0]);
 
                         while (this.pieces.size() > 32) {
-                            this.pieces.remove(0);
+                            this.pieces.removeFirst();
                         }
                     }
                 }
@@ -447,7 +447,7 @@ public class WorldTextRenderer {
             }
 
             while (this.pieces.size() > 32) {
-                this.pieces.remove(0);
+                this.pieces.removeFirst();
             }
         }
     }

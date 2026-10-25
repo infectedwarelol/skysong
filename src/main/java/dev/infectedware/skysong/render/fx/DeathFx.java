@@ -125,12 +125,12 @@ public final class DeathFx {
             }
 
             java.util.Collections.shuffle(randomBag, RNG);
-            if (randomBag.size() > 1 && randomBag.get(randomBag.size() - 1) == lastRandom) {
+            if (randomBag.size() > 1 && randomBag.getLast() == lastRandom) {
                 java.util.Collections.swap(randomBag, 0, randomBag.size() - 1);
             }
         }
 
-        lastRandom = randomBag.remove(randomBag.size() - 1);
+        lastRandom = randomBag.removeLast();
         return lastRandom;
     }
 

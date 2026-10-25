@@ -90,7 +90,7 @@ public final class Afterimages {
                     if (!parts.isEmpty()) {
                         Vec3 at = p.getPosition(tickDelta);
                         if (ghosts.size() >= 48) {
-                            ghosts.remove(0);
+                            ghosts.removeFirst();
                         }
 
                         ghosts.add(new Afterimages.Ghost(p.getUUID(), at.x, at.y, at.z, now, parts));

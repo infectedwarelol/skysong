@@ -160,7 +160,7 @@ public final class Notifications implements HudLayer {
 
         Notifications.Toast t = new Notifications.Toast(segs, now, hold);
         t.example = isExample;
-        this.toasts.add(0, t);
+        this.toasts.addFirst(t);
         if (isExample) {
             this.example = t;
         }

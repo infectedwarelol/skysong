@@ -146,12 +146,12 @@ public final class KillFx {
             }
 
             java.util.Collections.shuffle(randomBag, RNG);
-            if (randomBag.size() > 1 && randomBag.get(randomBag.size() - 1) == lastRandom) {
+            if (randomBag.size() > 1 && randomBag.getLast() == lastRandom) {
                 java.util.Collections.swap(randomBag, 0, randomBag.size() - 1);
             }
         }
 
-        lastRandom = randomBag.remove(randomBag.size() - 1);
+        lastRandom = randomBag.removeLast();
         return lastRandom;
     }
 
@@ -768,7 +768,7 @@ public final class KillFx {
                 next.add(p.add(q).scale(0.5).add((r.nextFloat() - 0.5F) * amount, (r.nextFloat() - 0.5F) * amount * 0.4F, (r.nextFloat() - 0.5F) * amount));
             }
 
-            next.add(pts.get(pts.size() - 1));
+            next.add(pts.getLast());
             pts = next;
             amount *= 0.55F;
         }
