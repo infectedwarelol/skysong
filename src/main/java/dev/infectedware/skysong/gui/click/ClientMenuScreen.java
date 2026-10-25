@@ -52,6 +52,8 @@ public class ClientMenuScreen extends VScreen {
     private static final float SEARCH_W = 130.0F;
     private static final float THEME_BUTTON_W = 96.0F;
     private static final float TOGGLE_3D_W = 22.0F;
+    private static final float ON_OFF_W = 40.0F;
+    private static final float BIND_W = 54.0F;
     private static final float[] HOLO_LIFT = new float[]{-16.0F, 8.0F, 0.0F};
     private static final float[] AWAY = new float[]{-100000.0F, -100000.0F};
     private static final String MENU_MODULE = "Click GUI";
@@ -340,7 +342,23 @@ public class ClientMenuScreen extends VScreen {
 
         ClientModule m = this.selected == null ? null : ModuleRegistry.byName(this.selected);
         float top = this.tabsBottom(tabs) + 5.0F;
-        return m != null && !m.description().isEmpty() ? top + 10.0F : top;
+        if (m == null) {
+            return top;
+        }
+
+        return top + (m.description().isEmpty() ? 15.0F : 24.0F);
+    }
+
+    private float headerTop(List<Tab> tabs) {
+        return this.tabsBottom(tabs) + 5.0F;
+    }
+
+    private float onOffX() {
+        return this.mainX() + this.mainW() - ON_OFF_W;
+    }
+
+    private float bindX() {
+        return this.onOffX() - 4.0F - BIND_W;
     }
 
     @Override
@@ -559,8 +577,29 @@ public class ClientMenuScreen extends VScreen {
             return;
         }
 
+        float right = m.hasToggle() ? this.bindX() - 6.0F : x + w;
+        Ui.scrollingText(c, m.name(), x + 1.0F, top + 1.5F, right - x - 2.0F, 8.0F, Ui.white(250.0F * a));
         if (!m.description().isEmpty()) {
-            Ui.scrollingText(c, m.description(), x + 1.0F, top, w - 2.0F, 5.5F, Ui.white(135.0F * a));
+            Ui.scrollingText(c, m.description(), x + 1.0F, top + 13.0F, w - 2.0F, 5.5F, Ui.white(150.0F * a));
+        }
+
+        if (m.hasToggle()) {
+            boolean on = m.isOn();
+            float ox = this.onOffX();
+            boolean overToggle = Ui.inside(this.mx, this.my, ox, top, ON_OFF_W, 12.0F);
+            if (on) {
+                R2D.rect(c, ox, top, ON_OFF_W, 12.0F, 0.0F, Widget.flatFill((overToggle ? 255.0F : 225.0F) * a));
+            } else {
+                Widget.flatField(c, ox, top, ON_OFF_W, 12.0F, a, overToggle);
+            }
+
+            String state = on ? "ON" : "OFF";
+            R2D.text(c, MsdfFont.Font.SEMIBOLD, state, ox + (ON_OFF_W - R2D.width(MsdfFont.Font.SEMIBOLD, state, 6.0F)) / 2.0F, top + 2.8F, 6.0F, Ui.white(250.0F * a));
+            float bx = this.bindX();
+            int key = Binds.key(m.name());
+            String bind = key == -1 ? "Bind a key" : "Key: " + Binds.shortName(key);
+            Widget.flatField(c, bx, top, BIND_W, 12.0F, a, Ui.inside(this.mx, this.my, bx, top, BIND_W, 12.0F));
+            Ui.text(c, bind, bx + (BIND_W - Ui.width(bind, 5.5F)) / 2.0F, top + 3.2F, 5.5F, Ui.white(210.0F * a));
         }
     }
 
@@ -744,6 +783,21 @@ public class ClientMenuScreen extends VScreen {
                     Sounds.play("select_category");
                 }
 
+                return true;
+            }
+        }
+
+        ClientModule current = this.selected == null || this.themesShown() ? null : ModuleRegistry.byName(this.selected);
+        if (button == 0 && current != null && current.hasToggle()) {
+            float top = this.headerTop(this.tabs());
+            if (Ui.inside(hx, hy, this.onOffX(), top, ON_OFF_W, 12.0F)) {
+                toggle(current);
+                return true;
+            }
+
+            if (Ui.inside(hx, hy, this.bindX(), top, BIND_W, 12.0F)) {
+                this.bind.open(current, x, y);
+                Sounds.play("button");
                 return true;
             }
         }

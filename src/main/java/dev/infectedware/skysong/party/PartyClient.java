@@ -243,6 +243,7 @@ public final class PartyClient {
         return claimed;
     }
 
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private static void renameAll() {
         List<Friend> renamed = new ArrayList<>();
         for (Friend f : friends) {
