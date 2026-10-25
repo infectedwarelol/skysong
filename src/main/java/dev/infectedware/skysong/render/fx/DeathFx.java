@@ -16,8 +16,8 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 
 public final class DeathFx {
-    public static final String[] EFFECTS = new String[]{"Shattered Glass", "Flatline", "Ascension", "Signal Lost", "Cinematic", "Swallowed", "Frozen", "Pixelated", "Random"};
-    private static final int KINDS = 8;
+    public static final String[] EFFECTS = new String[]{"Shattered Glass", "Flatline", "Ascension", "Signal Lost", "Cinematic", "Swallowed", "Frozen", "Pixelated", "Ink Bleed", "Thermal", "Kaleidoscope", "Burn Away", "Drowned", "Rewind", "Ripple", "Stained Glass", "Ghost Echo", "Starry Void", "Random"};
+    private static final int KINDS = 18;
     private static final java.util.List<Integer> randomBag = new java.util.ArrayList<>();
     private static int lastRandom = -1;
     private static final float[] BEATS = new float[]{0.05F, 0.75F};
@@ -64,6 +64,56 @@ public final class DeathFx {
                 new DeathFx.Cue(0.6F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.8F),
                 new DeathFx.Cue(1.2F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.6F),
                 new DeathFx.Cue(1.8F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.8F, 0.5F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.SCULK_CLICKING, 1.0F, 0.5F),
+                new DeathFx.Cue(1.2F, SoundEvents.WARDEN_HEARTBEAT, 0.8F, 0.6F),
+                new DeathFx.Cue(2.6F, SoundEvents.SCULK_CLICKING, 0.8F, 0.4F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.BEACON_ACTIVATE, 0.8F, 1.8F),
+                new DeathFx.Cue(0.8F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.6F, 1.4F),
+                new DeathFx.Cue(2.8F, SoundEvents.BEACON_DEACTIVATE, 0.8F, 1.2F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.AMETHYST_BLOCK_RESONATE, 1.0F, 0.7F),
+                new DeathFx.Cue(1.0F, SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 1.2F),
+                new DeathFx.Cue(2.0F, SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 0.9F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.FIRECHARGE_USE, 1.0F, 0.6F),
+                new DeathFx.Cue(0.6F, SoundEvents.FIRE_AMBIENT, 1.0F, 0.8F),
+                new DeathFx.Cue(2.4F, SoundEvents.FIRE_EXTINGUISH, 0.8F, 0.7F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.PLAYER_SPLASH, 1.0F, 0.6F),
+                new DeathFx.Cue(0.5F, SoundEvents.BUBBLE_COLUMN_UPWARDS_INSIDE, 1.0F, 0.8F),
+                new DeathFx.Cue(2.5F, SoundEvents.DROWNED_AMBIENT_WATER, 0.6F, 0.6F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.BOOK_PAGE_TURN, 1.0F, 0.6F),
+                new DeathFx.Cue(0.3F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.6F, 0.5F),
+                new DeathFx.Cue(0.6F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.6F, 0.45F),
+                new DeathFx.Cue(0.9F, SoundEvents.NOTE_BLOCK_BIT.value(), 0.6F, 0.4F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.BELL_RESONATE, 1.0F, 0.8F),
+                new DeathFx.Cue(1.5F, SoundEvents.BELL_RESONATE, 0.7F, 0.6F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.GLASS_BREAK, 0.8F, 1.4F),
+                new DeathFx.Cue(0.8F, SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 0.7F),
+                new DeathFx.Cue(1.6F, SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 0.5F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.ILLUSIONER_MIRROR_MOVE, 1.0F, 0.7F),
+                new DeathFx.Cue(1.4F, SoundEvents.ILLUSIONER_MIRROR_MOVE, 0.8F, 0.5F),
+                new DeathFx.Cue(2.8F, SoundEvents.BEACON_POWER_SELECT, 0.7F, 1.6F)
+        },
+        {
+                new DeathFx.Cue(0.0F, SoundEvents.PORTAL_TRIGGER, 0.5F, 1.4F),
+                new DeathFx.Cue(1.2F, SoundEvents.AMETHYST_BLOCK_RESONATE, 1.0F, 0.5F),
+                new DeathFx.Cue(3.0F, SoundEvents.BEACON_DEACTIVATE, 0.8F, 0.5F)
         }
     };
     private static long diedAt = -1L;

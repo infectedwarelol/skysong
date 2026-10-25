@@ -28,7 +28,7 @@ public final class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Field, Object> DEFAULTS = captureDefaults();
     private static final String EFFECT_LIST_KEY = "effectListVersion";
-    private static final int EFFECT_LIST_VERSION = 2;
+    private static final int EFFECT_LIST_VERSION = 3;
     private static final Set<String> PERSONAL = Set.of(
         "spotifyClientId", "popupPositions", "shareMySong", "partyEnabled", "partyShareSong", "partyRelayUrl"
     );
@@ -53,19 +53,28 @@ public final class ModConfig {
     }
 
     public static void migrateEffects(JsonObject json) {
-        if (json == null || json.has(EFFECT_LIST_KEY)) {
+        if (json == null) {
             return;
         }
 
-        if (json.has("killEffectType") && json.get("killEffectType").isJsonPrimitive() && json.get("killEffectType").getAsInt() == 6) {
-            json.addProperty("killEffectType", 11);
+        int version = json.has(EFFECT_LIST_KEY) && json.get(EFFECT_LIST_KEY).isJsonPrimitive() ? json.get(EFFECT_LIST_KEY).getAsInt() : 1;
+        if (version < 2) {
+            remap(json, "killEffectType", 6, 11);
+            remap(json, "deathEffectType", 4, 8);
         }
 
-        if (json.has("deathEffectType") && json.get("deathEffectType").isJsonPrimitive() && json.get("deathEffectType").getAsInt() == 4) {
-            json.addProperty("deathEffectType", 8);
+        if (version < 3) {
+            remap(json, "killEffectType", 11, 21);
+            remap(json, "deathEffectType", 8, 18);
         }
 
         json.addProperty(EFFECT_LIST_KEY, EFFECT_LIST_VERSION);
+    }
+
+    private static void remap(JsonObject json, String key, int from, int to) {
+        if (json.has(key) && json.get(key).isJsonPrimitive() && json.get(key).getAsInt() == from) {
+            json.addProperty(key, to);
+        }
     }
 
     public static void save() {

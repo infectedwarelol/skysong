@@ -13,6 +13,10 @@
 //  5 Swallowed: the world spins into a dark hole in the middle that grows until it takes it all.
 //  6 Frozen: frost crystals grow in from the edges and the picture turns to ice.
 //  7 Pixelated: the picture breaks into bigger and bigger pixels with fewer colors, then goes dark.
+//  8 Ink Bleed: ink creeps in from the edges with glowing tips.  9 Thermal: heat camera vision.
+// 10 Kaleidoscope: the view folds into a turning mirror pattern.  11 Burn Away: the picture burns like paper.
+// 12 Drowned: underwater waves and bubbles.  13 Rewind: a sepia tape rewinding.  14 Ripple: rings ripple out.
+// 15 Stained Glass: the world turns into glass panes.  16 Ghost Echo: echoes fade to white.  17 Starry Void: space eats the world.
 
 uniform sampler2D Sampler0;   // the world
 
@@ -259,6 +263,178 @@ vec3 pixelated(vec2 uv, float t) {
     return col;
 }
 
+float vnoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x), mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+
+float fbm(vec2 p) {
+    float v = 0.0;
+    float a = 0.5;
+    for (int i = 0; i < 4; i++) {
+        v += a * vnoise(p);
+        p = p * 2.03 + 11.7;
+        a *= 0.5;
+    }
+    return v;
+}
+
+vec3 inkBleed(vec2 uv, vec2 c, float r, float t) {
+    vec3 col = texture(Sampler0, uv).rgb;
+    float edge = min(min(uv.x, 1.0 - uv.x), min(uv.y, 1.0 - uv.y));
+    float n = fbm(c * 5.0 + vec2(0.0, t * 0.3));
+    float reach = 0.6 * smoothstep(0.0, 3.2, t);
+    float ink = smoothstep(reach + 0.04, reach - 0.04, edge + n * 0.22);
+    float rim = smoothstep(0.06, 0.0, abs(edge + n * 0.22 - reach));
+    col = mix(col, vec3(luma(col)) * 0.8, smoothstep(0.0, 2.0, t) * 0.6);
+    col = mix(col, vec3(0.02), ink);
+    col += tintAt(n) * rim * 0.9 * step(0.01, reach);
+    return col;
+}
+
+vec3 thermal(vec2 uv, float t) {
+    vec3 src = texture(Sampler0, uv).rgb;
+    float heat = clamp(luma(src) * 1.3 - 0.15 * smoothstep(0.5, 3.5, t), 0.0, 1.0);
+    vec3 pal = mix(vec3(0.02, 0.0, 0.12), vec3(0.45, 0.0, 0.6), smoothstep(0.0, 0.3, heat));
+    pal = mix(pal, vec3(1.0, 0.25, 0.0), smoothstep(0.3, 0.65, heat));
+    pal = mix(pal, vec3(1.0, 0.95, 0.5), smoothstep(0.65, 1.0, heat));
+    vec3 col = mix(src, pal, smoothstep(0.0, 0.6, t));
+    float scan = 1.0 - smoothstep(0.0, 0.015, abs(uv.y - fract(t * 0.45)));
+    col += tintAt(uv.x) * scan * 0.5;
+    col *= 0.9 + 0.1 * sin(gl_FragCoord.y * 1.5708);
+    col *= 1.0 - smoothstep(2.8, 4.4, t);
+    return col;
+}
+
+vec3 kaleidoscope(vec2 uv, vec2 c, float r, float t) {
+    float aspect = OutSize.x / max(OutSize.y, 1.0);
+    float k = smoothstep(0.0, 1.5, t);
+    float seg = 6.2832 / 8.0;
+    float a = atan(c.y, c.x) + t * 0.35 * k;
+    a = mod(a, seg);
+    a = abs(a - seg * 0.5);
+    vec2 mirrored = vec2(cos(a), sin(a)) * r * (1.0 - 0.25 * k);
+    vec2 kuv = mix(uv, mirrored / vec2(aspect, 1.0) + 0.5, k);
+    vec3 col = texture(Sampler0, clamp(kuv, 0.0, 1.0)).rgb;
+    col = mix(col, col * tintAt(fract(a / seg + r)) * 1.6, 0.35 * k);
+    col *= 1.0 - smoothstep(0.4, 1.0, r) * 0.6 * k;
+    col *= 1.0 - smoothstep(3.0, 4.5, t);
+    return col;
+}
+
+vec3 burnAway(vec2 uv, vec2 c, float t) {
+    vec3 col = texture(Sampler0, uv).rgb;
+    float n = fbm(c * 4.0);
+    float level = smoothstep(0.2, 3.4, t) * 1.15;
+    float burnt = step(n, level - 0.05);
+    float edge = smoothstep(0.08, 0.0, abs(n - level));
+    vec3 ember = mix(vec3(1.0, 0.45, 0.05), tintAt(n), 0.4);
+    col = mix(col, col * vec3(1.0, 0.8, 0.6), smoothstep(0.0, 1.0, t) * 0.5);
+    col = mix(col, vec3(0.04, 0.03, 0.03) + ember * 0.05 * vnoise(c * 40.0 + t), burnt);
+    col += ember * edge * 1.6;
+    return col;
+}
+
+vec3 drowned(vec2 uv, vec2 c, float t) {
+    float k = smoothstep(0.0, 2.0, t);
+    vec2 wave = vec2(sin(uv.y * 18.0 + t * 3.0), cos(uv.x * 14.0 + t * 2.4)) * 0.006 * k;
+    vec3 col = texture(Sampler0, clamp(uv + wave, 0.0, 1.0)).rgb;
+    col = mix(col, col * vec3(0.3, 0.6, 0.9) + vec3(0.0, 0.05, 0.12), k);
+    vec2 p = uv * vec2(OutSize.x / max(OutSize.y, 1.0), 1.0) * 14.0 + vec2(0.0, t * 1.4);
+    vec2 cell = floor(p);
+    float h = hash12(cell);
+    if (h > 0.82) {
+        vec2 center = cell + 0.3 + 0.4 * hash22(cell + 1.7);
+        float d = length(p - center);
+        float size = 0.12 + 0.12 * h;
+        col += (vec3(0.7, 0.9, 1.0) + tintAt(h) * 0.3) * (smoothstep(size, size - 0.03, d) - smoothstep(size - 0.03, size - 0.08, d)) * 0.7 * k;
+    }
+    col *= 1.0 - smoothstep(1.5, 4.5, t) * (0.4 + 0.6 * smoothstep(0.2, 0.8, length(c)));
+    return col;
+}
+
+vec3 rewind(vec2 uv, float t) {
+    float k = smoothstep(0.0, 1.0, t);
+    float band = floor(uv.y * 9.0 - t * 6.0);
+    float off = (hash12(vec2(band, floor(t * 10.0))) - 0.5) * 0.05 * k;
+    vec2 ruv = vec2(fract(uv.x + off), fract(uv.y + t * 0.6 * k));
+    vec3 col = texture(Sampler0, ruv).rgb;
+    vec3 sepia = vec3(luma(col)) * vec3(1.1, 0.95, 0.72);
+    col = mix(col, sepia, k * 0.85);
+    float track = 1.0 - smoothstep(0.0, 0.02, abs(fract(uv.y * 3.0 - t * 2.0) - 0.5));
+    col = mix(col, vec3(1.0) * (0.6 + 0.4 * hash12(gl_FragCoord.xy + t)), track * 0.5 * k);
+    col += tintAt(uv.y) * track * 0.25 * k;
+    col *= 1.0 - smoothstep(3.0, 4.4, t);
+    return col;
+}
+
+vec3 rippleOut(vec2 uv, vec2 c, float r, float t) {
+    float aspect = OutSize.x / max(OutSize.y, 1.0);
+    float k = smoothstep(0.0, 0.8, t);
+    float wave = sin(r * 34.0 - t * 9.0) * exp(-r * 1.6) * 0.02 * k;
+    vec2 dir = r > 0.0001 ? c / r : vec2(0.0);
+    vec2 wuv = uv + dir / vec2(aspect, 1.0) * wave;
+    vec3 col = texture(Sampler0, clamp(wuv, 0.0, 1.0)).rgb;
+    col = mix(col, vec3(luma(col)), smoothstep(0.5, 2.5, t) * 0.8);
+    float ring = 1.0 - smoothstep(0.0, 0.025, abs(fract(r * 3.0 - t * 0.9) - 0.5) - 0.47);
+    col += tintAt(r) * ring * 0.4 * k;
+    col *= 1.0 - smoothstep(2.8, 4.4, t);
+    return col;
+}
+
+vec3 stainedGlass(vec2 uv, vec2 c, float t) {
+    float aspect = OutSize.x / max(OutSize.y, 1.0);
+    float k = smoothstep(0.0, 1.6, t);
+    float f1, f2;
+    vec2 cell;
+    voronoi(c * mix(40.0, 9.0, k), f1, f2, cell);
+    vec2 center = (cell + hash22(cell)) / mix(40.0, 9.0, k);
+    vec3 pane = texture(Sampler0, clamp(center / vec2(aspect, 1.0) + 0.5, 0.0, 1.0)).rgb;
+    vec3 col = texture(Sampler0, uv).rgb;
+    vec3 glass = pane * (0.8 + 0.4 * hash22(cell).x) + tintAt(hash22(cell).y) * 0.2;
+    col = mix(col, glass, k);
+    float lead = 1.0 - smoothstep(0.0, 0.06, f2 - f1);
+    col = mix(col, vec3(0.03), lead * k);
+    col *= 1.0 - smoothstep(3.0, 4.5, t);
+    return col;
+}
+
+vec3 ghostEcho(vec2 uv, float t) {
+    float k = smoothstep(0.0, 1.0, t);
+    vec3 col = texture(Sampler0, uv).rgb;
+    vec3 acc = vec3(0.0);
+    for (int i = 1; i <= 5; i++) {
+        float f = float(i) / 5.0;
+        vec2 e = 0.5 + (uv - 0.5) * (1.0 - 0.05 * f * k) + vec2(sin(t * 2.0 + f * 3.0), cos(t * 1.6 + f * 2.0)) * 0.01 * f * k;
+        acc += texture(Sampler0, clamp(e, 0.0, 1.0)).rgb * (1.0 - f * 0.6);
+    }
+    acc /= 3.2;
+    col = mix(col, acc, 0.75 * k);
+    col = mix(col, vec3(luma(col)) * (0.8 + 0.4 * tintAt(uv.y)), 0.6 * k);
+    col = mix(col, vec3(0.92, 0.95, 1.0), smoothstep(2.2, 4.4, t) * 0.85);
+    return col;
+}
+
+vec3 starryVoid(vec2 uv, vec2 c, float r, float t) {
+    vec3 col = texture(Sampler0, uv).rgb;
+    float n = fbm(c * 3.0 + vec2(t * 0.05, 0.0));
+    vec3 space = vec3(0.01, 0.0, 0.03) + tintAt(n) * pow(n, 2.5) * 0.6;
+    vec2 p = c * 60.0;
+    vec2 cell = floor(p);
+    float h = hash12(cell);
+    float twinkle = 0.5 + 0.5 * sin(t * 4.0 + h * 40.0);
+    float star = step(0.96, h) * (1.0 - smoothstep(0.0, 0.18, length(fract(p) - 0.5))) * twinkle;
+    space += vec3(1.0) * star;
+    float reach = 1.4 * smoothstep(0.0, 3.0, t);
+    float edge = vnoise(c * 6.0) * 0.25;
+    float gone = smoothstep(reach - 0.05, reach + 0.05, -r + reach * 2.0 - edge);
+    col = mix(col, vec3(luma(col)) * vec3(0.7, 0.75, 1.0), smoothstep(0.0, 1.0, t) * 0.5);
+    col = mix(col, space, 1.0 - gone);
+    return col;
+}
+
 void main() {
     float t = Death.x;
     vec2 aspect = vec2(OutSize.x / max(OutSize.y, 1.0), 1.0);
@@ -273,6 +449,16 @@ void main() {
     else if (mode == 5) col = swallowed(texCoord, c, r, t);
     else if (mode == 6) col = frozen(texCoord, c, r, t);
     else if (mode == 7) col = pixelated(texCoord, t);
+    else if (mode == 8) col = inkBleed(texCoord, c, r, t);
+    else if (mode == 9) col = thermal(texCoord, t);
+    else if (mode == 10) col = kaleidoscope(texCoord, c, r, t);
+    else if (mode == 11) col = burnAway(texCoord, c, t);
+    else if (mode == 12) col = drowned(texCoord, c, t);
+    else if (mode == 13) col = rewind(texCoord, t);
+    else if (mode == 14) col = rippleOut(texCoord, c, r, t);
+    else if (mode == 15) col = stainedGlass(texCoord, c, t);
+    else if (mode == 16) col = ghostEcho(texCoord, t);
+    else if (mode == 17) col = starryVoid(texCoord, c, r, t);
     else col = shattered(texCoord, c, r, t);
     fragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
 }
