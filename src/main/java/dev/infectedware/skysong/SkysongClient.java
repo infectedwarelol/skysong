@@ -59,11 +59,7 @@ public class SkysongClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        LOGGER.info(
-            "Initializing Skysong for Minecraft "
-                + FabricLoader.getInstance().getModContainer("minecraft").map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("?")
-                + "..."
-        );
+        LOGGER.info("Initializing Skysong for Minecraft {}...", FabricLoader.getInstance().getModContainer("minecraft").map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("?"));
         ModConfig.load();
         startSelfTestIfRequested();
         spotifyManager = new SpotifyManager();

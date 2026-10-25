@@ -89,7 +89,7 @@ public final class LyricTranslator {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Lyric translation failed: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Lyric translation failed: {}", e.getMessage());
         }
     }
 

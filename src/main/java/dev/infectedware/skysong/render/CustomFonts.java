@@ -93,7 +93,7 @@ public final class CustomFonts {
                 }
             }
         } catch (IOException e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not prepare custom fonts: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not prepare custom fonts: {}", e.getMessage());
         }
 
         fonts = Map.copyOf(found);

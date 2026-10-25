@@ -116,7 +116,7 @@ public final class GifPlayer {
             reader.dispose();
         } catch (Exception e) {
             this.failed = true;
-            SkysongClient.LOGGER.warn("[Skysong] Could not load " + this.source + ": " + e);
+            SkysongClient.LOGGER.warn("[Skysong] Could not load {}: {}", this.source, e);
         }
     }
 

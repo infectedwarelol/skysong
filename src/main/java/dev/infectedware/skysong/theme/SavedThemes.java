@@ -300,7 +300,7 @@ public final class SavedThemes {
                 }
             }
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not read themes: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not read themes: {}", e.getMessage());
         }
 
         return out;
@@ -345,7 +345,7 @@ public final class SavedThemes {
             Files.createDirectories(FILE.getParent());
             Files.writeString(FILE, GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not save themes: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not save themes: {}", e.getMessage());
         }
     }
 

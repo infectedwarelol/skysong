@@ -95,7 +95,7 @@ public final class LocalMediaSource {
                         throw e;
                     } catch (Throwable t) {
                         if (!warned) {
-                            SkysongClient.LOGGER.warn("[Skysong] Reading Spotify on this PC failed: " + t);
+                            SkysongClient.LOGGER.warn("[Skysong] Reading Spotify on this PC failed: {}", String.valueOf(t));
                         }
 
                         warned = true;

@@ -187,7 +187,7 @@ public final class MsdfFont {
                 kerning
             );
         } catch (Exception e) {
-            SkysongClient.LOGGER.error("[Skysong] Could not load font " + file, e);
+            SkysongClient.LOGGER.error("[Skysong] Could not load font {}", file, e);
             return null;
         }
     }

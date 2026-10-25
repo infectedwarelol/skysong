@@ -197,7 +197,7 @@ public final class Profiles {
             try {
                 Files.writeString(BACKUP, GSON.toJson(ModConfig.snapshot(false, false)), StandardCharsets.UTF_8);
             } catch (Exception e) {
-                SkysongClient.LOGGER.warn("[Skysong] Could not back up settings: " + e.getMessage());
+                SkysongClient.LOGGER.warn("[Skysong] Could not back up settings: {}", e.getMessage());
             }
         }
     }
@@ -322,7 +322,7 @@ public final class Profiles {
                 }
             }
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not read profiles: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not read profiles: {}", e.getMessage());
         }
 
         return out;
@@ -345,7 +345,7 @@ public final class Profiles {
             Files.createDirectories(FILE.getParent());
             Files.writeString(FILE, GSON.toJson(root), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not save profiles: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not save profiles: {}", e.getMessage());
         }
     }
 

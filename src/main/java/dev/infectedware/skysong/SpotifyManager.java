@@ -197,7 +197,7 @@ public class SpotifyManager {
                     this.fetchAlbumArt(url);
                 }
             } catch (Exception e) {
-                SkysongClient.LOGGER.debug("[Skysong] No artwork found for " + title);
+                SkysongClient.LOGGER.debug("[Skysong] No artwork found for {}", title);
             }
         });
     }
@@ -232,7 +232,7 @@ public class SpotifyManager {
                 SkysongClient.LOGGER.info("[Skysong] Loaded saved Spotify login");
             }
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not load saved Spotify login: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not load saved Spotify login: {}", e.getMessage());
         }
     }
 
@@ -248,7 +248,7 @@ public class SpotifyManager {
             json.addProperty("expires_at", this.expiresAt);
             Files.writeString(TOKEN_FILE.toPath(), json.toString(), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not save Spotify login: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not save Spotify login: {}", e.getMessage());
         }
     }
 
@@ -386,7 +386,7 @@ public class SpotifyManager {
             this.authServer.start();
             return true;
         } catch (IOException e) {
-            SkysongClient.LOGGER.warn("[Skysong] Can't open the login receiver on port 43821: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Can't open the login receiver on port 43821: {}", e.getMessage());
             this.authServer = null;
             return false;
         }
@@ -463,7 +463,7 @@ public class SpotifyManager {
                     .POST(BodyPublishers.ofString(requestBody))
                     .build();
                 HttpResponse<String> response = this.httpClient.send(request, BodyHandlers.ofString());
-                SkysongClient.LOGGER.info("Token response status: " + response.statusCode());
+                SkysongClient.LOGGER.info("Token response status: {}", response.statusCode());
                 if (response.statusCode() == 200) {
                     this.applyTokenResponse(JsonParser.parseString(response.body()).getAsJsonObject());
                     this.codeVerifier = null;
@@ -471,7 +471,7 @@ public class SpotifyManager {
                     SkysongClient.LOGGER.info("[Skysong] Spotify login complete");
                     this.sendChat("§b[Skysong] §a§lConnected to Spotify! §r§aYou won't need to log in again.");
                 } else {
-                    SkysongClient.LOGGER.error("Token exchange failed: " + response.body());
+                    SkysongClient.LOGGER.error("Token exchange failed: {}", response.body());
                     this.sendChat("§b[Skysong] §cLogin failed: " + response.body());
                     this.codeVerifier = null;
                 }
@@ -606,7 +606,7 @@ public class SpotifyManager {
                                     this.status = "Blocked by Spotify";
                                 }
 
-                                SkysongClient.LOGGER.warn("[Skysong] Spotify refused the request (403): " + response.body());
+                                SkysongClient.LOGGER.warn("[Skysong] Spotify refused the request (403): {}", response.body());
                                 if (ModSettings.useLocalMedia && LocalMediaSource.isSupported()) {
                                     this.reportProblem(
                                         "blocked",
@@ -666,7 +666,7 @@ public class SpotifyManager {
                         Identifier id = Ids.of("skysong", "album_art");
                         Minecraft.getInstance().getTextureManager().register(id, texture);
                         this.albumArtId = id;
-                        SkysongClient.LOGGER.info("Album art loaded: " + w + "x" + h);
+                        SkysongClient.LOGGER.info("Album art loaded: {}x{}", w, h);
                     } catch (Exception e) {
                         SkysongClient.LOGGER.error("Failed to load album art", e);
                     }
@@ -769,7 +769,7 @@ public class SpotifyManager {
                 int volume = Math.max(0, Math.min(100, device.get("volume_percent").getAsInt() + Integer.signum(direction) * VOLUME_STEP));
                 this.control("PUT", "/me/player/volume?volume_percent=" + volume, () -> Feedback.show("Volume " + volume + "%", 1200L));
             } catch (RuntimeException e) {
-                SkysongClient.LOGGER.warn("[Skysong] Could not read Spotify volume: " + e.getMessage());
+                SkysongClient.LOGGER.warn("[Skysong] Could not read Spotify volume: {}", e.getMessage());
             }
         });
     }
@@ -795,7 +795,7 @@ public class SpotifyManager {
                 boolean liked = JsonParser.parseString(response.body()).getAsJsonArray().get(0).getAsBoolean();
                 this.control(liked ? "DELETE" : "PUT", "/me/tracks?ids=" + id, () -> Feedback.show(liked ? "Removed from Liked Songs" : "Added to Liked Songs", 2000L));
             } catch (RuntimeException e) {
-                SkysongClient.LOGGER.warn("[Skysong] Could not read liked state: " + e.getMessage());
+                SkysongClient.LOGGER.warn("[Skysong] Could not read liked state: {}", e.getMessage());
             }
         });
     }
@@ -829,7 +829,7 @@ public class SpotifyManager {
             .method(method, method.equals("GET") ? BodyPublishers.noBody() : BodyPublishers.ofString(""))
             .build();
         return this.httpClient.sendAsync(request, BodyHandlers.ofString()).exceptionally(error -> {
-            SkysongClient.LOGGER.warn("[Skysong] Spotify request failed: " + error.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Spotify request failed: {}", error.getMessage());
             return null;
         });
     }

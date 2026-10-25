@@ -39,7 +39,7 @@ public class LyricsManager {
                     List<LyricsManager.LyricLine> lines = find(trackName, artistName, durationMs);
                     if (key.equals(this.currentTrackKey)) {
                         this.currentLyrics = lines;
-                        SkysongClient.LOGGER.info("[Skysong] " + (lines.isEmpty() ? "No synced lyrics for: " : "Lyrics loaded for: ") + trackName);
+                        SkysongClient.LOGGER.info("[Skysong] {}{}", (lines.isEmpty() ? "No synced lyrics for: " : "Lyrics loaded for: "), trackName);
                     }
                 }, "Skysong lyrics");
                 t.setDaemon(true);
@@ -73,7 +73,7 @@ public class LyricsManager {
 
             return bestFromSearch("search?q=" + enc(clean + " " + artist), durationMs);
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Lyrics lookup failed: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Lyrics lookup failed: {}", e.getMessage());
             return List.of();
         }
     }

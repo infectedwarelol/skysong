@@ -168,7 +168,7 @@ public final class DragSystem implements HudLayer {
                     d.renderWithTilt(c);
                 } catch (Throwable t) {
                     if (this.failed.add(d.id())) {
-                        SkysongClient.LOGGER.error("[Skysong] HUD element " + d.id() + " failed to draw", t);
+                        SkysongClient.LOGGER.error("[Skysong] HUD element {} failed to draw", d.id(), t);
                     }
                 }
             }
@@ -209,7 +209,7 @@ public final class DragSystem implements HudLayer {
                         d.renderGhost(c, o[0], o[1]);
                     } catch (Throwable t) {
                         if (this.failed.add(d.id() + ":ghost")) {
-                            SkysongClient.LOGGER.error("[Skysong] ghost of " + d.id() + " failed", t);
+                            SkysongClient.LOGGER.error("[Skysong] ghost of {} failed", d.id(), t);
                         }
                     } finally {
                         Gpu.setColor(1.0F, 1.0F, 1.0F, 1.0F);

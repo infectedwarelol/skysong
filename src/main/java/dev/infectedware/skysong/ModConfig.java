@@ -46,10 +46,10 @@ public final class ModConfig {
                 apply(json, true);
                 if (migrate) {
                     save();
-                    SkysongClient.LOGGER.info("[Skysong] Imported settings from " + LEGACY_FILE.getFileName());
+                    SkysongClient.LOGGER.info("[Skysong] Imported settings from {}", LEGACY_FILE.getFileName());
                 }
             } catch (Exception e) {
-                SkysongClient.LOGGER.warn("[Skysong] Could not load config: " + e.getMessage());
+                SkysongClient.LOGGER.warn("[Skysong] Could not load config: {}", e.getMessage());
             }
         }
     }
@@ -75,7 +75,7 @@ public final class ModConfig {
             Files.createDirectories(FILE.getParent());
             Files.writeString(FILE, GSON.toJson(snapshot(false, true)), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not save config: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not save config: {}", e.getMessage());
         }
     }
 
@@ -100,7 +100,7 @@ public final class ModConfig {
                 }
             }
         } catch (IllegalAccessException e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not read settings: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not read settings: {}", e.getMessage());
         }
 
         return json;
@@ -166,7 +166,7 @@ public final class ModConfig {
                 }
             }
         } catch (IllegalAccessException e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not reset config: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not reset shared settings: {}", e.getMessage());
         }
     }
 
@@ -176,7 +176,7 @@ public final class ModConfig {
                 e.getKey().set(null, e.getValue());
             }
         } catch (IllegalAccessException e) {
-            SkysongClient.LOGGER.warn("[Skysong] Could not reset config: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not reset config: {}", e.getMessage());
         }
 
         save();

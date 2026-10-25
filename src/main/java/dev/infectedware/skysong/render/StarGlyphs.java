@@ -80,7 +80,7 @@ public final class StarGlyphs {
             return out;
         } catch (Exception e) {
             failed = true;
-            SkysongClient.LOGGER.warn("[Skysong] Could not read the font for constellation lyrics: " + e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Could not read the font for constellation lyrics: {}", e.getMessage());
             return null;
         }
     }
