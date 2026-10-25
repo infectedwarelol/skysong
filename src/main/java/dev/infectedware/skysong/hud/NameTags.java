@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud;
 
+import dev.infectedware.skysong.compat.VoiceChat;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
 import dev.infectedware.skysong.ModSettings;
@@ -21,6 +22,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.Style;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.StringDecomposer;
 import net.minecraft.world.entity.Entity;
@@ -217,7 +219,8 @@ public final class NameTags implements HudLayer {
                                         h,
                                         s.alpha,
                                         s.scale,
-                                        screen[2]
+                                        screen[2],
+                                        VoiceChat.iconFor(p.getUUID())
                                     )
                                 );
                         }
@@ -309,6 +312,11 @@ public final class NameTags implements HudLayer {
                 }
 
                 R2D.rect(c, t.x(), t.y(), t.w(), t.h(), t.radius(), Colors.multAlpha(-1778384896, t.alpha()));
+                if (t.voice() != null) {
+                    float icon = t.h();
+                    R2D.image(c, t.voice(), t.x() - icon - 1.5F, t.y(), icon, icon, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, Colors.multAlpha(-1, t.alpha()), false);
+                }
+
                 float tx = t.x() + t.padX();
                 float[] nb = R2D.bounds(MsdfFont.Font.SEMIBOLD, "H", t.nameSize());
                 float nameY = midY - (nb[1] + nb[3]) / 2.0F;
@@ -376,7 +384,8 @@ public final class NameTags implements HudLayer {
         float h,
         float alpha,
         float scale,
-        float depth
+        float depth,
+        Identifier voice
     ) {
     }
 }
