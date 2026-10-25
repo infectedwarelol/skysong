@@ -59,6 +59,9 @@ public final class ModSettings {
     public static boolean lyricRealTiming = true;
     public static boolean classicMenu = false;
     public static boolean liveEditorMenu = false;
+    public static boolean partyEnabled = false;
+    public static boolean partyShareSong = true;
+    public static String partyRelayUrl = "";
     public static boolean shareMySong = false;
     public static boolean showOthersSongs = true;
     public static String lyricCustomFont = "";

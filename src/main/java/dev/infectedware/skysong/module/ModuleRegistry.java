@@ -12,6 +12,7 @@ import dev.infectedware.skysong.gui.click.SettingsPopup;
 import dev.infectedware.skysong.hud.Crosshair;
 import dev.infectedware.skysong.hud.InfoHud;
 import dev.infectedware.skysong.lyrics.LyricTranslator;
+import dev.infectedware.skysong.party.PartyClient;
 import dev.infectedware.skysong.render.AspectRatio;
 import dev.infectedware.skysong.render.CustomFonts;
 import dev.infectedware.skysong.render.fx.DeathFx;
@@ -568,6 +569,15 @@ public final class ModuleRegistry {
             )
         ),
         new ClientModule(
+            "Party",
+            "Add friends who use Skysong, see what they're playing and listen along together.",
+            Category.UTILS,
+            () -> ModSettings.partyEnabled,
+            v -> ModSettings.partyEnabled = v,
+            null,
+            ModuleRegistry::partySettings
+        ),
+        new ClientModule(
             "Config", "Save profiles, share your settings with a code, or reset everything.", Category.UTILS, null, null, null, ModuleRegistry::configSettings
         )
     );
@@ -1016,6 +1026,80 @@ public final class ModuleRegistry {
         );
         shaderColors(s);
         shaderError(s);
+        return s;
+    }
+
+    private static List<Setting> partySettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Status"));
+        s.add(new Setting.Info(PartyClient::status));
+        s.add(new Setting.Toggle("Share what I'm listening to", () -> ModSettings.partyShareSong, v -> ModSettings.partyShareSong = v));
+        PartyClient.Friend followed = PartyClient.followed();
+        if (followed != null) {
+            s.add(new Setting.Header("Listening along"));
+            s.add(new Setting.Info(() -> {
+                PartyClient.Friend f = PartyClient.followed();
+                return f == null || f.song() == null ? "Waiting for a song…" : f.song().label();
+            }));
+            s.add(new Setting.Action("Stop listening with " + followed.name(), PartyClient::unfollow));
+        }
+
+        s.add(new Setting.Header("Add a friend"));
+        s.add(new Setting.Input("Minecraft name…", "Send request", PartyClient::addFriend));
+        s.add(new Setting.Info(() -> "They need Skysong with Party turned on."));
+        List<String> incoming = PartyClient.incoming();
+        if (!incoming.isEmpty()) {
+            s.add(new Setting.Header("Friend requests"));
+            s.add(new Setting.Info(() -> "Click to accept, × twice to decline."));
+            for (String name : incoming) {
+                s.add(new Setting.ListRow(name, () -> false, () -> PartyClient.accept(name), () -> PartyClient.decline(name)));
+            }
+        }
+
+        List<String> outgoing = PartyClient.outgoing();
+        if (!outgoing.isEmpty()) {
+            s.add(new Setting.Header("Sent requests"));
+            for (String name : outgoing) {
+                s.add(new Setting.ListRow(name + " · waiting", () -> false, () -> {}, () -> PartyClient.cancel(name)));
+            }
+        }
+
+        s.add(new Setting.Header("Friends"));
+        List<PartyClient.Friend> friends = PartyClient.friends();
+        if (friends.isEmpty()) {
+            s.add(new Setting.Info(() -> PartyClient.isConnected() ? "No friends yet: send a request above." : "Friends show up once you're connected."));
+        } else {
+            s.add(new Setting.Info(() -> "Click a friend to listen along."));
+        }
+
+        for (PartyClient.Friend f : friends) {
+            String label = f.name() + (f.online() ? "" : " · offline") + (f.listeningToMe() ? " · listening to you" : "");
+            s.add(new Setting.ListRow(label, () -> PartyClient.isFollowing(f.name()), () -> {
+                if (PartyClient.isFollowing(f.name())) {
+                    PartyClient.unfollow();
+                } else {
+                    PartyClient.follow(f.name());
+                }
+            }, () -> PartyClient.remove(f.name())));
+            s.add(new Setting.Info(() -> {
+                PartyClient.Friend now = PartyClient.friend(f.uuid());
+                if (now == null || !now.online()) {
+                    return "Offline";
+                }
+
+                return now.song() == null ? "Not sharing a song" : (now.song().playing() ? "Playing: " : "Paused: ") + now.song().label();
+            }));
+        }
+
+        s.add(new Setting.Header("Relay"));
+        s.add(new Setting.Info(() -> ModSettings.partyRelayUrl.isBlank() ? "No relay address set" : ModSettings.partyRelayUrl));
+        s.add(new Setting.Input("Relay address…", "Use relay", url -> {
+            ModSettings.partyRelayUrl = url.trim();
+            ModConfig.save();
+            PartyClient.reconnect();
+            SettingsPopup.rebuildSoon();
+        }));
+        s.add(new Setting.Action("Reconnect", PartyClient::reconnect));
         return s;
     }
 

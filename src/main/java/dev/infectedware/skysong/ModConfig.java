@@ -30,7 +30,9 @@ public final class ModConfig {
     private static final Map<Field, Object> DEFAULTS = captureDefaults();
     private static final String EFFECT_LIST_KEY = "effectListVersion";
     private static final int EFFECT_LIST_VERSION = 2;
-    private static final Set<String> PERSONAL = Set.of("spotifyClientId", "popupPositions", "shareMySong");
+    private static final Set<String> PERSONAL = Set.of(
+        "spotifyClientId", "popupPositions", "shareMySong", "partyEnabled", "partyShareSong", "partyRelayUrl"
+    );
 
     private ModConfig() {
     }

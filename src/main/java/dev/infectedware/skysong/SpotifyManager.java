@@ -33,6 +33,7 @@ import java.util.Base64;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -76,6 +77,7 @@ public class SpotifyManager {
     private static final String API = "https://api.spotify.com/v1";
     private static final int VOLUME_STEP = 10;
     private volatile String currentTrackId = "";
+    private static final Pattern TRACK_ID = Pattern.compile("[A-Za-z0-9]{22}");
 
     public long getSmoothedProgressMs() {
         if (this.isPlaying && this.lastUpdateTime != 0L) {
@@ -810,10 +812,15 @@ public class SpotifyManager {
     }
 
     private CompletableFuture<HttpResponse<String>> send(String method, String path) {
+        return this.send(method, path, "");
+    }
+
+    private CompletableFuture<HttpResponse<String>> send(String method, String path, String body) {
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(API + path))
             .header("Authorization", "Bearer " + this.accessToken)
-            .method(method, method.equals("GET") ? BodyPublishers.noBody() : BodyPublishers.ofString(""))
+            .header("Content-Type", "application/json")
+            .method(method, method.equals("GET") ? BodyPublishers.noBody() : BodyPublishers.ofString(body))
             .build();
         return this.httpClient.sendAsync(request, BodyHandlers.ofString()).exceptionally(error -> {
             SkysongClient.LOGGER.warn("[Skysong] Spotify request failed: {}", error.getMessage());
@@ -844,6 +851,41 @@ public class SpotifyManager {
 
     public Identifier getAlbumArtId() {
         return this.albumArtId;
+    }
+
+    public String getCurrentTrackId() {
+        return this.currentTrackId;
+    }
+
+    public boolean playTrack(String trackId, long positionMs) {
+        if (trackId == null || !TRACK_ID.matcher(trackId).matches()) {
+            return false;
+        }
+
+        if (this.usingLocal && this.local.supportsControls() && this.local.openTrack(trackId, () -> {
+        })) {
+            return true;
+        }
+
+        if (this.accessToken != null) {
+            JsonObject body = new JsonObject();
+            JsonArray uris = new JsonArray();
+            uris.add("spotify:track:" + trackId);
+            body.add("uris", uris);
+            body.addProperty("position_ms", Math.max(0L, positionMs));
+            this.send("PUT", "/me/player/play", body.toString()).thenAccept(response -> {
+                if (response != null && response.statusCode() >= 200 && response.statusCode() < 300) {
+                    this.updatePlaybackState();
+                } else {
+                    this.reportControlFailure(response);
+                }
+            });
+            return true;
+        }
+
+        Util.getPlatform().openUri("spotify:track:" + trackId);
+        Feedback.show("Opened the song in Spotify: press play", 3000L);
+        return false;
     }
 
     public String getCurrentTrackName() {

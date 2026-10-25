@@ -70,6 +70,11 @@ public final class MacSpotifyReader implements MediaReader {
         return run("if application \"Spotify\" is running then\ntell application \"Spotify\" to " + action + "\nend if") != null;
     }
 
+    @Override
+    public boolean openTrack(String trackId) {
+        return run("if application \"Spotify\" is running then\ntell application \"Spotify\" to play track \"spotify:track:" + trackId + "\"\nend if") != null;
+    }
+
     private static long parseLong(String text) {
         try {
             return Math.round(Double.parseDouble(text.trim().replace(',', '.')));

@@ -64,6 +64,22 @@ public final class LocalMediaSource {
         return true;
     }
 
+    public boolean openTrack(String trackId, Runnable onDone) {
+        MediaReader reader = this.active;
+        if (reader == null) {
+            return false;
+        }
+
+        Thread worker = new Thread(() -> {
+            if (reader.openTrack(trackId)) {
+                onDone.run();
+            }
+        }, "Skysong media open");
+        worker.setDaemon(true);
+        worker.start();
+        return true;
+    }
+
     public boolean supportsControls() {
         MediaReader reader = this.active;
         return reader != null && !(reader instanceof WindowsMediaReader);

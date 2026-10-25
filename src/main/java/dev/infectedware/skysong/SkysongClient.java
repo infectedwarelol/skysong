@@ -17,6 +17,7 @@ import dev.infectedware.skysong.lyrics.LyricsManager;
 import dev.infectedware.skysong.module.Binds;
 import dev.infectedware.skysong.module.Category;
 import dev.infectedware.skysong.module.ClientModule;
+import dev.infectedware.skysong.party.PartyClient;
 import dev.infectedware.skysong.render.CinematicTextRenderer;
 import dev.infectedware.skysong.render.StarGlyphs;
 import dev.infectedware.skysong.render.WorldTextRenderer;
@@ -31,6 +32,7 @@ import dev.infectedware.skysong.render.fx.WorldFx;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.message.v1.ClientSendMessageEvents;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
@@ -134,6 +136,8 @@ public class SkysongClient implements ClientModInitializer {
         KillFx.init();
         DeathFx.init();
         ClientTickEvents.END_CLIENT_TICK.register(StormFx::tick);
+        ClientTickEvents.END_CLIENT_TICK.register(client -> PartyClient.tick());
+        ClientLifecycleEvents.CLIENT_STOPPING.register(client -> PartyClient.shutdown());
         Hooks.afterEntities(EntityFx::capture);
         Hooks.last(ctx -> {
             Afterimages.render(ctx);

@@ -123,6 +123,12 @@ public final class LinuxMprisReader implements MediaReader {
         };
     }
 
+    @Override
+    public boolean openTrack(String trackId) {
+        String dest = this.destination;
+        return dest != null && call(dest, PLAYER + ".OpenUri", "'spotify:track:" + trackId + "'");
+    }
+
     private boolean seekTo(String dest, long targetMs) {
         String out = run("call", "--session", "--dest", dest, "--object-path", OBJECT_PATH, "--method", "org.freedesktop.DBus.Properties.Get", PLAYER, "Position");
         if (out == null) {

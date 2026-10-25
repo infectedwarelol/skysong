@@ -95,6 +95,7 @@ public class LiveEditorScreen extends VScreen {
         Map.entry("Dynamic Colors", Items.AMETHYST_SHARD),
         Map.entry("Spotify", Items.GOAT_HORN),
         Map.entry("Config", Items.COMPARATOR),
+        Map.entry("Party", Items.JUKEBOX),
         Map.entry(THEMES_ROW, Items.GLOW_INK_SAC)
     );
     private static final Map<String, ItemStack> STACKS = new java.util.HashMap<>();

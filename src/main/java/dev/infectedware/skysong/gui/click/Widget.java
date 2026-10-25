@@ -546,7 +546,12 @@ public abstract class Widget {
             float fw = w - 8.0F;
             float fy = y + 1.0F;
             float fh = 13.0F;
-            R2D.rect(c, fx, fy, fw, fh, Ui.cornerRadius(3.0F, fw, fh), Colors.rgba(0, 0, 0, 60.0F * a));
+            if (flat) {
+                flatField(c, fx, fy, fw, fh, a, this.focus || Ui.inside(mx, my, fx, fy, fw, fh));
+            } else {
+                R2D.rect(c, fx, fy, fw, fh, Ui.cornerRadius(3.0F, fw, fh), Colors.rgba(0, 0, 0, 60.0F * a));
+            }
+
             if (this.focus) {
                 R2D.outline(c, fx, fy, fw, fh, Ui.cornerRadius(3.0F, fw, fh), 0.6F, ClientAccent.accentBright(190.0F * a));
             }
@@ -561,13 +566,19 @@ public abstract class Widget {
                 shown = empty ? shown.substring(0, shown.length() - 1) : shown.substring(1);
             }
 
-            Ui.text(c, shown, fx + 5.0F, fy + 2.8F, 6.0F, empty ? Ui.white(110.0F * a) : ClientAccent.accentSoft(220.0F * a));
+            Ui.text(c, shown, fx + 5.0F, fy + 2.8F, 6.0F, empty ? Ui.white(110.0F * a) : (flat ? Ui.white(235.0F * a) : ClientAccent.accentSoft(220.0F * a)));
             if (this.focus && System.currentTimeMillis() / 500L % 2L == 0L) {
                 float cx = fx + 5.0F + (empty ? 0.0F : Ui.width(shown, 6.0F)) + 0.5F;
                 R2D.rect(c, cx, fy + 2.5F, 0.8F, fh - 5.0F, 0.0F, ClientAccent.accentBright(220.0F * a));
             }
 
-            Ui.button(c, x + 4.0F, y + 16.0F, w - 8.0F, 13.0F, this.ip.button(), a);
+            if (flat) {
+                flatField(c, x + 4.0F, y + 16.0F, w - 8.0F, 13.0F, a, Ui.inside(mx, my, x + 4.0F, y + 16.0F, w - 8.0F, 13.0F));
+                float lw = Ui.width(this.ip.button(), 6.0F);
+                Ui.text(c, this.ip.button(), x + (w - lw) / 2.0F, y + 19.2F, 6.0F, Ui.white(235.0F * a));
+            } else {
+                Ui.button(c, x + 4.0F, y + 16.0F, w - 8.0F, 13.0F, this.ip.button(), a);
+            }
         }
 
         @Override
@@ -790,17 +801,25 @@ public abstract class Widget {
             this.hover = this.hover + ((over ? 1.0F : 0.0F) - this.hover) * 0.25F;
             this.xHover = this.xHover + ((overX ? 1.0F : 0.0F) - this.xHover) * 0.25F;
             boolean on = this.row.active().getAsBoolean();
-            Ui.panelBg(c, bx, by, bw, bh, 3.0F, a * (1.0F + this.hover * 0.6F));
-            R2D.outline(
-                c,
-                bx,
-                by,
-                bw,
-                bh,
-                Ui.cornerRadius(3.0F, bw, bh),
-                on ? 0.8F : 0.5F,
-                on ? ClientAccent.accentBright(200.0F * a) : ClientAccent.accentSoft((30.0F + 50.0F * this.hover) * a)
-            );
+            if (flat) {
+                flatField(c, bx, by, bw, bh, a, over || overX);
+                if (on) {
+                    R2D.outline(c, bx, by, bw, bh, 0.0F, 0.7F, ClientAccent.accentBright(210.0F * a));
+                }
+            } else {
+                Ui.panelBg(c, bx, by, bw, bh, 3.0F, a * (1.0F + this.hover * 0.6F));
+                R2D.outline(
+                    c,
+                    bx,
+                    by,
+                    bw,
+                    bh,
+                    Ui.cornerRadius(3.0F, bw, bh),
+                    on ? 0.8F : 0.5F,
+                    on ? ClientAccent.accentBright(200.0F * a) : ClientAccent.accentSoft((30.0F + 50.0F * this.hover) * a)
+                );
+            }
+
             if (on) {
                 R2D.circle(c, bx + 7.0F, by + bh / 2.0F, 1.6F, ClientAccent.accentBright(230.0F * a));
             }
@@ -814,7 +833,7 @@ public abstract class Widget {
                 by + (bh - 7.0F) / 2.0F,
                 bw - xs - 16.0F,
                 6.0F,
-                armed ? Colors.rgba(255, 120, 120, 230.0F * a) : (on ? ClientAccent.accentBright(235.0F * a) : ClientAccent.accentSoft(215.0F * a))
+                armed ? Colors.rgba(255, 120, 120, 230.0F * a) : (on ? ClientAccent.accentBright(235.0F * a) : (flat ? Ui.white(225.0F * a) : ClientAccent.accentSoft(215.0F * a)))
             );
             int xCol = armed ? Colors.rgba(255, 90, 90, 240.0F * a) : Ui.white((110.0F + 120.0F * this.xHover) * a);
             float cx = xx + xs / 2.0F;

@@ -10,4 +10,8 @@ public interface MediaReader {
     default boolean control(MediaCommand command, long value) {
         return false;
     }
+
+    default boolean openTrack(String trackId) {
+        return false;
+    }
 }
