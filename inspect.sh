@@ -123,7 +123,7 @@ if [ -n "$LEAKS" ]; then
 else
     ok "no tokens or private keys in tracked files"
 fi
-TRACKED=$(git ls-files | grep -E '^(build|run|libs|\.gradle|\.idea)/|\.jar$|spotify_token|skysong\.json$' | grep -v '^gradle/wrapper/gradle-wrapper\.jar$' || true)
+TRACKED=$(git ls-files | grep -E '^(build|run|libs|\.gradle|\.idea)/|\.jar$|spotify_token|skysong\.json$' | grep -vE '^(gradle/wrapper/gradle-wrapper\.jar|\.idea/dictionaries/project\.xml)$' || true)
 if [ -n "$TRACKED" ]; then
     echo "$TRACKED" | sed 's/^/  /'
     fail "build output, game files or personal config are tracked by git"
