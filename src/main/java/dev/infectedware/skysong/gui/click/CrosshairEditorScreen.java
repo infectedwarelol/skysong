@@ -54,9 +54,7 @@ public final class CrosshairEditorScreen extends VScreen {
         return (this.height / this.scale() - 190.0F) / 2.0F;
     }
 
-    private float cellSize() {
-        return 10.0F;
-    }
+    private static final float CELL_SIZE = 10.0F;
 
     @Override
     protected void draw(GuiGraphics c, int mouseX, int mouseY, float delta) {
@@ -89,7 +87,7 @@ public final class CrosshairEditorScreen extends VScreen {
     }
 
     private void drawGrid(GuiGraphics c, float gx, float gy, float mx, float my, float a) {
-        float cs = this.cellSize();
+        float cs = CELL_SIZE;
         R2D.rect(c, gx - 3.0F, gy - 3.0F, 156.0F, 156.0F, 6.0F, Colors.rgba(0, 0, 0, 70.0F * a));
 
         for (int i = 0; i <= 15; i++) {
@@ -178,8 +176,8 @@ public final class CrosshairEditorScreen extends VScreen {
         float gx = this.px() + 12.0F;
         float gy = this.py() + 32.0F;
         if (!(mx < gx) && !(my < gy) && !(mx >= gx + 150.0F) && !(my >= gy + 150.0F)) {
-            int cx = (int)((mx - gx) / this.cellSize());
-            int cy = (int)((my - gy) / this.cellSize());
+            int cx = (int)((mx - gx) / CELL_SIZE);
+            int cy = (int)((my - gy) / CELL_SIZE);
             return new int[]{Math.min(cx, 14), Math.min(cy, 14)};
         } else {
             return null;

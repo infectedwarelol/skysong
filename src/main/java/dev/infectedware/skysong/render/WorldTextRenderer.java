@@ -102,7 +102,7 @@ public class WorldTextRenderer {
     private static final float SKY_NIGHT_GLOW = 1.5F;
     private static final float STAR_SCALE = 0.28F;
     private static final float STAR_HALO_SCALE = 2.4F;
-    private static final Component STAR = Component.literal("\u2726");
+    private static final Component STAR = Component.literal("✦");
     private static final float TYPE_STEP_MS = 40.0F;
     private static final float TYPE_FADE_MS = 90.0F;
     private static final float FALL_STEP_MS = 30.0F;
@@ -577,7 +577,8 @@ public class WorldTextRenderer {
                 double otherPitch = Math.toDegrees(Math.atan2(-other.y, Math.hypot(other.x, other.z)));
                 double dx = Math.abs(Mth.wrapDegrees(yaw - otherYaw)) - halfW - p.halfWidth;
                 double dy = Math.abs(pitch - otherPitch) - halfH - p.halfHeight;
-                nearest = Math.min(nearest, Math.max(dx, dy));
+                double overlap = Math.max(dx, dy);
+                nearest = Math.min(nearest, overlap);
             }
         }
 
@@ -1069,15 +1070,14 @@ public class WorldTextRenderer {
             alpha *= 0.55F + 0.3F * glitch;
         }
 
-        float glow = glowStrength;
-        if (glow > 0.02F) {
+        if (glowStrength > 0.02F) {
             int glowRgb = switch (ModSettings.lyricGlowMode) {
                 case ModSettings.LYRIC_GLOW_MATCH -> color;
                 case ModSettings.LYRIC_GLOW_CUSTOM -> ModSettings.lyricGlowColor & 16777215;
                 default -> 14543103;
             };
-            int c = argb(alpha * (0.1F + 0.05F * glow), glowRgb);
-            float spread = 0.5F + 0.5F * glow;
+            int c = argb(alpha * (0.1F + 0.05F * glowStrength), glowRgb);
+            float spread = 0.5F + 0.5F * glowStrength;
             if (c != 0) {
                 for (float[] o : GLOW_OFFSETS) {
                     tr.drawInBatch(text, x + o[0] * spread, y + o[1] * spread, c, false, mat, passes.glow(), layer, 0, 15728880);
@@ -1197,11 +1197,11 @@ public class WorldTextRenderer {
     }
 
     private static float[][] ring(int count, float radius) {
-        float[][] ring = new float[count][];
+        float[][] ring = new float[8][];
 
-        for (int i = 0; i < count; i++) {
-            double a = i * 2 * Math.PI / count;
-            ring[i] = new float[]{(float)Math.cos(a) * radius, (float)Math.sin(a) * radius};
+        for (int i = 0; i < 8; i++) {
+            double a = i * 2 * Math.PI / 8;
+            ring[i] = new float[]{(float)Math.cos(a), (float)Math.sin(a)};
         }
 
         return ring;

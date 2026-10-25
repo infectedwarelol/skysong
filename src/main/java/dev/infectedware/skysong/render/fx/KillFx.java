@@ -944,7 +944,7 @@ public final class KillFx {
     private static void sword(Vec3 tip, Vec3 side, float width, float size, float[] tint, float a) {
         Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
         float g = (width - 1.0F) * 0.14F;
-        swordSize = size;
+        swordSize = 0.62F;
         quad2d(b, tip, side, tint, a, 0.0F, -g, 0.26F * width, 0.55F, 0.0F, 0.55F, -0.26F * width, 0.55F);
         quad2d(b, tip, side, tint, a, -0.26F * width, 0.55F, 0.26F * width, 0.55F, 0.24F * width, 3.4F, -0.24F * width, 3.4F);
         quad2d(b, tip, side, tint, a, -0.95F * width, 3.36F - g, 0.95F * width, 3.36F - g, 0.8F * width, 3.64F + g, -0.8F * width, 3.64F + g);
@@ -998,7 +998,7 @@ public final class KillFx {
     }
 
     private static void groundLine(List<Vec3> pts, float width, float[] tint, float a) {
-        ribbon(pts, width, tint, a, new Vec3(0.0, 1.0, 0.0));
+        ribbon(pts, 0.07F, tint, a, new Vec3(0.0, 1.0, 0.0));
     }
 
     private static void beam(Vec3 base, float height, float width, float[] tint, float a) {
@@ -1091,7 +1091,7 @@ public final class KillFx {
     }
 
     private static long clock() {
-        return frozenAt >= 0L ? frozenAt : System.currentTimeMillis();
+        return System.currentTimeMillis();
     }
 
     private static void vtx(Mesh b, Vec3 p, float[] c, float a) {

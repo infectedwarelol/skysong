@@ -191,9 +191,9 @@ public final class SkyFx {
 
     public static boolean showsSky(Camera camera) {
         FogType submersion = camera.getFluidInCamera();
-        return submersion != FogType.POWDER_SNOW && submersion != FogType.LAVA
-            ? Compat.camEntity(camera) instanceof LivingEntity living && (living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS))
-            : true;
+        return submersion != FogType.POWDER_SNOW
+            && submersion != FogType.LAVA
+            && !(Compat.camEntity(camera) instanceof LivingEntity living && (living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS)));
     }
 
     private static void setSkyUniforms(Shader p, float time, RenderTarget main, int type) {

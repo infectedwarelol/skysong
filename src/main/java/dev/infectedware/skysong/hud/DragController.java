@@ -110,9 +110,9 @@ public final class DragController {
 
     public void swapGrabOffset() {
         if (this.dragging) {
-            float t = this.grabX;
-            this.grabX = this.grabY;
-            this.grabY = t;
+            float[] swapped = new float[]{this.grabY, this.grabX};
+            this.grabX = swapped[0];
+            this.grabY = swapped[1];
         }
     }
 

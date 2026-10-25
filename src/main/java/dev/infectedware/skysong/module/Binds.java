@@ -48,8 +48,7 @@ public final class Binds {
 
     public static void setHold(String module, boolean hold) {
         sync();
-        Binds.Bind b = BINDS.get(module);
-        BINDS.put(module, new Binds.Bind(b == null ? -1 : b.key(), hold));
+        BINDS.compute(module, (name, b) -> new Binds.Bind(b == null ? -1 : b.key(), hold));
         save();
     }
 

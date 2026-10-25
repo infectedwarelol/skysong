@@ -280,7 +280,7 @@ public final class Profiles {
             return "";
         }
 
-        String s = raw.replaceAll("[\\p{Cntrl}]", "").trim();
+        String s = raw.replaceAll("\\p{Cntrl}", "").trim();
         return s.length() > 24 ? s.substring(0, 24).trim() : s;
     }
 

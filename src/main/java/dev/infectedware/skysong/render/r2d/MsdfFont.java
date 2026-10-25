@@ -45,7 +45,7 @@ public final class MsdfFont {
     }
 
     public boolean lacks(int cp) {
-        return this.glyphs.containsKey(cp);
+        return !this.glyphs.containsKey(cp);
     }
 
     float kerning(int a, int b) {

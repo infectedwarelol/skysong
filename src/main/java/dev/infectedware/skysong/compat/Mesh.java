@@ -181,7 +181,7 @@ public final class Mesh {
         if (vao < 0) {
             vao = GlStateManager._glGenVertexArrays();
             vbo = GlStateManager._glGenBuffers();
-            ibo = GlStateManager._glGenBuffers();
+            int ibo = GlStateManager._glGenBuffers();
             GlStateManager._glBindVertexArray(vao);
             GL15.glBindBuffer(34962, vbo);
             int stride = 48;

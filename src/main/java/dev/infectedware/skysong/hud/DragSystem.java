@@ -131,7 +131,7 @@ public final class DragSystem implements HudLayer {
                 anyVisible |= d.interactive();
             }
 
-            if (anyVisible || NameTags.anyVisible()) {
+            if (anyVisible) {
                 Backdrop.captureForHud(c, tick);
             }
 

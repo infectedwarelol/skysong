@@ -33,13 +33,7 @@ import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.scores.PlayerTeam;
 
 public final class NameTags implements HudLayer {
-    private static final double MAX_DISTANCE_SQ = 4096.0;
-    private static final long VISIBILITY_REFRESH_MS = 150L;
-    private static final long PRUNE_MS = 1000L;
-    private static final int BACKGROUND = -1778384896;
-    private static final int HEART = -42386;
-    private static final int HEALTH = -5196096;
-    private static final Pattern EMPTY_TOKEN = Pattern.compile("[<\\[({‹〈«＜]\\s*empty\\s*[>\\])}›〉»＞]", 2);
+    private static final Pattern EMPTY_TOKEN = Pattern.compile("[<\\[({‹〈«＜]\\s*empty\\s*[>\\])}›〉»＞]", Pattern.CASE_INSENSITIVE);
     private static final NameTags INSTANCE = new NameTags();
     private final List<NameTags.Tag> tags = new ArrayList<>();
     private final Map<Integer, NameTags.Seen> seen = new HashMap<>();
@@ -114,12 +108,12 @@ public final class NameTags implements HudLayer {
 
     private static boolean present(String s) {
         if (s == null) {
-            return true;
+            return false;
         }
 
         String t = EMPTY_TOKEN.matcher(s.replaceAll("(?i)§[0-9a-fk-or]", "").trim()).replaceAll("").trim();
         t = t.replaceAll("^[\\p{P}\\p{S}\\s]+", "").replaceAll("[\\p{P}\\p{S}\\s]+$", "");
-        return t.isEmpty() || t.equalsIgnoreCase("empty");
+        return !t.isEmpty() && !t.equalsIgnoreCase("empty");
     }
 
     private static Component topHologram(Player p) {
@@ -129,7 +123,7 @@ public final class NameTags implements HudLayer {
         double top = p.getY() + p.getBbHeight();
 
         for (Entity e : mc.level.entitiesForRendering()) {
-            if (e != p && !(e instanceof Player)) {
+            if (!(e instanceof Player)) {
                 double dx = e.getX() - p.getX();
                 double dz = e.getZ() - p.getZ();
                 if (!(dx * dx + dz * dz > 2.25) && !(e.getY() < top - 1.0) && !(e.getY() > top + 7.0)) {
@@ -294,20 +288,21 @@ public final class NameTags implements HudLayer {
 
             for (NameTags.Tag t : this.tags) {
                 boolean scaling = Math.abs(t.scale() - 1.0F) > 0.001F;
+                float midY = t.y() + t.h() / 2.0F;
                 if (scaling) {
                     float cx = t.x() + t.w() / 2.0F;
                     float cy = t.y() + t.h() / 2.0F;
                     c.pose().pushPose();
-                    c.pose().translate(cx, cy, 0.0F);
+                    c.pose().translate(cx, midY, 0.0F);
                     c.pose().scale(t.scale(), t.scale(), 1.0F);
-                    c.pose().translate(-cx, -cy, 0.0F);
+                    c.pose().translate(-cx, -midY, 0.0F);
                 }
 
                 R2D.rect(c, t.x(), t.y(), t.w(), t.h(), t.radius(), Colors.multAlpha(-1778384896, t.alpha()));
                 float tx = t.x() + t.padX();
                 float ty = t.y() + t.padY() - 1.0F;
                 float[] nb = R2D.bounds(MsdfFont.Font.SEMIBOLD, "H", t.nameSize());
-                float nameY = t.y() + t.h() / 2.0F - (nb[1] + nb[3]) / 2.0F;
+                float nameY = midY - (nb[1] + nb[3]) / 2.0F;
 
                 for (NameTags.Run r : t.runs()) {
                     R2D.text(c, MsdfFont.Font.SEMIBOLD, r.text(), tx, nameY, t.nameSize(), Colors.multAlpha(r.color(), t.alpha()));
@@ -318,7 +313,7 @@ public final class NameTags implements HudLayer {
                     float hx = t.x() + t.padX() + t.nameW() + t.healthGap();
                     float[] hb = R2D.bounds(MsdfFont.Font.HEART, "A", t.healthSize());
                     R2D.text(
-                        c, MsdfFont.Font.HEART, "A", hx, t.y() + t.h() / 2.0F - (hb[1] + hb[3]) / 2.0F, t.healthSize(), Colors.multAlpha(-42386, t.alpha())
+                        c, MsdfFont.Font.HEART, "A", hx, midY - (hb[1] + hb[3]) / 2.0F, t.healthSize(), Colors.multAlpha(-42386, t.alpha())
                     );
                     float[] vb = R2D.bounds(MsdfFont.Font.MEDIUM, "0", t.healthSize());
                     R2D.text(
@@ -326,7 +321,7 @@ public final class NameTags implements HudLayer {
                         MsdfFont.Font.MEDIUM,
                         t.health(),
                         hx + t.heartW() + t.gap(),
-                        t.y() + t.h() / 2.0F - (vb[1] + vb[3]) / 2.0F,
+                        midY - (vb[1] + vb[3]) / 2.0F,
                         t.healthSize(),
                         Colors.multAlpha(-5196096, t.alpha())
                     );

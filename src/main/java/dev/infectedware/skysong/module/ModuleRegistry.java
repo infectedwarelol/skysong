@@ -1222,9 +1222,7 @@ public final class ModuleRegistry {
         }
 
         String[] options = names.toArray(String[]::new);
-        return new Setting.Choice("Font file", options, () -> Math.max(0, names.indexOf(ModSettings.lyricCustomFont)), v -> {
-            ModSettings.lyricCustomFont = options[Math.floorMod(v, options.length)];
-        });
+        return new Setting.Choice("Font file", options, () -> Math.max(0, names.indexOf(ModSettings.lyricCustomFont)), v -> ModSettings.lyricCustomFont = options[Math.floorMod(v, options.length)]);
     }
 
     private static SpotifyManager spotify() {

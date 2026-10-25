@@ -207,12 +207,12 @@ public final class Fx {
         }
     }
 
-    static void set(Shader p, String name, float x, float y, float z, float w) {
-        p.set(name, x, y, z, w);
+    static void set(Shader p, String name, float a, float b, float c, float d) {
+        p.set(name, a, b, c, d);
     }
 
-    static void set(Shader p, String name, float x, float y) {
-        p.set(name, x, y);
+    static void setOutSize(Shader p, float width, float height) {
+        p.set("OutSize", width, height);
     }
 
     static void set(Shader p, String name, Matrix4f m) {

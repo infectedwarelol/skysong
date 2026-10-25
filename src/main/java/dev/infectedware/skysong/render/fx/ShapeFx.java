@@ -59,14 +59,14 @@ final class ShapeFx {
         Gpu.texture(1, Gpu.color(captured));
         Gpu.texture(2, sceneCopy != null ? Gpu.color(sceneCopy) : 0);
         Gpu.texture(3, glow ? Gpu.color(blurB) : 0);
-        Fx.set(Fx.shape, "OutSize", w, h);
+        Fx.setOutSize(Fx.shape, w, h);
         Fx.set(Fx.shape, "Fill", look.fill(), look.opacity(), Fx.seconds(), look.drawCaptured() ? 1.0F : 0.0F);
         Fx.set(
             Fx.shape,
             "Edge",
             look.outlineWidth() > 0.0F ? Fx.px(look.outlineWidth()) : 0.0F,
             glow ? look.glowStrength() : 0.0F,
-            look.hiddenFill(),
+            0.0F,
             look.outlineWhiten()
         );
         Fx.set(

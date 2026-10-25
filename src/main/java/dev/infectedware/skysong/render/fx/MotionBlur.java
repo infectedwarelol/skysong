@@ -72,7 +72,7 @@ public final class MotionBlur {
                     Fx.set(Fx.motion, "CamDelta", (float)delta.x, (float)delta.y, (float)delta.z, ModSettings.motionBlurMovement ? 1.0F : 0.0F);
                     int q = Mth.clamp(ModSettings.motionBlurQuality, 0, SAMPLES.length - 1);
                     Fx.set(Fx.motion, "Params", scale, ModSettings.motionBlurMax / 100.0F, SAMPLES[q], ModSettings.motionBlurSharpCenter ? 1.0F : 0.0F);
-                    Fx.set(Fx.motion, "OutSize", main.width, main.height);
+                    Fx.setOutSize(Fx.motion, main.width, main.height);
                     Fx.draw(Fx.motion);
                     drawnFrame = System.currentTimeMillis();
                 } catch (Throwable t) {

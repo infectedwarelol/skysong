@@ -26,8 +26,10 @@ public final class Sounds {
                 return;
             }
 
-            SoundEvent event = EVENTS.computeIfAbsent(id, k -> SoundEvent.createVariableRangeEvent(Ids.of("skysong", "ui." + k)));
-            mc.getSoundManager().play(SimpleSoundInstance.forUI(event, 1.0F, volume * 0.6F));
+            lastTypingSound = now;
         }
+
+        SoundEvent event = EVENTS.computeIfAbsent(id, k -> SoundEvent.createVariableRangeEvent(Ids.of("skysong", "ui." + k)));
+        mc.getSoundManager().play(SimpleSoundInstance.forUI(event, 1.0F, volume * 0.6F));
     }
 }

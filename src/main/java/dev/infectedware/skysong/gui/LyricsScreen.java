@@ -50,7 +50,7 @@ public class LyricsScreen extends VScreen {
         float h = HudSpace.height();
         float panelW = Math.min(MAX_PANEL_WIDTH, w - MARGIN * 2.0F);
         float panelH = h - MARGIN * 2.0F;
-        this.panelX = (w - panelW) / 2.0F;
+        float panelX = (w - panelW) / 2.0F;
         float panelY = MARGIN;
         this.listTop = panelY + HEADER_HEIGHT;
         this.listBottom = panelY + panelH - PADDING;
@@ -58,8 +58,8 @@ public class LyricsScreen extends VScreen {
         ctx.pose().translate(0.0F, 0.0F, 300.0F);
         ctx.pose().scale(s, s, 1.0F);
         R2D.rect(ctx, 0.0F, 0.0F, w, h, 0.0F, 1426063360);
-        R2D.clientRectFixed(ctx, this.panelX, panelY, panelW, panelH, 12.0F, 1.0F);
-        float textX = this.panelX + PADDING;
+        R2D.clientRectFixed(ctx, panelX, panelY, panelW, panelH, 12.0F, 1.0F);
+        float textX = panelX + PADDING;
         float textWidth = panelW - PADDING * 2.0F;
         String track = spotify.getCurrentTrackName();
         String title = track.isEmpty() ? "Nothing playing" : track + "  ·  " + spotify.getCurrentArtist();
@@ -70,7 +70,7 @@ public class LyricsScreen extends VScreen {
         List<LyricsManager.LyricLine> lines = lyrics.lines();
         if (lines.isEmpty()) {
             R2D.textCentered(
-                ctx, MsdfFont.Font.MEDIUM, "No synced lyrics for this song", this.panelX + panelW / 2.0F, (this.listTop + this.listBottom) / 2.0F, 8.0F,
+                ctx, MsdfFont.Font.MEDIUM, "No synced lyrics for this song", panelX + panelW / 2.0F, (this.listTop + this.listBottom) / 2.0F, 8.0F,
                 Colors.rgba(220, 225, 240, 220.0F)
             );
         } else {
@@ -79,20 +79,20 @@ public class LyricsScreen extends VScreen {
             this.follow(lines, current);
             float hoverY = HudSpace.mouseY();
             float hoverX = HudSpace.mouseX();
-            Clip.push(ctx, this.panelX, this.listTop, this.panelX + panelW, this.listBottom);
+            Clip.push(ctx, panelX, this.listTop, panelX + panelW, this.listBottom);
             float y = this.listTop - this.scroll;
 
             for (int i = 0; i < lines.size(); i++) {
                 LyricsManager.LyricLine line = lines.get(i);
                 float rowHeight = rowHeight(line);
                 if (y + rowHeight >= this.listTop && y <= this.listBottom) {
-                    boolean hovered = hoverX >= this.panelX && hoverX <= this.panelX + panelW && hoverY >= y && hoverY < y + rowHeight;
+                    boolean hovered = hoverX >= panelX && hoverX <= panelX + panelW && hoverY >= y && hoverY < y + rowHeight;
                     if (i == current) {
-                        R2D.rect(ctx, this.panelX + 6.0F, y + 1.0F, 2.5F, rowHeight - 2.0F, 1.0F, ClientAccent.accent(255.0F));
+                        R2D.rect(ctx, panelX + 6.0F, y + 1.0F, 2.5F, rowHeight - 2.0F, 1.0F, ClientAccent.accent(255.0F));
                     }
 
                     if (hovered) {
-                        R2D.rect(ctx, this.panelX + 4.0F, y, panelW - 8.0F, rowHeight, 5.0F, Colors.rgba(255, 255, 255, 22.0F));
+                        R2D.rect(ctx, panelX + 4.0F, y, panelW - 8.0F, rowHeight, 5.0F, Colors.rgba(255, 255, 255, 22.0F));
                     }
 
                     int color = i == current ? -1 : (i < current ? Colors.rgba(170, 175, 190, 170.0F) : Colors.rgba(215, 220, 235, 225.0F));

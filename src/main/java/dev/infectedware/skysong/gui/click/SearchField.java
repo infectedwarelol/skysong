@@ -302,7 +302,7 @@ public final class SearchField {
         }
 
         switch (key) {
-            case 256:
+            case 256 -> {
                 if (!this.text.isEmpty()) {
                     this.setText("");
                 } else {
@@ -310,36 +310,44 @@ public final class SearchField {
                 }
 
                 return true;
-            case 257:
-            case 335:
+            }
+            case 257, 335 -> {
                 this.blur();
                 return true;
-            case 259:
+            }
+            case 259 -> {
                 if (!this.deleteSelection() && this.cursor > 0) {
                     this.remove(this.cursor - 1, this.cursor);
                 }
 
                 return true;
-            case 261:
+            }
+            case 261 -> {
                 if (!this.deleteSelection() && this.cursor < this.text.length()) {
                     this.remove(this.cursor, this.cursor + 1);
                 }
 
                 return true;
-            case 262:
+            }
+            case 262 -> {
                 this.move(this.hasSelection() && !shift ? this.selMax() : Math.min(this.text.length(), this.cursor + 1), shift);
                 return true;
-            case 263:
+            }
+            case 263 -> {
                 this.move(this.hasSelection() && !shift ? this.selMin() : Math.max(0, this.cursor - 1), shift);
                 return true;
-            case 268:
+            }
+            case 268 -> {
                 this.move(0, shift);
                 return true;
-            case 269:
+            }
+            case 269 -> {
                 this.move(this.text.length(), shift);
                 return true;
-            default:
+            }
+            default -> {
                 return false;
+            }
         }
     }
 

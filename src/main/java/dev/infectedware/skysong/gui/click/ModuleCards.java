@@ -358,11 +358,11 @@ public final class ModuleCards {
     }
 
     static float cornerEdgeInset(float r, float t) {
-        if (r <= t) {
+        if (r <= 1.0F) {
             return 0.0F;
         }
 
-        float d = r - t;
+        float d = r - 1.0F;
         return r - (float)Math.sqrt(Math.max(0.0F, r * r - d * d));
     }
 

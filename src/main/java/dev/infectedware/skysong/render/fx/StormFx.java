@@ -102,7 +102,7 @@ public final class StormFx {
                 Fx.set(Fx.storm, "Proj", proj);
                 Fx.set(Fx.storm, "InvProj", invProj);
                 Fx.set(Fx.storm, "ViewRot", new Matrix4f(ctx.view()));
-                Fx.set(Fx.storm, "OutSize", w, h);
+                Fx.setOutSize(Fx.storm, w, h);
                 Fx.set(Fx.storm, "CamPos", (float)(cam.x % 4096.0), (float)cam.y, (float)(cam.z % 4096.0), Fx.seconds());
                 Fx.set(Fx.storm, "Params", ModSettings.stormReflections, ModSettings.stormPuddles, ModSettings.stormFog, SkyFx.daylight());
                 Fx.set(Fx.storm, "FogCol", fog[0], fog[1], fog[2], raining(mc) ? 1.0F : 0.0F);

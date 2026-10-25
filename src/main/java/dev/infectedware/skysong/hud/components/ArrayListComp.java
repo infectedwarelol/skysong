@@ -76,8 +76,8 @@ public final class ArrayListComp extends Draggable {
             }
         }
 
-        this.leftAligned = this.x() + this.width / 2.0F <= HudSpace.width() / 2.0F;
-        this.bottom = this.y() + this.height / 2.0F > HudSpace.height() / 2.0F;
+        boolean leftAligned = this.x() + this.width / 2.0F <= HudSpace.width() / 2.0F;
+        boolean bottom = this.y() + this.height / 2.0F > HudSpace.height() / 2.0F;
         List<ClientModule> shown = new ArrayList<>();
 
         for (ClientModule m : this.rows.keySet()) {
@@ -89,7 +89,7 @@ public final class ArrayListComp extends Draggable {
         shown.sort(
             Comparator.<ClientModule>comparingDouble(mx -> R2D.width(MsdfFont.Font.MEDIUM, mx.name(), 7.2F)).reversed().thenComparing(ClientModule::name)
         );
-        if (this.bottom) {
+        if (bottom) {
             Collections.reverse(shown);
         }
 
@@ -108,7 +108,7 @@ public final class ArrayListComp extends Draggable {
 
         this.width = Math.max(1.0F, maxW);
         this.height = total + 1.0F;
-        if (this.bottom && !Float.isNaN(this.lastPinnedHeight) && !this.drag().dragging() && Math.abs(this.height - this.lastPinnedHeight) > 1.0E-4F) {
+        if (bottom && !Float.isNaN(this.lastPinnedHeight) && !this.drag().dragging() && Math.abs(this.height - this.lastPinnedHeight) > 1.0E-4F) {
             this.drag().adjustY(-(this.height - this.lastPinnedHeight));
             this.drag().syncToTarget();
         }
@@ -135,7 +135,7 @@ public final class ArrayListComp extends Draggable {
                 float rw = widths[i];
                 float rh = heights[i];
                 if (!(rh <= 0.05F)) {
-                    float rx = this.leftAligned ? x : x + this.width - rw;
+                    float rx = leftAligned ? x : x + this.width - rw;
                     float overlapTop = i > 0 ? 0.75F : 0.0F;
                     boolean first = i == 0;
                     boolean last = i + 1 >= shown.size();
@@ -145,10 +145,10 @@ public final class ArrayListComp extends Draggable {
                     float straightBottom = last ? 3.0F : 0.0F;
                     float raggedTop = topSticksOut ? 3.0F : 0.0F;
                     float raggedBottom = bottomSticksOut ? 3.0F : 0.0F;
-                    float rTL = this.leftAligned ? straightTop : raggedTop;
-                    float rTR = this.leftAligned ? raggedTop : straightTop;
-                    float rBL = this.leftAligned ? straightBottom : raggedBottom;
-                    float rBR = this.leftAligned ? raggedBottom : straightBottom;
+                    float rTL = leftAligned ? straightTop : raggedTop;
+                    float rTR = leftAligned ? raggedTop : straightTop;
+                    float rBL = leftAligned ? straightBottom : raggedBottom;
+                    float rBR = leftAligned ? raggedBottom : straightBottom;
                     float extra = last ? 0.0F : 0.75F;
                     R2D.glass(c, rx, rowY - overlapTop, rw, rh + overlapTop + extra, rTL, rTR, rBR, rBL, a, first);
                     rowY += rh;
@@ -167,7 +167,7 @@ public final class ArrayListComp extends Draggable {
                 float p = this.rows.get(m).get();
                 float rh = heights[i];
                 float tw = R2D.width(MsdfFont.Font.MEDIUM, m.name(), 7.2F);
-                float tx = this.leftAligned ? x + 1.5F : x + this.width - 1.5F - tw;
+                float tx = leftAligned ? x + 1.5F : x + this.width - 1.5F - tw;
                 float ta = Math.clamp(a * p, 0.0F, 1.0F);
                 float wave = 0.5F + 0.5F * (float)Math.sin((rowY + rh * 0.5F) * 0.05F - this.wavePhase);
                 int color;

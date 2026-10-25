@@ -228,7 +228,8 @@ public final class TargetHudComp extends Draggable {
         barFill(c, bx, barY, fill, 8.0F, br, this.health, a);
         String hpText = Math.round(Math.max(0.0F, hp)) + "HP";
         float hpW = R2D.width(MsdfFont.Font.PIXEL, hpText, 6.0F);
-        float tx = Math.max(Math.min(bx + (bw - hpW) / 2.0F + 0.75F, bx + fill - hpW - 2.0F), bx + 2.0F);
+        float centered = Math.min(bx + (bw - hpW) / 2.0F + 0.75F, bx + fill - hpW - 2.0F);
+        float tx = Math.max(centered, bx + 2.0F);
         float covered = hpW <= 0.0F ? 0.0F : clamp01((bx + fill - tx) / hpW);
         int under = Colors.lerp(-14935006, barColorAt(clamp01((tx + hpW / 2.0F - bx) / Math.max(bw, 1.0F)), this.health), covered);
         float lum = (0.2126F * (under >> 16 & 0xFF) + 0.7152F * (under >> 8 & 0xFF) + 0.0722F * (under & 0xFF)) / 255.0F;
@@ -365,7 +366,7 @@ public final class TargetHudComp extends Draggable {
     }
 
     private static int darken(int rgb, float amount) {
-        float k = 1.0F - amount;
+        float k = 1.0F - 0.45F;
         return Math.round((rgb >> 16 & 0xFF) * k) << 16 | Math.round((rgb >> 8 & 0xFF) * k) << 8 | Math.round((rgb & 0xFF) * k);
     }
 
@@ -503,8 +504,8 @@ public final class TargetHudComp extends Draggable {
             StringDecomposer.iterateFormatted(s, style, (i, st, cp) -> {
                 int col = st.getColor() != null ? 0xFF000000 | st.getColor().getValue() : -1;
                 if (col != color[0] && !run.isEmpty()) {
-                    R2D.text(c, MsdfFont.Font.SEMIBOLD, run.toString(), cursor[0], y, size, Colors.multAlpha(color[0], a));
-                    cursor[0] += R2D.width(MsdfFont.Font.SEMIBOLD, run.toString(), size);
+                    R2D.text(c, MsdfFont.Font.SEMIBOLD, run.toString(), cursor[0], y, 8.0F, Colors.multAlpha(color[0], a));
+                    cursor[0] += R2D.width(MsdfFont.Font.SEMIBOLD, run.toString(), 8.0F);
                     run.setLength(0);
                 }
 
@@ -515,13 +516,13 @@ public final class TargetHudComp extends Draggable {
             return Optional.empty();
         }, Style.EMPTY);
         if (!run.isEmpty()) {
-            R2D.text(c, MsdfFont.Font.SEMIBOLD, run.toString(), cursor[0], y, size, Colors.multAlpha(color[0], a));
+            R2D.text(c, MsdfFont.Font.SEMIBOLD, run.toString(), cursor[0], y, 8.0F, Colors.multAlpha(color[0], a));
         }
     }
 
     private static float coloredWidth(Component text, float size) {
         String plain = ChatFormatting.stripFormatting(text.getString());
-        return R2D.width(MsdfFont.Font.SEMIBOLD, plain == null ? "" : plain, size);
+        return R2D.width(MsdfFont.Font.SEMIBOLD, plain, 8.0F);
     }
 
     private static float clamp01(float f) {

@@ -253,7 +253,7 @@ public class ClickGuiScreen extends VScreen {
             ctx.pose().pushPose();
             ctx.pose().translate(0.0F, 0.0F, 200.0F);
             ctx.pose().scale(s, s, 1.0F);
-            R2D.rect(ctx, -5.0F, -5.0F, this.vw() + 10.0F, this.vh() + 10.0F, 0.0F, Colors.rgba(0, 0, 0, 60.0F * alpha));
+            R2D.rect(ctx, -5.0F, -5.0F, this.vw() + 10.0F, this.vh() + 10.0F, 0.0F, Colors.rgba(0, 0, 0, 60.0F * open));
             float px = this.panelX();
             float py = this.panelY();
             float motion = this.closing ? 0.96F + 0.04F * open : 0.9F + 0.1F * Anim.easeOutBack(Math.min(1.0F, this.openAnim.linear() * 1.05F));
@@ -261,7 +261,7 @@ public class ClickGuiScreen extends VScreen {
             ctx.pose().translate(px + 215.0F, py + 145.0F, 0.0F);
             ctx.pose().scale(motion, motion, 1.0F);
             ctx.pose().translate(-(px + 215.0F), -(py + 145.0F), 0.0F);
-            this.renderPanel(ctx, px, py, alpha);
+            this.renderPanel(ctx, px, py, open);
             ctx.pose().popPose();
             ctx.pose().popPose();
             Backdrop.release();
@@ -446,11 +446,11 @@ public class ClickGuiScreen extends VScreen {
     }
 
     private static String trim(String s, float max, float size) {
-        if (Ui.width(s, size) <= max) {
+        if (Ui.width(s, 5.0F) <= 90.0F) {
             return s;
         }
 
-        while (s.length() > 1 && Ui.width(s + "…", size) > max) {
+        while (s.length() > 1 && Ui.width(s + "…", 5.0F) > 90.0F) {
             s = s.substring(0, s.length() - 1);
         }
 
@@ -845,7 +845,7 @@ public class ClickGuiScreen extends VScreen {
             this.search.focus();
         }
 
-        return this.search.isTyping() && this.search.charTyped(chr) ? true : super.onChar(chr, modifiers);
+        return this.search.isTyping() && this.search.charTyped(chr) || super.onChar(chr, modifiers);
     }
 
     private enum View {

@@ -46,7 +46,7 @@ public final class InputEvents {
     }
 
     public static boolean isUp(int key) {
-        return key >= 0 && DOWN.get(key);
+        return key < 0 || !DOWN.get(key);
     }
 
     public static int leftCps() {

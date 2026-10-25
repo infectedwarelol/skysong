@@ -87,31 +87,20 @@ public abstract class Widget {
 
     public static Widget of(Setting s) {
         Setting u = Setting.unwrap(s);
-        if (u instanceof Setting.Header h) {
-            return new Widget.Separator(s, h);
-        } else if (u instanceof Setting.Toggle t) {
-            return new Widget.Bool(s, t);
-        } else if (u instanceof Setting.Slide sl) {
-            return new Widget.Slider(s, sl);
-        } else if (u instanceof Setting.Choice ch) {
-            return new Widget.Select(s, ch);
-        } else if (u instanceof Setting.Multi mu) {
-            return new Widget.MultiSelect(s, mu);
-        } else if (u instanceof Setting.ColorPick cp) {
-            return new Widget.ColorPicker(s, cp);
-        } else if (u instanceof Setting.Action ac) {
-            return new Widget.Button(s, ac);
-        } else if (u instanceof Setting.Info in) {
-            return new Widget.InfoLine(s, in);
-        } else if (u instanceof Setting.Input ip) {
-            return new Widget.InputRow(s, ip);
-        } else if (u instanceof Setting.KeyPick kp) {
-            return new Widget.KeyRow(s, kp);
-        } else if (u instanceof Setting.ListRow lr) {
-            return new Widget.ListItem(s, lr);
-        } else {
-            throw new IllegalStateException("unknown setting " + u);
-        }
+        return switch (u) {
+            case Setting.Header h -> new Widget.Separator(s, h);
+            case Setting.Toggle t -> new Widget.Bool(s, t);
+            case Setting.Slide sl -> new Widget.Slider(s, sl);
+            case Setting.Choice ch -> new Widget.Select(s, ch);
+            case Setting.Multi mu -> new Widget.MultiSelect(s, mu);
+            case Setting.ColorPick cp -> new Widget.ColorPicker(s, cp);
+            case Setting.Action ac -> new Widget.Button(s, ac);
+            case Setting.Info in -> new Widget.InfoLine(s, in);
+            case Setting.Input ip -> new Widget.InputRow(s, ip);
+            case Setting.KeyPick kp -> new Widget.KeyRow(s, kp);
+            case Setting.ListRow lr -> new Widget.ListItem(s, lr);
+            case Setting.Shown shown -> throw new IllegalStateException("unwrapped setting is still hidden: " + shown);
+        };
     }
 
     public static void drawToggle(GuiGraphics c, float x, float y, float w, float h, float on, float a) {
@@ -1151,7 +1140,8 @@ public abstract class Widget {
         @Override
         public void render(GuiGraphics c, float x, float y, float w, float a, float mx, float my) {
             String s = this.h.title();
-            float tw = Math.min(Ui.width(s, 6.0F), Math.max(8.0F, w - 24.0F));
+            float room = Math.max(8.0F, w - 24.0F);
+            float tw = Math.min(Ui.width(s, 6.0F), room);
             float tx = x + w / 2.0F - tw / 2.0F;
             float ly = y + 9.0F;
             int text = ClientAccent.accentSoft(210.0F * a);

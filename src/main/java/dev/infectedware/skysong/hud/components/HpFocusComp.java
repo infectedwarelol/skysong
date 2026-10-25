@@ -57,9 +57,10 @@ public final class HpFocusComp extends Draggable {
 
     private static boolean shouldShow() {
         Minecraft mc = Minecraft.getInstance();
-        return ModSettings.hpFocusEnabled && mc.player != null && !mc.options.hideGui
-            ? DragSystem.get().dragMode() || ServerStats.health(mc.player) <= ModSettings.hpFocusThreshold
-            : false;
+        return ModSettings.hpFocusEnabled
+            && mc.player != null
+            && !mc.options.hideGui
+            && (DragSystem.get().dragMode() || ServerStats.health(mc.player) <= ModSettings.hpFocusThreshold);
     }
 
     public static void captureIfNeeded() {

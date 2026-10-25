@@ -97,7 +97,7 @@ public final class ClientAccent {
             result = new int[n];
 
             for (int i = 0; i < n; i++) {
-                float f = n <= 1 ? 0.0F : (float)i / (n - 1);
+                float f = n == 1 ? 0.0F : (float)i / (n - 1);
                 result[i] = Colors.mixRgb(Colors.samplePalette(fromPalette, f), Colors.samplePalette(target, f), t);
             }
         }

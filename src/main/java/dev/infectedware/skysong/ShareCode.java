@@ -62,10 +62,10 @@ public final class ShareCode {
                     varint(raw, (long)gap << 2 | (b ? 1 : 0));
                 } else if (v instanceof Integer i) {
                     varint(raw, (long)gap << 2 | 2L);
-                    varint(raw, zigzag(i.intValue()));
+                    varint(raw, zigzag(i));
                 } else if (v instanceof Float fl) {
                     varint(raw, (long)gap << 2 | 2L);
-                    varint(raw, zigzag(Math.round(fl.floatValue() * 1000.0)));
+                    varint(raw, zigzag(Math.round(fl * 1000.0)));
                 } else if (v instanceof String str) {
                     varint(raw, (long)gap << 2 | 3L);
                     byte[] b = str.getBytes(StandardCharsets.UTF_8);
@@ -210,14 +210,13 @@ public final class ShareCode {
                     };
                     if (f != null) {
                         Class<?> t = f.getType();
-                        if (t == boolean.class && value instanceof Boolean) {
-                            settings.put(f.getName(), value);
-                        } else if (t == int.class && value instanceof Long l) {
-                            settings.put(f.getName(), (int)l.longValue());
-                        } else if (t == float.class && value instanceof Long l) {
-                            settings.put(f.getName(), (float)(l.longValue() / 1000.0));
-                        } else if (t == String.class && value instanceof String) {
-                            settings.put(f.getName(), value);
+                        switch (value) {
+                            case Boolean b when t == boolean.class -> settings.put(f.getName(), b);
+                            case Long l when t == int.class -> settings.put(f.getName(), (int)l.longValue());
+                            case Long l when t == float.class -> settings.put(f.getName(), (float)(l / 1000.0));
+                            case String str when t == String.class -> settings.put(f.getName(), str);
+                            default -> {
+                            }
                         }
                     }
                 }

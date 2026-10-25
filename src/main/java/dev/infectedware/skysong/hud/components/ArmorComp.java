@@ -141,7 +141,7 @@ public final class ArmorComp extends Draggable {
 
         if (dragging) {
             int next = canDock ? edgeSide(HudSpace.mouseX(), screenW, this.previewSide) : 0;
-            if (next != 0 != (this.previewSide != 0)) {
+            if ((next == 0) == (this.previewSide != 0)) {
                 this.drag().swapGrabOffset();
             }
 

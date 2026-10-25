@@ -27,6 +27,8 @@ public final class ModConfig {
     private static final Class<?>[] HOLDERS = new Class<?>[]{ModSettings.class};
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Field, Object> DEFAULTS = captureDefaults();
+    private static final String EFFECT_LIST_KEY = "effectListVersion";
+    private static final int EFFECT_LIST_VERSION = 2;
     private static final Set<String> PERSONAL = Set.of("spotifyClientId", "popupPositions", "shareMySong");
 
     private ModConfig() {
@@ -55,7 +57,7 @@ public final class ModConfig {
     }
 
     public static void migrateEffects(JsonObject json) {
-        if (json == null || json.has("effectListVersion")) {
+        if (json == null || json.has(EFFECT_LIST_KEY)) {
             return;
         }
 
@@ -67,7 +69,7 @@ public final class ModConfig {
             json.addProperty("deathEffectType", 8);
         }
 
-        json.addProperty("effectListVersion", 2);
+        json.addProperty(EFFECT_LIST_KEY, EFFECT_LIST_VERSION);
     }
 
     public static void save() {
@@ -81,6 +83,7 @@ public final class ModConfig {
 
     public static JsonObject snapshot(boolean onlyChanged, boolean personal) {
         JsonObject json = new JsonObject();
+        json.addProperty(EFFECT_LIST_KEY, EFFECT_LIST_VERSION);
 
         try {
             for (Class<?> holder : HOLDERS) {

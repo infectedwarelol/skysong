@@ -50,7 +50,7 @@ public final class Backdrop {
         if (radius > 0.5F) {
             Fx.boxBlur(main, blurred, perPass, 2);
         } else {
-            blit(main, blurred, w, h);
+            Gpu.blit(main, blurred);
         }
 
         Gpu.bind(main);

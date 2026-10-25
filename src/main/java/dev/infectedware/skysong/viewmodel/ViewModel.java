@@ -72,7 +72,7 @@ public final class ViewModel {
     public static void applyOffset(PoseStack matrices, InteractionHand hand) {
         if (enabled() && hand != null) {
             ViewModel.HandState s = state(hand);
-            s.outer.set(Compat.projection()).mul(RenderSystem.getModelViewMatrix()).mul(matrices.last().pose());
+            s.outer.set(Compat.handProjection).mul(RenderSystem.getModelViewMatrix()).mul(matrices.last().pose());
             s.outerValid = true;
             matrices.translate(s.x, s.y, s.z);
         }
@@ -128,7 +128,7 @@ public final class ViewModel {
 
     private static void capturePivot(ViewModel.HandState s, PoseStack matrices) {
         if (s.outerValid) {
-            Matrix4f full = new Matrix4f(Compat.projection()).mul(RenderSystem.getModelViewMatrix()).mul(matrices.last().pose());
+            Matrix4f full = new Matrix4f(Compat.handProjection).mul(RenderSystem.getModelViewMatrix()).mul(matrices.last().pose());
             float[] center = project(full, 0.0F, 0.0F, 0.0F);
             float[] side = project(full, 0.5F, 0.0F, 0.0F);
             if (center != null) {

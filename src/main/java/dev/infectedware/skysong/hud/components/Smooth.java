@@ -8,11 +8,11 @@ public final class Smooth {
     private double seconds;
 
     public Smooth(float initial) {
-        this.from = this.to = this.value = initial;
+        this.from = this.to = initial;
     }
 
     public void set(float v) {
-        this.from = this.to = this.value = v;
+        this.from = this.to = v;
         this.seconds = 0.0;
     }
 
@@ -35,15 +35,15 @@ public final class Smooth {
 
     public float get() {
         if (this.seconds <= 0.0) {
-            return this.value = this.to;
+            return this.to;
         } else {
             double t = (System.nanoTime() - this.start) / 1.0E9 / this.seconds;
             if (t >= 1.0) {
                 this.seconds = 0.0;
-                return this.value = this.to;
+                return this.to;
             } else {
                 float e = (float)(t * t * (3.0 - 2.0 * t));
-                return this.value = this.from + (this.to - this.from) * e;
+                return this.from + (this.to - this.from) * e;
             }
         }
     }

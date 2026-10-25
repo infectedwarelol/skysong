@@ -214,7 +214,7 @@ public class SpotifyManager {
                 return;
             }
 
-            String saved = new String(Files.readAllBytes(TOKEN_FILE.toPath()), StandardCharsets.UTF_8).trim();
+            String saved = Files.readString(TOKEN_FILE.toPath(), StandardCharsets.UTF_8).trim();
             if (saved.startsWith("{")) {
                 JsonObject json = JsonParser.parseString(saved).getAsJsonObject();
                 if (json.has("client_id") && !json.get("client_id").getAsString().equals(clientId())) {
@@ -403,7 +403,7 @@ public class SpotifyManager {
         this.sendChat("§7  2. Redirect URIs: press §fCtrl+V§7 (already copied), then §fAdd");
         this.sendChat("§7  3. Tick §fWeb API§7, then §fSave");
         this.sendChat("§7  4. Open the app's §fSettings§7 and copy the §fClient ID");
-        this.sendChat("§b[Skysong] §aSkysong will notice the Client ID and connect by itself.");
+        this.sendChat("§b[Skysong] §a" + "Skysong will notice the Client ID and connect by itself.");
     }
 
     public boolean handleChatCode(String message) {
@@ -574,7 +574,7 @@ public class SpotifyManager {
                                         this.isPlaying = json.get("is_playing").getAsBoolean();
                                         this.lastUpdateTime = System.currentTimeMillis();
                                         JsonObject album = item.getAsJsonObject("album");
-                                        if (album.has("images") && album.getAsJsonArray("images").size() > 0) {
+                                        if (album.has("images") && !album.getAsJsonArray("images").isEmpty()) {
                                             String newImageUrl = album.getAsJsonArray("images").get(0).getAsJsonObject().get("url").getAsString();
                                             if (!newImageUrl.equals(this.albumImageUrl)) {
                                                 this.albumImageUrl = newImageUrl;
@@ -677,12 +677,12 @@ public class SpotifyManager {
     }
 
     private static BufferedImage downscale(BufferedImage src, int size) {
-        if (src.getWidth() <= size && src.getHeight() <= size) {
+        if (src.getWidth() <= 128 && src.getHeight() <= 128) {
             return src;
         }
 
-        Image scaled = src.getScaledInstance(size, size, 16);
-        BufferedImage out = new BufferedImage(size, size, 2);
+        Image scaled = src.getScaledInstance(128, 128, 16);
+        BufferedImage out = new BufferedImage(128, 128, 2);
         Graphics2D g = out.createGraphics();
         g.drawImage(scaled, 0, 0, null);
         g.dispose();

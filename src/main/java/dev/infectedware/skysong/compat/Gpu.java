@@ -107,8 +107,8 @@ public final class Gpu {
         bindFramebuffer(36160, fbo(target));
         GlStateManager._viewport(0, 0, target.width, target.height);
         Window window = Minecraft.getInstance().getWindow();
-        float w = window.getWidth() / window.getGuiScale();
-        float h = window.getHeight() / window.getGuiScale();
+        float w = (float)(window.getWidth() / window.getGuiScale());
+        float h = (float)(window.getHeight() / window.getGuiScale());
         projection.setOrtho(0.0F, w, h, 0.0F, 1000.0F, 11000.0F);
         modelView.identity().translate(0.0F, 0.0F, -10000.0F);
     }
@@ -135,7 +135,7 @@ public final class Gpu {
     }
 
     private static void colorMaskRaw(boolean r, boolean g, boolean b, boolean a) {
-        GlStateManager._colorMask(r, g, b, a);
+        GlStateManager._colorMask(r, g, b, true);
     }
 
     public static void texture(int unit, int glId) {

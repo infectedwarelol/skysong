@@ -117,7 +117,7 @@ final class SpotifyAuthServer {
         return map;
     }
 
-    private static void respond(Socket client, int status, String title, String message) throws IOException {
+    private static byte[] page(String title, String message) {
         String html = "<!doctype html><html><head><meta charset=utf-8><title>"
             + title
             + "</title><style>body{margin:0;height:100vh;display:grid;place-items:center;background:#11163a;font-family:Segoe UI,system-ui,sans-serif;color:#f4f6ff}.card{padding:40px 48px;border-radius:16px;background:rgba(91,124,250,.14);border:1px solid rgba(200,212,255,.25);text-align:center;max-width:420px}h1{margin:0 0 10px;font-size:24px;letter-spacing:.04em}p{margin:0;color:#a9b1cc}</style></head><body><div class=card><h1>"
@@ -125,7 +125,11 @@ final class SpotifyAuthServer {
             + "</h1><p>"
             + message
             + "</p></div></body></html>";
-        byte[] body = html.getBytes(StandardCharsets.UTF_8);
+        return html.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static void respond(Socket client, int status, String title, String message) throws IOException {
+        byte[] body = page(title, message);
         String reason = status == 200 ? "OK" : (status == 404 ? "Not Found" : "Bad Request");
         String head = "HTTP/1.1 "
             + status

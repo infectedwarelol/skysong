@@ -144,7 +144,7 @@ public final class ViewModelEditScreen extends VScreen {
         GlassRenderer.fillPolygon(
             c,
             new float[][]{
-                {x + dx * 2.6F, y + dy * 2.6F}, {x - dx * 1.2F + px * 2.2F, y - dy * 1.2F + py * 2.2F}, {x - dx * 1.2F - px * 2.2F, y - dy * 1.2F - py * 2.2F}
+                {x + dx * 2.6F, y + dy * 2.6F}, {x - dx * 1.2F + px * 2.2F, y - dy * 1.2F + dx * 2.2F}, {x - dx * 1.2F - px * 2.2F, y - dy * 1.2F - dx * 2.2F}
             },
             col
         );
@@ -377,32 +377,7 @@ public final class ViewModelEditScreen extends VScreen {
         }
 
         ViewModel.HandState s = ViewModel.state(h);
-        return Math.hypot(mx - s.screenX, my - s.screenY) <= max ? h : null;
-    }
-
-    public void dragForTest(InteractionHand hand, float dx, float dy) {
-        ViewModel.HandState s = ViewModel.state(hand);
-        this.onClick(s.screenX, s.screenY, 0);
-        this.onDrag(s.screenX + dx, s.screenY + dy, 0, dx, dy);
-        this.onRelease(s.screenX + dx, s.screenY + dy, 0);
-    }
-
-    public void scrollForTest(InteractionHand hand, double amount) {
-        ViewModel.HandState s = ViewModel.state(hand);
-        this.scrolled(s.screenX, s.screenY, 0.0, amount);
-    }
-
-    public static boolean pivotVisible(InteractionHand hand) {
-        return ViewModel.state(hand).pivotValid;
-    }
-
-    public static float[] pivot(InteractionHand hand) {
-        ViewModel.HandState s = ViewModel.state(hand);
-        return new float[]{s.screenX, s.screenY};
-    }
-
-    public static boolean settingsChanged() {
-        return ModSettings.vmMainX != 0.0F || ModSettings.vmMainY != 0.0F || ModSettings.vmMainScale != 1.0F;
+        return Math.hypot(mx - s.screenX, my - s.screenY) <= 90.0F ? h : null;
     }
 
     private enum Mode {

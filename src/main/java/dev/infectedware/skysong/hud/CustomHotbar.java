@@ -79,12 +79,12 @@ public final class CustomHotbar {
             for (int i = 0; i < 9; i++) {
                 int ix = (int)(center - 90.0F + i * 20.0F + 2.0F);
                 int iy = (int)(y + 3.0F);
-                item(c, player, player.getInventory().getItem(i), ix, iy, partial, seed++);
+                item(c, player, player.getInventory().getItem(i), ix, iy, tick, seed++);
             }
 
             if (!offhand.isEmpty()) {
                 int ox = (int)(offhandLeft ? center - 120.0F + 4.0F : center + 97.0F + 4.0F);
-                item(c, player, offhand, ox, (int)(y + 3.0F), partial, seed);
+                item(c, player, offhand, ox, (int)(y + 3.0F), tick, seed);
             }
 
             return true;

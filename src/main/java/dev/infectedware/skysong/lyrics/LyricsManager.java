@@ -15,16 +15,16 @@ import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class LyricsManager {
     private static final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5L)).build();
-    private static final String API = "https://lrclib.net/api/";
-    private static final Pattern LRC_STAMP = Pattern.compile("\\[(\\d{1,3}):(\\d{2})(?:[.:](\\d{1,3}))?\\]");
+    private static final Pattern LRC_STAMP = Pattern.compile("\\[(\\d{1,3}):(\\d{2})(?:[.:](\\d{1,3}))?]");
     private static final Pattern WORD_STAMP = Pattern.compile("<(\\d{1,3}):(\\d{2})(?:[.:](\\d{1,3}))?>");
-    private static final Pattern LRC_OFFSET = Pattern.compile("\\[offset:([+-]?\\d+)\\]", 2);
+    private static final Pattern LRC_OFFSET = Pattern.compile("\\[offset:([+-]?\\d+)]", Pattern.CASE_INSENSITIVE);
     private volatile List<LyricsManager.LyricLine> currentLyrics = List.of();
     private volatile String currentTrackKey = "";
     private volatile String translationKey = "";
@@ -179,7 +179,7 @@ public class LyricsManager {
             }
         }
 
-        stamps.sort((a, b) -> Long.compare(a[0], b[0]));
+        stamps.sort(Comparator.comparingLong(a -> a[0]));
         List<LyricsManager.LyricLine> parsed = new ArrayList<>();
 
         for (int i = 0; i < stamps.size(); i++) {

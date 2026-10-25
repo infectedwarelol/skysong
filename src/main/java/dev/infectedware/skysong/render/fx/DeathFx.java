@@ -191,7 +191,7 @@ public final class DeathFx {
                 Fx.set(Fx.death, "Death", t, ModSettings.deathEffectCracks ? 1.0F : 0.0F, drained, beat);
                 Fx.set(Fx.death, "Mode", mode, 0.0F, 0.0F, 0.0F);
                 Fx.setTints(Fx.death, tints());
-                Fx.set(Fx.death, "OutSize", main.width, main.height);
+                Fx.setOutSize(Fx.death, main.width, main.height);
                 Fx.draw(Fx.death);
                 drawnFrame = System.currentTimeMillis();
             } catch (Throwable e) {
@@ -249,7 +249,7 @@ public final class DeathFx {
             float d = s - b;
             v += 0.12F * gauss(d + 0.1F, 0.03F);
             v -= 0.25F * gauss(d - 0.015F, 0.008F);
-            v += 1.0F * gauss(d - 0.04F, 0.011F);
+            v += gauss(d - 0.04F, 0.011F);
             v -= 0.45F * gauss(d - 0.07F, 0.011F);
             v += 0.22F * gauss(d - 0.22F, 0.045F);
         }

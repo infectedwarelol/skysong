@@ -207,7 +207,7 @@ public class LiveEditorScreen extends VScreen {
     }
 
     private float previewX() {
-        return this.listX() + LIST_W + GAP;
+        return MARGIN + LIST_W + GAP;
     }
 
     private float previewW() {
@@ -303,7 +303,8 @@ public class LiveEditorScreen extends VScreen {
 
         String title = spotify == null || spotify.getCurrentTrackName().isEmpty() ? "Nothing playing" : spotify.getCurrentTrackName();
         String artist = spotify == null ? "" : spotify.getCurrentArtist();
-        float textW = Math.min(120.0F, Math.max(Ui.width(title, 6.5F), Ui.width(artist, 5.5F)));
+        float widest = Math.max(Ui.width(title, 6.5F), Ui.width(artist, 5.5F));
+        float textW = Math.min(120.0F, widest);
         float textX = bx - 8.0F - textW;
         R2D.text(c, MsdfFont.Font.SEMIBOLD, trim(title, textW, 6.5F), textX, cy - 7.0F, 6.5F, Ui.white(240.0F * a));
         Ui.text(c, trim(artist, textW, 5.5F), textX, cy + 1.0F, 5.5F, Ui.white(150.0F * a));
@@ -393,7 +394,7 @@ public class LiveEditorScreen extends VScreen {
     }
 
     private void drawList(GuiGraphics c, float a) {
-        float x = this.listX();
+        float x = MARGIN;
         float y = this.bodyY();
         float h = this.bodyH();
         panel(c, x, y, LIST_W, h, a);
@@ -429,12 +430,12 @@ public class LiveEditorScreen extends VScreen {
 
     private void drawModuleRow(GuiGraphics c, String name, float x, float y, float w, float a) {
         boolean active = name.equals(this.selected);
-        boolean hover = Ui.inside(this.mx, this.my, x, y, w, ROW_H);
+        boolean hover = Ui.inside(this.mx, this.my, x, y, (LIST_W - 6.0F), ROW_H);
         if (active) {
-            R2D.rect(c, x, y + 1.0F, w, ROW_H - 2.0F, 0.0F, ClientAccent.accent(52.0F * a));
+            R2D.rect(c, x, y + 1.0F, (LIST_W - 6.0F), ROW_H - 2.0F, 0.0F, ClientAccent.accent(52.0F * a));
             R2D.rect(c, x, y + 1.0F, 1.5F, ROW_H - 2.0F, 0.0F, ClientAccent.accentBright(255.0F * a));
         } else if (hover) {
-            R2D.rect(c, x, y + 1.0F, w, ROW_H - 2.0F, 0.0F, Ui.white(14.0F * a));
+            R2D.rect(c, x, y + 1.0F, (LIST_W - 6.0F), ROW_H - 2.0F, 0.0F, Ui.white(14.0F * a));
         }
 
         float boxX = x + 5.0F;
@@ -447,14 +448,14 @@ public class LiveEditorScreen extends VScreen {
         }
 
         drawItem(c, name, boxX + (ICON_BOX - ICON_SIZE) / 2.0F, boxY + (ICON_BOX - ICON_SIZE) / 2.0F, ICON_SIZE);
-        Ui.text(c, trim(name, w - 48.0F, 6.5F), boxX + ICON_BOX + 6.0F, y + ROW_H / 2.0F - 4.0F, 6.5F, Ui.white((active ? 255.0F : 215.0F) * a));
+        Ui.text(c, trim(name, (LIST_W - 6.0F) - 48.0F, 6.5F), boxX + ICON_BOX + 6.0F, y + ROW_H / 2.0F - 4.0F, 6.5F, Ui.white((active ? 255.0F : 215.0F) * a));
         ClientModule m = ModuleRegistry.byName(name);
-        float tx = x + w - TOGGLE_W - 5.0F;
+        float tx = x + (LIST_W - 6.0F) - TOGGLE_W - 5.0F;
         float ty = y + (ROW_H - TOGGLE_H) / 2.0F;
         if (m != null && m.hasToggle()) {
             drawToggle(c, tx, ty, m.isOn(), a);
         } else {
-            Ui.text(c, "›", x + w - 9.0F, y + ROW_H / 2.0F - 4.5F, 7.0F, Ui.white(120.0F * a));
+            Ui.text(c, "›", x + (LIST_W - 6.0F) - 9.0F, y + ROW_H / 2.0F - 4.5F, 7.0F, Ui.white(120.0F * a));
         }
     }
 
@@ -474,7 +475,7 @@ public class LiveEditorScreen extends VScreen {
         ItemStack stack = STACKS.computeIfAbsent(name, key -> new ItemStack(item));
         c.pose().pushPose();
         c.pose().translate(x, y, 0.0F);
-        c.pose().scale(size / 16.0F, size / 16.0F, 1.0F);
+        c.pose().scale(ICON_SIZE / 16.0F, ICON_SIZE / 16.0F, 1.0F);
         c.renderItem(stack, 0, 0);
         c.pose().popPose();
     }
@@ -610,12 +611,12 @@ public class LiveEditorScreen extends VScreen {
 
         for (String word : text.split(" ")) {
             String candidate = line.isEmpty() ? word : line + " " + word;
-            if (Ui.width(candidate, size) <= maxW || line.isEmpty()) {
+            if (Ui.width(candidate, 5.5F) <= maxW || line.isEmpty()) {
                 line.setLength(0);
                 line.append(candidate);
             } else {
                 lines.add(line.toString());
-                if (lines.size() == maxLines) {
+                if (lines.size() == 2) {
                     return lines;
                 }
 
@@ -624,8 +625,8 @@ public class LiveEditorScreen extends VScreen {
             }
         }
 
-        if (!line.isEmpty() && lines.size() < maxLines) {
-            lines.add(trim(line.toString(), maxW, size));
+        if (!line.isEmpty() && lines.size() < 2) {
+            lines.add(trim(line.toString(), maxW, 5.5F));
         }
 
         return lines;
@@ -647,7 +648,7 @@ public class LiveEditorScreen extends VScreen {
     private String rowAt(float x, float y) {
         float lx = this.listX();
         float ly = this.bodyY();
-        if (!Ui.inside(x, y, lx, ly, LIST_W, this.bodyH())) {
+        if (!Ui.inside(x, y, MARGIN, ly, LIST_W, this.bodyH())) {
             return null;
         }
 
@@ -805,7 +806,7 @@ public class LiveEditorScreen extends VScreen {
         String row = this.rowAt(x, y);
         if (row != null && (button == 0 || button == 1)) {
             ClientModule m = ModuleRegistry.byName(row);
-            float tx = this.listX() + 3.0F + LIST_W - 6.0F - TOGGLE_W - 5.0F;
+            float tx = MARGIN + 3.0F + LIST_W - 6.0F - TOGGLE_W - 5.0F;
             boolean onToggle = x >= tx - 3.0F;
             if (m != null && m.hasToggle() && (onToggle || button == 1)) {
                 m.toggle();
@@ -849,7 +850,7 @@ public class LiveEditorScreen extends VScreen {
             return true;
         }
 
-        if (Ui.inside(x, y, this.listX(), this.bodyY(), LIST_W, this.bodyH())) {
+        if (Ui.inside(x, y, MARGIN, this.bodyY(), LIST_W, this.bodyH())) {
             this.listScrollTarget -= (float)amount * 14.0F;
             return true;
         }

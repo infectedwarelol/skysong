@@ -82,6 +82,7 @@ public final class InventoryComp extends Draggable {
         for (ItemStack s : this.stacks) {
             if (!s.isEmpty()) {
                 hasItems = true;
+                break;
             }
         }
 

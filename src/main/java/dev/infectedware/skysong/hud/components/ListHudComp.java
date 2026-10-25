@@ -16,20 +16,7 @@ import java.util.Map;
 import java.util.function.BooleanSupplier;
 
 public abstract class ListHudComp extends Draggable {
-    private static final float HEADER_H = 22.0F;
-    private static final float CONTENT_TOP = 5.0F;
-    private static final float PAD_X = 9.0F;
-    private static final float PAD_BOTTOM = 5.0F;
-    private static final float ROW_H = 11.5F;
-    private static final float TITLE_SIZE = 8.2F;
-    private static final float ROW_SIZE = 6.5F;
-    private static final float VALUE_GAP = 10.0F;
-    private static final float HEADER_EXTRA = 10.0F;
-    private static final float ICON_SIZE = 8.5F;
-    private static final float ICON_GAP = 4.0F;
-    private static final float HEADER_ICON_SIZE = 7.0F;
-    static final int ROW_COLOR = -3355444;
-    static final int DIVIDER = -1997220937;
+    private static final float ROW_TOP = 29.0F;
     private final String title;
     private final BooleanSupplier enabled;
     private final Map<Object, ListHudComp.RowState> rows = new LinkedHashMap<>();
@@ -46,7 +33,7 @@ public abstract class ListHudComp extends Draggable {
     private float currentH = 22.0F;
 
     protected ListHudComp(String id, String title, BooleanSupplier enabled, float x, float y) {
-        super(id, x, y);
+        super(id, x, ROW_TOP);
         this.title = title;
         this.enabled = enabled;
     }
@@ -289,7 +276,7 @@ public abstract class ListHudComp extends Draggable {
     }
 
     private static float delayed(float p, float delay) {
-        return p <= delay ? 0.0F : Math.min(1.0F, (p - delay) / (1.0F - delay));
+        return p <= 0.12F ? 0.0F : Math.min(1.0F, (p - 0.12F) / (1.0F - 0.12F));
     }
 
     public interface AlphaPulse {

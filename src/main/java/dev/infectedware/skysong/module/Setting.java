@@ -26,8 +26,7 @@ public sealed interface Setting
     Setting.ListRow,
     Setting.Shown {
     static Setting unwrap(Setting s) {
-        while (s instanceof Setting.Shown) {
-            Setting.Shown shown = (Setting.Shown)s;
+        while (s instanceof Setting.Shown shown) {
             s = shown.setting();
         }
 
@@ -35,13 +34,12 @@ public sealed interface Setting
     }
 
     static boolean visible(Setting s) {
-        while (s instanceof Setting.Shown) {
-            Setting.Shown shown = (Setting.Shown)s;
-            if (!shown.when().getAsBoolean()) {
+        while (s instanceof Setting.Shown(BooleanSupplier when, Setting inner)) {
+            if (!when.getAsBoolean()) {
                 return false;
             }
 
-            s = shown.setting();
+            s = inner;
         }
 
         return true;
@@ -110,7 +108,7 @@ public sealed interface Setting
                 }
             }
 
-            return String.format(Locale.ROOT, "%." + decimals + "f", v);
+            return new BigDecimal(v).setScale(decimals, RoundingMode.HALF_UP).toPlainString();
         }
     }
 

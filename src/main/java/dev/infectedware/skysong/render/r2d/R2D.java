@@ -197,11 +197,11 @@ public final class R2D {
             int cp = s.codePointAt(i);
             i += Character.charCount(cp);
             if (cp > 32 && f.lacks(cp)) {
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     private static List<String[]> runs(MsdfFont f, String s) {
