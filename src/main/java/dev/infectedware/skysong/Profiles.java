@@ -24,7 +24,6 @@ import net.minecraft.util.Util;
 
 public final class Profiles {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skysong_profiles.json");
-    private static final Path LEGACY_FILE = FabricLoader.getInstance().getConfigDir().resolve("spotify_mod_profiles.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static List<Profiles.Profile> profiles;
     private static String status = "";
@@ -74,18 +73,6 @@ public final class Profiles {
         say((replaced ? "Updated profile " : "Saved profile ") + name);
     }
 
-    public static void saveBuiltIn(String name, JsonObject settings) {
-        List<Profiles.Profile> list = all();
-        Profiles.Profile p = new Profiles.Profile(name, settings);
-        int at = indexOf(name);
-        if (at >= 0) {
-            list.set(at, p);
-        } else {
-            list.addFirst(p);
-        }
-
-        write();
-    }
 
     public static void load(String name) {
         int at = indexOf(name);
@@ -310,13 +297,12 @@ public final class Profiles {
 
     private static List<Profiles.Profile> read() {
         List<Profiles.Profile> out = new ArrayList<>();
-        Path source = Files.exists(FILE) ? FILE : LEGACY_FILE;
-        if (!Files.exists(source)) {
+        if (!Files.exists(FILE)) {
             return out;
         }
 
         try {
-            JsonObject root = JsonParser.parseString(Files.readString(source, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = JsonParser.parseString(Files.readString(FILE, StandardCharsets.UTF_8)).getAsJsonObject();
 
             for (JsonElement e : root.getAsJsonArray("profiles")) {
                 JsonObject o = e.getAsJsonObject();

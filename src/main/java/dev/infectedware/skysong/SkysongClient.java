@@ -61,7 +61,6 @@ public class SkysongClient implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("Initializing Skysong for Minecraft {}...", FabricLoader.getInstance().getModContainer("minecraft").map(c -> c.getMetadata().getVersion().getFriendlyString()).orElse("?"));
         ModConfig.load();
-        Profiles.saveBuiltIn("Jules", ModConfig.defaultsSnapshot());
         startSelfTestIfRequested();
         spotifyManager = new SpotifyManager();
         lyricsManager = new LyricsManager();

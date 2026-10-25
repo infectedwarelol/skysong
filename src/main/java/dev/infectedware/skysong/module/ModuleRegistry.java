@@ -70,9 +70,9 @@ public final class ModuleRegistry {
                 new Setting.Toggle("Follow player", () -> ModSettings.lyricFollowPlayer, v -> ModSettings.lyricFollowPlayer = v),
                 new Setting.Toggle("Uppercase", () -> ModSettings.lyricUppercase, v -> ModSettings.lyricUppercase = v),
                 new Setting.Header("Customization"),
-                new Setting.Slide("Blur", 0.0F, 1.0F, 0.01F, 0.0, () -> ModSettings.lyricBlur, v -> ModSettings.lyricBlur = (float)v),
+                new Setting.Slide("Blur", 0.0F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricBlur, v -> ModSettings.lyricBlur = (float)v),
                 new Setting.Slide("Glow", 0.0F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricGlow, v -> ModSettings.lyricGlow = (float)v),
-                new Setting.Slide("Outline", 0.0F, 1.0F, 0.01F, 0.0, () -> ModSettings.lyricOutline, v -> ModSettings.lyricOutline = (float)v),
+                new Setting.Slide("Outline", 0.0F, 1.0F, 0.01F, 0.7, () -> ModSettings.lyricOutline, v -> ModSettings.lyricOutline = (float)v),
                 new Setting.Slide("Bounce", 0.0F, 1.0F, 0.01F, 1.0, () -> ModSettings.lyricBounce, v -> ModSettings.lyricBounce = (float)v),
                 new Setting.Toggle("Flicker effect", () -> ModSettings.lyricFlicker, v -> ModSettings.lyricFlicker = v),
                 new Setting.Header("Word effects"),
@@ -699,7 +699,7 @@ public final class ModuleRegistry {
             new Setting.Shown(
                 () -> ModSettings.shaderHandsGlow,
                 new Setting.Slide(
-                    "Glow radius", 2.0F, 30.0F, 1.0F, 10.0, () -> ModSettings.shaderHandsGlowRadius, v -> ModSettings.shaderHandsGlowRadius = (float)v
+                    "Glow radius", 2.0F, 30.0F, 1.0F, 12.0, () -> ModSettings.shaderHandsGlowRadius, v -> ModSettings.shaderHandsGlowRadius = (float)v
                 )
             )
         );
@@ -707,7 +707,7 @@ public final class ModuleRegistry {
             new Setting.Shown(
                 () -> ModSettings.shaderHandsGlow,
                 new Setting.Slide(
-                    "Glow strength", 0.1F, 4.0F, 0.05F, 1.4, () -> ModSettings.shaderHandsGlowStrength, v -> ModSettings.shaderHandsGlowStrength = (float)v
+                    "Glow strength", 0.1F, 4.0F, 0.05F, 1.6, () -> ModSettings.shaderHandsGlowStrength, v -> ModSettings.shaderHandsGlowStrength = (float)v
                 )
             )
         );
@@ -725,8 +725,8 @@ public final class ModuleRegistry {
                 "Spawn every (s)", 0.1F, 3.0F, 0.05F, 0.35, () -> ModSettings.afterimagesInterval, v -> ModSettings.afterimagesInterval = (float)v
             )
         );
-        s.add(new Setting.Slide("Lasts (s)", 0.2F, 4.0F, 0.1F, 1.7, () -> ModSettings.afterimagesLife, v -> ModSettings.afterimagesLife = (float)v));
-        s.add(new Setting.Slide("Opacity", 0.1F, 1.0F, 0.05F, 0.55, () -> ModSettings.afterimagesOpacity, v -> ModSettings.afterimagesOpacity = (float)v));
+        s.add(new Setting.Slide("Lasts (s)", 0.2F, 4.0F, 0.1F, 1.0, () -> ModSettings.afterimagesLife, v -> ModSettings.afterimagesLife = (float)v));
+        s.add(new Setting.Slide("Opacity", 0.1F, 1.0F, 0.05F, 0.95, () -> ModSettings.afterimagesOpacity, v -> ModSettings.afterimagesOpacity = (float)v));
         s.add(new Setting.Header("Glow"));
         s.add(new Setting.Toggle("Glow", () -> ModSettings.afterimagesGlow, v -> ModSettings.afterimagesGlow = v));
         s.add(
@@ -776,7 +776,7 @@ public final class ModuleRegistry {
             new Setting.Shown(
                 () -> ModSettings.swingTrailGlow,
                 new Setting.Slide(
-                    "Glow radius", 2.0F, 30.0F, 1.0F, 7.0, () -> ModSettings.swingTrailGlowRadius, v -> ModSettings.swingTrailGlowRadius = (float)v
+                    "Glow radius", 2.0F, 30.0F, 1.0F, 12.0, () -> ModSettings.swingTrailGlowRadius, v -> ModSettings.swingTrailGlowRadius = (float)v
                 )
             )
         );
@@ -784,7 +784,7 @@ public final class ModuleRegistry {
             new Setting.Shown(
                 () -> ModSettings.swingTrailGlow,
                 new Setting.Slide(
-                    "Glow strength", 0.1F, 4.0F, 0.05F, 0.3, () -> ModSettings.swingTrailGlowStrength, v -> ModSettings.swingTrailGlowStrength = (float)v
+                    "Glow strength", 0.1F, 4.0F, 0.05F, 1.5, () -> ModSettings.swingTrailGlowStrength, v -> ModSettings.swingTrailGlowStrength = (float)v
                 )
             )
         );
@@ -975,7 +975,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Header("Shader"));
         s.add(new Setting.Choice("Shader", ModSettings.WORLD_SHADERS, () -> ModSettings.worldShaderType, v -> ModSettings.worldShaderType = v));
         s.add(
-            new Setting.Slide("Sky brightness", 0.1F, 2.0F, 0.05F, 1.1, () -> ModSettings.shaderSkyBrightness, v -> ModSettings.shaderSkyBrightness = (float)v)
+            new Setting.Slide("Sky brightness", 0.1F, 2.0F, 0.05F, 1.0, () -> ModSettings.shaderSkyBrightness, v -> ModSettings.shaderSkyBrightness = (float)v)
         );
         BooleanSupplier storm = () -> ModSettings.worldShaderType == 0;
         s.add(new Setting.Shown(storm, new Setting.Header("Storm")));
@@ -1008,14 +1008,14 @@ public final class ModuleRegistry {
             new Setting.Shown(
                 blocks,
                 new Setting.Slide(
-                    "Brightness", 0.3F, 1.7F, 0.05F, 0.55, () -> ModSettings.shaderBlocksBrightness, v -> ModSettings.shaderBlocksBrightness = (float)v
+                    "Brightness", 0.3F, 1.7F, 0.05F, 0.95, () -> ModSettings.shaderBlocksBrightness, v -> ModSettings.shaderBlocksBrightness = (float)v
                 )
             )
         );
         s.add(
             new Setting.Shown(
                 blocks,
-                new Setting.Slide("Contrast", 0.5F, 1.8F, 0.05F, 1.25, () -> ModSettings.shaderBlocksContrast, v -> ModSettings.shaderBlocksContrast = (float)v)
+                new Setting.Slide("Contrast", 0.5F, 1.8F, 0.05F, 1.05, () -> ModSettings.shaderBlocksContrast, v -> ModSettings.shaderBlocksContrast = (float)v)
             )
         );
         s.add(
