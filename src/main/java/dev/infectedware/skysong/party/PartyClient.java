@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.mojang.authlib.exceptions.AuthenticationException;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.SkysongClient;
 import dev.infectedware.skysong.SpotifyManager;
@@ -12,18 +11,27 @@ import dev.infectedware.skysong.gui.click.SettingsPopup;
 import dev.infectedware.skysong.hud.Notifications;
 import java.net.URI;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
-import java.security.SecureRandom;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.Signature;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.HexFormat;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.User;
+import net.minecraft.world.entity.player.ProfileKeyPair;
+import net.minecraft.world.entity.player.ProfilePublicKey;
 
 public final class PartyClient {
     public static final String DEFAULT_RELAY = "https://skysong-relay.developingjules.workers.dev";
@@ -33,7 +41,6 @@ public final class PartyClient {
     private static final long SONG_REFRESH_MS = 20000L;
     private static final long SONG_DRIFT_MS = 2500L;
     private static final int MAX_FRAME = 262144;
-    private static final SecureRandom RANDOM = new SecureRandom();
     private static final ScheduledExecutorService IO = Executors.newSingleThreadScheduledExecutor(task -> {
         Thread thread = new Thread(task, "Skysong party");
         thread.setDaemon(true);
@@ -44,8 +51,11 @@ public final class PartyClient {
     private static volatile String myName = "";
     private static volatile boolean connected;
     private static volatile List<Friend> friends = List.of();
-    private static volatile List<String> incoming = List.of();
-    private static volatile List<String> outgoing = List.of();
+    private static volatile List<Person> incoming = List.of();
+    private static volatile List<Person> outgoing = List.of();
+    private static final Map<String, String> VERIFIED = new ConcurrentHashMap<>();
+    private static final Set<String> LOOKING = ConcurrentHashMap.newKeySet();
+    private static ProfileKeyPair keys;
     private static volatile String following;
     private static WebSocket socket;
     private static String activeUrl = "";
@@ -73,6 +83,9 @@ public final class PartyClient {
     public record Friend(String uuid, String name, boolean online, Song song, boolean listeningToMe) {
     }
 
+    public record Person(String uuid, String name) {
+    }
+
     private PartyClient() {
     }
 
@@ -88,11 +101,11 @@ public final class PartyClient {
         return friends;
     }
 
-    public static List<String> incoming() {
+    public static List<Person> incoming() {
         return incoming;
     }
 
-    public static List<String> outgoing() {
+    public static List<Person> outgoing() {
         return outgoing;
     }
 
@@ -121,9 +134,8 @@ public final class PartyClient {
         return null;
     }
 
-    public static boolean isFollowing(String name) {
-        Friend f = followed();
-        return f != null && f.name().equalsIgnoreCase(name);
+    public static boolean isFollowing(String uuid) {
+        return uuid.equals(following);
     }
 
     public static void tick() {
@@ -153,28 +165,103 @@ public final class PartyClient {
         });
     }
 
-    public static void addFriend(String name) {
-        sendLater(message("add", "name", name.trim()));
+    public static void addFriend(String rawName) {
+        String name = rawName.trim();
+        if (!name.matches("[A-Za-z0-9_]{3,16}")) {
+            notify("That isn't a Minecraft name");
+            return;
+        }
+
+        IO.execute(() -> {
+            JsonObject profile = getJson("https://api.mojang.com/users/profiles/minecraft/" + name);
+            if (profile == null || string(profile, "id").length() != 32) {
+                notify("No Minecraft account named " + name);
+                return;
+            }
+
+            String uuid = dashed(string(profile, "id"));
+            VERIFIED.put(uuid, string(profile, "name"));
+            send(message("add", "uuid", uuid).toString());
+        });
     }
 
-    public static void accept(String name) {
-        sendLater(message("accept", "name", name));
+    public static void accept(String uuid) {
+        sendLater(message("accept", "uuid", uuid));
     }
 
-    public static void decline(String name) {
-        sendLater(message("decline", "name", name));
+    public static void decline(String uuid) {
+        sendLater(message("decline", "uuid", uuid));
     }
 
-    public static void cancel(String name) {
-        sendLater(message("cancel", "name", name));
+    public static void cancel(String uuid) {
+        sendLater(message("cancel", "uuid", uuid));
     }
 
-    public static void remove(String name) {
-        sendLater(message("remove", "name", name));
+    public static void remove(String uuid) {
+        sendLater(message("remove", "uuid", uuid));
     }
 
-    public static void follow(String name) {
-        sendLater(message("follow", "name", name));
+    public static void follow(String uuid) {
+        sendLater(message("follow", "uuid", uuid));
+    }
+
+    private static String dashed(String id) {
+        return id.substring(0, 8) + "-" + id.substring(8, 12) + "-" + id.substring(12, 16) + "-" + id.substring(16, 20) + "-" + id.substring(20);
+    }
+
+    private static JsonObject getJson(String url) {
+        try {
+            HttpResponse<String> response = HTTP.send(
+                HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(10L)).GET().build(), HttpResponse.BodyHandlers.ofString()
+            );
+            return response.statusCode() == 200 ? JsonParser.parseString(response.body()).getAsJsonObject() : null;
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
+            return null;
+        }
+    }
+
+    private static String verifiedName(String uuid, String claimed) {
+        String known = VERIFIED.get(uuid);
+        if (known != null) {
+            return known;
+        }
+
+        if (uuid.length() == 36 && LOOKING.add(uuid)) {
+            IO.execute(() -> {
+                JsonObject profile = getJson("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid.replace("-", ""));
+                if (profile != null && !string(profile, "name").isEmpty()) {
+                    VERIFIED.put(uuid, string(profile, "name"));
+                    renameAll();
+                }
+            });
+        }
+
+        return claimed;
+    }
+
+    private static void renameAll() {
+        List<Friend> renamed = new ArrayList<>();
+        for (Friend f : friends) {
+            renamed.add(new Friend(f.uuid(), verifiedName(f.uuid(), f.name()), f.online(), f.song(), f.listeningToMe()));
+        }
+
+        friends = List.copyOf(renamed);
+        incoming = renamePeople(incoming);
+        outgoing = renamePeople(outgoing);
+        rebuildMenu();
+    }
+
+    private static List<Person> renamePeople(List<Person> people) {
+        List<Person> out = new ArrayList<>();
+        for (Person p : people) {
+            out.add(new Person(p.uuid(), verifiedName(p.uuid(), p.name())));
+        }
+
+        return List.copyOf(out);
     }
 
     public static void unfollow() {
@@ -244,14 +331,20 @@ public final class PartyClient {
     private static void connect(String url) {
         retryAt = Long.MAX_VALUE;
         Minecraft mc = Minecraft.getInstance();
-        User user = mc.getUser();
-        String serverId = HexFormat.of().formatHex(RANDOM.generateSeed(16));
         setStatus("Signing in…");
 
         try {
-            mc.services().sessionService().joinServer(user.getProfileId(), user.getAccessToken(), serverId);
-        } catch (AuthenticationException e) {
-            failed("Minecraft login check failed: " + e.getMessage());
+            keys = mc.getProfileKeyPairManager().prepareKeyPair().get(20L, TimeUnit.SECONDS).orElse(null);
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
+            keys = null;
+        }
+
+        if (keys == null) {
+            failed("Couldn't get your Minecraft chat key: play online with a Microsoft account");
             return;
         }
 
@@ -269,13 +362,34 @@ public final class PartyClient {
                 failed("Couldn't reach the relay");
             } else if (!wanted || !url.equals(activeUrl)) {
                 ws.sendClose(WebSocket.NORMAL_CLOSURE, "bye");
-            } else {
+            } else if (socket == null) {
                 socket = ws;
-                JsonObject hello = message("hello", "name", user.getName());
-                hello.addProperty("serverId", serverId);
-                send(hello.toString());
             }
         }));
+    }
+
+    private static void sendHello(String nonce) {
+        ProfileKeyPair pair = keys;
+        if (pair == null || nonce.isEmpty()) {
+            return;
+        }
+
+        try {
+            Signature signer = Signature.getInstance("SHA256withRSA");
+            signer.initSign(pair.privateKey());
+            signer.update(nonce.getBytes(StandardCharsets.UTF_8));
+            ProfilePublicKey.Data data = pair.publicKey().data();
+            User user = Minecraft.getInstance().getUser();
+            JsonObject hello = message("hello", "name", user.getName());
+            hello.addProperty("uuid", user.getProfileId().toString());
+            hello.addProperty("key", Base64.getEncoder().encodeToString(data.key().getEncoded()));
+            hello.addProperty("keySignature", Base64.getEncoder().encodeToString(data.keySignature()));
+            hello.addProperty("expiresAt", data.expiresAt().toEpochMilli());
+            hello.addProperty("signature", Base64.getEncoder().encodeToString(signer.sign()));
+            send(hello.toString());
+        } catch (GeneralSecurityException e) {
+            failed("Couldn't sign in: " + e.getMessage());
+        }
     }
 
     private static void failed(String reason) {
@@ -352,6 +466,7 @@ public final class PartyClient {
         }
 
         switch (string(m, "t")) {
+            case "challenge" -> sendHello(string(m, "nonce"));
             case "welcome" -> {
                 myName = string(m, "name");
                 connected = true;
@@ -381,15 +496,16 @@ public final class PartyClient {
         if (m.get("friends") instanceof JsonArray array) {
             for (JsonElement e : array) {
                 if (e instanceof JsonObject f) {
-                    list.add(new Friend(string(f, "uuid"), string(f, "name"), bool(f, "online"), song(f.get("song")), bool(f, "listening")));
+                    String uuid = string(f, "uuid");
+                    list.add(new Friend(uuid, verifiedName(uuid, string(f, "name")), bool(f, "online"), song(f.get("song")), bool(f, "listening")));
                 }
             }
         }
 
         list.sort((a, b) -> a.online() != b.online() ? (a.online() ? -1 : 1) : a.name().compareToIgnoreCase(b.name()));
         friends = List.copyOf(list);
-        incoming = names(m.get("incoming"));
-        outgoing = names(m.get("outgoing"));
+        incoming = people(m.get("incoming"));
+        outgoing = people(m.get("outgoing"));
         following = m.get("following") != null && m.get("following").isJsonPrimitive() ? m.get("following").getAsString() : null;
         if (!before.equals(signature())) {
             rebuildMenu();
@@ -429,12 +545,13 @@ public final class PartyClient {
         );
     }
 
-    private static List<String> names(JsonElement raw) {
-        List<String> out = new ArrayList<>();
+    private static List<Person> people(JsonElement raw) {
+        List<Person> out = new ArrayList<>();
         if (raw instanceof JsonArray array) {
             for (JsonElement e : array) {
-                if (e.isJsonPrimitive()) {
-                    out.add(e.getAsString());
+                if (e instanceof JsonObject p) {
+                    String uuid = string(p, "uuid");
+                    out.add(new Person(uuid, verifiedName(uuid, string(p, "name"))));
                 }
             }
         }
@@ -526,6 +643,10 @@ public final class PartyClient {
                 String text = this.buffer.toString();
                 this.buffer.setLength(0);
                 IO.execute(() -> {
+                    if (socket == null && wanted) {
+                        socket = ws;
+                    }
+
                     if (socket == ws) {
                         handle(text);
                     }

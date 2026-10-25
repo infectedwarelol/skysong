@@ -1047,20 +1047,20 @@ public final class ModuleRegistry {
         s.add(new Setting.Header("Add a friend"));
         s.add(new Setting.Input("Minecraft name…", "Send request", PartyClient::addFriend));
         s.add(new Setting.Info(() -> "They need Skysong with Party turned on."));
-        List<String> incoming = PartyClient.incoming();
+        List<PartyClient.Person> incoming = PartyClient.incoming();
         if (!incoming.isEmpty()) {
             s.add(new Setting.Header("Friend requests"));
-            s.add(new Setting.Info(() -> "Click to accept, × twice to decline."));
-            for (String name : incoming) {
-                s.add(new Setting.ListRow(name, () -> false, () -> PartyClient.accept(name), () -> PartyClient.decline(name)));
+            s.add(new Setting.Info(() -> "Click a name to accept, × twice to decline."));
+            for (PartyClient.Person p : incoming) {
+                s.add(new Setting.ListRow(p.name() + " · click to accept", () -> false, () -> PartyClient.accept(p.uuid()), () -> PartyClient.decline(p.uuid())));
             }
         }
 
-        List<String> outgoing = PartyClient.outgoing();
+        List<PartyClient.Person> outgoing = PartyClient.outgoing();
         if (!outgoing.isEmpty()) {
             s.add(new Setting.Header("Sent requests"));
-            for (String name : outgoing) {
-                s.add(new Setting.ListRow(name + " · waiting", () -> false, () -> {}, () -> PartyClient.cancel(name)));
+            for (PartyClient.Person p : outgoing) {
+                s.add(new Setting.ListRow(p.name() + " · waiting", () -> false, () -> {}, () -> PartyClient.cancel(p.uuid())));
             }
         }
 
@@ -1074,13 +1074,13 @@ public final class ModuleRegistry {
 
         for (PartyClient.Friend f : friends) {
             String label = f.name() + (f.online() ? "" : " · offline") + (f.listeningToMe() ? " · listening to you" : "");
-            s.add(new Setting.ListRow(label, () -> PartyClient.isFollowing(f.name()), () -> {
-                if (PartyClient.isFollowing(f.name())) {
+            s.add(new Setting.ListRow(label, () -> PartyClient.isFollowing(f.uuid()), () -> {
+                if (PartyClient.isFollowing(f.uuid())) {
                     PartyClient.unfollow();
                 } else {
-                    PartyClient.follow(f.name());
+                    PartyClient.follow(f.uuid());
                 }
-            }, () -> PartyClient.remove(f.name())));
+            }, () -> PartyClient.remove(f.uuid())));
             s.add(new Setting.Info(() -> {
                 PartyClient.Friend now = PartyClient.friend(f.uuid());
                 if (now == null || !now.online()) {

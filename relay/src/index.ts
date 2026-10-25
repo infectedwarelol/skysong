@@ -1,8 +1,9 @@
 import { DurableObject } from "cloudflare:workers";
+import { MOJANG_PLAYER_KEYS } from "./mojang-keys";
 
 interface Env {
   HUB: DurableObjectNamespace<Hub>;
-  SESSION_SERVER?: string;
+  MOJANG_KEYS?: string;
 }
 
 interface Song {
@@ -37,7 +38,18 @@ const MAX_PENDING = 100;
 const MAX_TEXT = 128;
 const MAX_MESSAGE = 4096;
 const SONG_INTERVAL_MS = 500;
-const MOJANG_SESSION_SERVER = "https://sessionserver.mojang.com";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+const B64 = /^[A-Za-z0-9+/]+={0,2}$/;
+const MAX_KEY_LIFETIME_MS = 14 * 86_400_000;
+
+function bytes(b64: string): Uint8Array {
+  return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+}
+
+function sessionOf(ws: WebSocket): Session | null {
+  const value = ws.deserializeAttachment() as Partial<Session> | null;
+  return value && typeof value.uuid === "string" ? (value as Session) : null;
+}
 
 function text(value: unknown): string {
   return typeof value === "string" ? value.replace(/\p{Cc}/gu, "").slice(0, MAX_TEXT) : "";
@@ -45,10 +57,6 @@ function text(value: unknown): string {
 
 function number(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? Math.min(Math.floor(value), 86_400_000) : 0;
-}
-
-function dashed(id: string): string {
-  return `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`;
 }
 
 function without(list: string[], uuid: string): string[] {
@@ -83,7 +91,9 @@ export class Hub extends DurableObject<Env> {
   async fetch(): Promise<Response> {
     const pair = new WebSocketPair();
     this.ctx.acceptWebSocket(pair[1]);
-    pair[1].serializeAttachment(null);
+    const nonce = Array.from(crypto.getRandomValues(new Uint8Array(24)), (b) => b.toString(16).padStart(2, "0")).join("");
+    pair[1].serializeAttachment({ nonce });
+    pair[1].send(JSON.stringify({ t: "challenge", nonce }));
     return new Response(null, { status: 101, webSocket: pair[0] });
   }
 
@@ -103,15 +113,16 @@ export class Hub extends DurableObject<Env> {
       return;
     }
 
-    const session = ws.deserializeAttachment() as Session | null;
+    const session = sessionOf(ws);
     if (!session) {
-      if (message.t === "hello") {
-        await this.hello(ws, message);
+      const pending = ws.deserializeAttachment() as { nonce?: string } | null;
+      if (message.t === "hello" && pending?.nonce) {
+        await this.hello(ws, message, pending.nonce);
       }
       return;
     }
 
-    const name = text(message.name);
+    const name = UUID.test(text(message.uuid)) ? text(message.uuid) : "";
     switch (message.t) {
       case "add":
         await this.add(ws, session, name);
@@ -149,7 +160,7 @@ export class Hub extends DurableObject<Env> {
   }
 
   private async left(ws: WebSocket): Promise<void> {
-    const session = ws.deserializeAttachment() as Session | null;
+    const session = sessionOf(ws);
     ws.serializeAttachment(null);
     if (!session || this.sockets(session.uuid).length > 0) {
       return;
@@ -167,44 +178,43 @@ export class Hub extends DurableObject<Env> {
     }
   }
 
-  private async hello(ws: WebSocket, message: Record<string, unknown>): Promise<void> {
-    const name = text(message.name);
-    const serverId = text(message.serverId);
-    if (!NAME.test(name) || serverId.length < 8) {
+  private async hello(ws: WebSocket, message: Record<string, unknown>, nonce: string): Promise<void> {
+    const realName = text(message.name);
+    const uuid = text(message.uuid);
+    const key = typeof message.key === "string" ? message.key : "";
+    const keySignature = typeof message.keySignature === "string" ? message.keySignature : "";
+    const signature = typeof message.signature === "string" ? message.signature : "";
+    const expiresAt = typeof message.expiresAt === "number" ? message.expiresAt : 0;
+    if (!NAME.test(realName) || !UUID.test(uuid) || !B64.test(key) || !B64.test(keySignature) || !B64.test(signature)) {
       this.fail(ws, "Invalid sign-in");
       return;
     }
 
-    const base = this.env.SESSION_SERVER || MOJANG_SESSION_SERVER;
-    const url = `${base}/session/minecraft/hasJoined?username=${encodeURIComponent(name)}&serverId=${encodeURIComponent(serverId)}`;
-    let profile: { id?: string; name?: string };
-    try {
-      const response = await fetch(url);
-      if (response.status !== 200) {
-        this.fail(ws, "Minecraft account could not be verified");
-        return;
-      }
-      profile = await response.json();
-    } catch {
-      this.fail(ws, "Minecraft login servers did not answer, try again soon");
+    const now = Date.now();
+    if (expiresAt <= now || expiresAt > now + MAX_KEY_LIFETIME_MS) {
+      this.fail(ws, "Your Minecraft chat key expired, restart Minecraft");
       return;
     }
 
-    if (!profile.id || !profile.name || !/^[0-9a-f]{32}$/.test(profile.id)) {
+    try {
+      if (!(await this.signedByMojang(uuid, expiresAt, bytes(key), bytes(keySignature)))) {
+        this.fail(ws, "Minecraft account could not be verified");
+        return;
+      }
+
+      const playerKey = await crypto.subtle.importKey("spki", bytes(key), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["verify"]);
+      if (!(await crypto.subtle.verify("RSASSA-PKCS1-v1_5", playerKey, bytes(signature), new TextEncoder().encode(nonce)))) {
+        this.fail(ws, "Minecraft account could not be verified");
+        return;
+      }
+    } catch {
       this.fail(ws, "Minecraft account could not be verified");
       return;
     }
 
-    const uuid = dashed(profile.id);
-    const realName = profile.name;
     const account = (await this.account(uuid)) ?? { name: realName, friends: [], incoming: [], outgoing: [] };
-    if (account.name !== realName) {
-      await this.ctx.storage.delete(`n:${account.name.toLowerCase()}`);
-      account.name = realName;
-    }
-
+    account.name = realName;
     await this.ctx.storage.put(`u:${uuid}`, account);
-    await this.ctx.storage.put(`n:${realName.toLowerCase()}`, uuid);
     for (const other of this.sockets(uuid)) {
       other.serializeAttachment(null);
       other.close(4000, "Signed in somewhere else");
@@ -219,15 +229,28 @@ export class Hub extends DurableObject<Env> {
     }
   }
 
-  private async add(ws: WebSocket, session: Session, name: string): Promise<void> {
-    if (!NAME.test(name)) {
-      this.send(ws, { t: "error", message: "That isn't a Minecraft name" });
-      return;
+  private async signedByMojang(uuid: string, expiresAt: number, key: Uint8Array, keySignature: Uint8Array): Promise<boolean> {
+    const payload = new Uint8Array(24 + key.length);
+    const view = new DataView(payload.buffer);
+    const hex = uuid.replaceAll("-", "");
+    view.setBigUint64(0, BigInt("0x" + hex.slice(0, 16)));
+    view.setBigUint64(8, BigInt("0x" + hex.slice(16)));
+    view.setBigUint64(16, BigInt(expiresAt));
+    payload.set(key, 24);
+    const trusted = this.env.MOJANG_KEYS ? this.env.MOJANG_KEYS.split(",") : MOJANG_PLAYER_KEYS;
+    for (const encoded of trusted) {
+      const mojang = await crypto.subtle.importKey("spki", bytes(encoded), { name: "RSASSA-PKCS1-v1_5", hash: "SHA-1" }, false, ["verify"]);
+      if (await crypto.subtle.verify("RSASSA-PKCS1-v1_5", mojang, keySignature, payload)) {
+        return true;
+      }
     }
+    return false;
+  }
 
+  private async add(ws: WebSocket, session: Session, name: string): Promise<void> {
     const target = await this.uuidOf(name);
     if (!target) {
-      this.send(ws, { t: "error", message: `${name} hasn't turned on Skysong party yet` });
+      this.send(ws, { t: "error", message: "That player hasn't turned on Skysong party yet" });
       return;
     }
 
@@ -382,7 +405,7 @@ export class Hub extends DurableObject<Env> {
     const target = await this.uuidOf(name);
     const me = await this.account(session.uuid);
     if (!target || !me || !me.friends.includes(target) || this.sockets(target).length === 0) {
-      this.send(ws, { t: "error", message: `${name} isn't online` });
+      this.send(ws, { t: "error", message: "That friend isn't online" });
       return;
     }
 
@@ -463,12 +486,12 @@ export class Hub extends DurableObject<Env> {
     };
   }
 
-  private async names(uuids: string[]): Promise<string[]> {
-    const out: string[] = [];
+  private async names(uuids: string[]): Promise<{ uuid: string; name: string }[]> {
+    const out: { uuid: string; name: string }[] = [];
     for (const uuid of uuids) {
       const account = await this.account(uuid);
       if (account) {
-        out.push(account.name);
+        out.push({ uuid, name: account.name });
       }
     }
     return out;
@@ -476,7 +499,7 @@ export class Hub extends DurableObject<Env> {
 
   private sockets(uuid: string): WebSocket[] {
     return this.ctx.getWebSockets().filter((socket) => {
-      const session = socket.deserializeAttachment() as Session | null;
+      const session = sessionOf(socket);
       return session !== null && session.uuid === uuid;
     });
   }
@@ -489,11 +512,8 @@ export class Hub extends DurableObject<Env> {
     await this.ctx.storage.put(`u:${uuid}`, account);
   }
 
-  private async uuidOf(name: string): Promise<string | null> {
-    if (!NAME.test(name)) {
-      return null;
-    }
-    return (await this.ctx.storage.get<string>(`n:${name.toLowerCase()}`)) ?? null;
+  private async uuidOf(id: string): Promise<string | null> {
+    return UUID.test(id) && (await this.account(id)) ? id : null;
   }
 
   private notice(uuid: string, message: string): void {
