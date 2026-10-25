@@ -1180,6 +1180,14 @@ public final class ModuleRegistry {
         return s;
     }
 
+    public static void disableAll() {
+        for (ClientModule m : ALL) {
+            if (m.hasToggle()) {
+                m.setEnabled().accept(false);
+            }
+        }
+    }
+
     public static List<ClientModule> in(Category category) {
         List<ClientModule> out = new ArrayList<>();
 

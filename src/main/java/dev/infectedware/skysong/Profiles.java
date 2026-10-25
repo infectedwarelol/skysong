@@ -74,6 +74,19 @@ public final class Profiles {
         say((replaced ? "Updated profile " : "Saved profile ") + name);
     }
 
+    public static void saveBuiltIn(String name, JsonObject settings) {
+        List<Profiles.Profile> list = all();
+        Profiles.Profile p = new Profiles.Profile(name, settings);
+        int at = indexOf(name);
+        if (at >= 0) {
+            list.set(at, p);
+        } else {
+            list.addFirst(p);
+        }
+
+        write();
+    }
+
     public static void load(String name) {
         int at = indexOf(name);
         if (at < 0) {

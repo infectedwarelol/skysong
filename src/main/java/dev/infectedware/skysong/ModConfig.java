@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
+import dev.infectedware.skysong.module.ModuleRegistry;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +36,12 @@ public final class ModConfig {
     }
 
     public static void load() {
+        if (!Files.exists(FILE) && !Files.exists(LEGACY_FILE)) {
+            ModuleRegistry.disableAll();
+            save();
+            return;
+        }
+
         boolean migrate = !Files.exists(FILE) && Files.exists(LEGACY_FILE);
         Path source = migrate ? LEGACY_FILE : FILE;
         if (Files.exists(source)) {
@@ -91,13 +98,7 @@ public final class ModConfig {
                     if (isSetting(f) && (personal || !PERSONAL.contains(f.getName()))) {
                         Object v = f.get(null);
                         if (!onlyChanged || !Objects.equals(v, DEFAULTS.get(f))) {
-                            if (v instanceof Boolean b) {
-                                json.addProperty(f.getName(), b);
-                            } else if (v instanceof Number n) {
-                                json.addProperty(f.getName(), n);
-                            } else if (v instanceof String str) {
-                                json.addProperty(f.getName(), str);
-                            }
+                            put(json, f.getName(), v);
                         }
                     }
                 }
@@ -107,6 +108,29 @@ public final class ModConfig {
         }
 
         return json;
+    }
+
+    public static JsonObject defaultsSnapshot() {
+        JsonObject json = new JsonObject();
+        json.addProperty(EFFECT_LIST_KEY, EFFECT_LIST_VERSION);
+
+        for (Entry<Field, Object> e : DEFAULTS.entrySet()) {
+            if (!PERSONAL.contains(e.getKey().getName())) {
+                put(json, e.getKey().getName(), e.getValue());
+            }
+        }
+
+        return json;
+    }
+
+    private static void put(JsonObject json, String name, Object value) {
+        if (value instanceof Boolean b) {
+            json.addProperty(name, b);
+        } else if (value instanceof Number n) {
+            json.addProperty(name, n);
+        } else if (value instanceof String str) {
+            json.addProperty(name, str);
+        }
     }
 
     public static void apply(JsonObject json, boolean personal) {
@@ -177,6 +201,7 @@ public final class ModConfig {
             SkysongClient.LOGGER.warn("[Skysong] Could not reset config: {}", e.getMessage());
         }
 
+        ModuleRegistry.disableAll();
         save();
     }
 
