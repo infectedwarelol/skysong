@@ -3,6 +3,7 @@ build/
 libs/
 run/
 out/
-.idea/
+.idea/*
+!.idea/dictionaries/
 *.iml
 .vscode/
