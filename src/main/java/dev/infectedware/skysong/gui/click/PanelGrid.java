@@ -5,7 +5,6 @@ import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.module.ClientModule;
 import dev.infectedware.skysong.render.r2d.MsdfFont;
 import dev.infectedware.skysong.render.r2d.R2D;
-import dev.infectedware.skysong.theme.ClientAccent;
 import dev.infectedware.skysong.theme.Colors;
 import dev.infectedware.skysong.ui.Clip;
 import java.util.ArrayList;
@@ -211,9 +210,7 @@ public final class PanelGrid {
     private static void drawBox(GuiGraphics c, Box b, float a) {
         R2D.rect(c, b.x(), b.y(), b.w(), b.h(), 0.0F, Colors.rgba(8, 8, 14, 120.0F * a));
         R2D.outline(c, b.x(), b.y(), b.w(), b.h(), 0.0F, 0.5F, Ui.white(20.0F * a));
-        int ga = ClientAccent.gradientA(235.0F * a);
-        int gb = ClientAccent.gradientB(235.0F * a);
-        R2D.rect(c, b.x(), b.y(), b.w(), 1.0F, 0.0F, ga, gb, gb, ga);
+        R2D.rect(c, b.x(), b.y(), b.w(), 1.0F, 0.0F, Widget.flatFill(235.0F * a));
         R2D.text(c, MsdfFont.Font.SEMIBOLD, b.group().title(), b.x() + 5.0F, b.y() + 4.5F, 6.5F, Ui.white(245.0F * a));
     }
 

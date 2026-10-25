@@ -422,7 +422,7 @@ public class ClientMenuScreen extends VScreen {
             boolean active = !searching && v == this.view;
             boolean hover = Ui.inside(this.mx, this.my, x, y, RAIL_W, RAIL_ROW_H);
             if (active) {
-                R2D.rect(c, x, y, RAIL_W, RAIL_ROW_H, 0.0F, ClientAccent.gradientA(46.0F * a));
+                R2D.rect(c, x, y, RAIL_W, RAIL_ROW_H, 0.0F, ClientAccent.accent(46.0F * a));
                 R2D.outline(c, x, y, RAIL_W, RAIL_ROW_H, 0.0F, 0.6F, ClientAccent.accentBright(170.0F * a));
                 R2D.rect(c, x, y, 1.5F, RAIL_ROW_H, 0.0F, ClientAccent.accentBright(255.0F * a));
             } else {
@@ -472,7 +472,7 @@ public class ClientMenuScreen extends VScreen {
         boolean active = m.name().equals(this.selected);
         boolean hover = Ui.inside(this.mx, this.my, t.x(), t.y(), t.w(), TAB_H);
         if (active) {
-            R2D.rect(c, t.x(), t.y(), t.w(), TAB_H, 0.0F, ClientAccent.gradientA(50.0F * a));
+            R2D.rect(c, t.x(), t.y(), t.w(), TAB_H, 0.0F, ClientAccent.accent(50.0F * a));
             R2D.outline(c, t.x(), t.y(), t.w(), TAB_H, 0.0F, 0.6F, ClientAccent.accentBright(190.0F * a));
             R2D.rect(c, t.x(), t.y() + TAB_H - 1.0F, t.w(), 1.0F, 0.0F, ClientAccent.accentBright(255.0F * a));
         } else {
@@ -500,7 +500,7 @@ public class ClientMenuScreen extends VScreen {
         R2D.text(c, MsdfFont.Font.SEMIBOLD, "Themes", x + 1.0F, top + 3.5F, 7.0F, Ui.white(245.0F * a));
         float bx = this.themeButtonX();
         boolean hover = Ui.inside(this.mx, this.my, bx, top, THEME_BUTTON_W, TAB_H);
-        R2D.rect(c, bx, top, THEME_BUTTON_W, TAB_H, 0.0F, ClientAccent.gradientA((hover ? 110.0F : 75.0F) * a));
+        R2D.rect(c, bx, top, THEME_BUTTON_W, TAB_H, 0.0F, ClientAccent.accent((hover ? 110.0F : 75.0F) * a));
         R2D.outline(c, bx, top, THEME_BUTTON_W, TAB_H, 0.0F, 0.6F, ClientAccent.accentBright(190.0F * a));
         String label = "Save look as theme";
         Ui.text(c, label, bx + (THEME_BUTTON_W - Ui.width(label, 6.0F)) / 2.0F, top + 3.8F, 6.0F, Ui.white(250.0F * a));

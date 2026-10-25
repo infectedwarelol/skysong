@@ -132,12 +132,25 @@ public abstract class Widget {
         R2D.outline(c, x, y, w, h, 0.0F, 0.5F, Ui.white((hover ? 42.0F : 22.0F) * a));
     }
 
+    static int flatFill(float alpha) {
+        int best = ClientAccent.accentBright(255.0F);
+        for (int candidate : new int[]{ClientAccent.gradientA(255.0F), ClientAccent.gradientB(255.0F)}) {
+            if (luminance(candidate) > luminance(best)) {
+                best = candidate;
+            }
+        }
+
+        return Colors.rgba(best & 16777215, alpha);
+    }
+
+    private static float luminance(int rgb) {
+        return 0.2126F * (rgb >> 16 & 0xFF) + 0.7152F * (rgb >> 8 & 0xFF) + 0.0722F * (rgb & 0xFF);
+    }
+
     static void flatCheck(GuiGraphics c, float x, float y, float size, float on, float a, boolean hover) {
         flatField(c, x, y, size, size, a, hover);
         if (on > 0.001F) {
-            int ga = ClientAccent.gradientA(255.0F * a * on);
-            int gb = ClientAccent.gradientB(255.0F * a * on);
-            R2D.rect(c, x + 0.5F, y + 0.5F, size - 1.0F, size - 1.0F, 0.0F, ga, gb, gb, ga);
+            R2D.rect(c, x + 0.5F, y + 0.5F, size - 1.0F, size - 1.0F, 0.0F, flatFill(255.0F * a * on));
         }
     }
 
@@ -1366,9 +1379,7 @@ public abstract class Widget {
             flatField(c, tx, ty, tw, 9.0F, a, this.dragging || Ui.inside(mx, my, tx, ty, tw, 9.0F));
             float fill = (tw - 1.0F) * Anim.clamp01(this.shown);
             if (fill > 0.4F) {
-                int ga = ClientAccent.gradientA(225.0F * a);
-                int gb = ClientAccent.gradientB(225.0F * a);
-                R2D.rect(c, tx + 0.5F, ty + 0.5F, fill, 8.0F, 0.0F, ga, gb, gb, ga);
+                R2D.rect(c, tx + 0.5F, ty + 0.5F, fill, 8.0F, 0.0F, flatFill(225.0F * a));
             }
 
             String value = this.s.text() + "/" + this.s.maxText();
