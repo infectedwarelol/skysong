@@ -255,3 +255,8 @@ effectListVersion
 classicMenu
 liveEditorMenu
 menu3d
+pvpSmallTotem
+pvpTotemScale
+pvpLowFire
+pvpFireDrop
+pvpNoHurtCam

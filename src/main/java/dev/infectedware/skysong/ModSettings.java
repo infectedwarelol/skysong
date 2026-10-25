@@ -60,6 +60,11 @@ public final class ModSettings {
     public static boolean classicMenu = false;
     public static boolean liveEditorMenu = false;
     public static boolean menu3d = false;
+    public static boolean pvpSmallTotem = false;
+    public static float pvpTotemScale = 0.5F;
+    public static boolean pvpLowFire = false;
+    public static float pvpFireDrop = 0.3F;
+    public static boolean pvpNoHurtCam = false;
     public static boolean partyEnabled = false;
     public static boolean partyShareSong = true;
     public static String partyRelayUrl = "";

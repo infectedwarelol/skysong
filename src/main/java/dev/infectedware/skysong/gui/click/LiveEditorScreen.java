@@ -96,6 +96,9 @@ public class LiveEditorScreen extends VScreen {
         Map.entry("Spotify", Items.GOAT_HORN),
         Map.entry("Config", Items.COMPARATOR),
         Map.entry("Party", Items.JUKEBOX),
+        Map.entry("Small Totem", Items.TOTEM_OF_UNDYING),
+        Map.entry("Low Fire", Items.FLINT_AND_STEEL),
+        Map.entry("No Hurt Cam", Items.IRON_CHESTPLATE),
         Map.entry(THEMES_ROW, Items.GLOW_INK_SAC)
     );
     private static final Map<String, ItemStack> STACKS = new java.util.HashMap<>();

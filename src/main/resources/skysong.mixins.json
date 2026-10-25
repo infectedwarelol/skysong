@@ -21,7 +21,9 @@
     "MouseMixin",
     "OutlineBufferSourceMixin",
     "WorldRendererMixin",
-    "PackRepositoryMixin"
+    "PackRepositoryMixin",
+    "ScreenEffectRendererMixin",
+    "HurtCameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1

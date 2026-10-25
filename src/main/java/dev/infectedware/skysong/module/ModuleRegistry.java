@@ -569,6 +569,37 @@ public final class ModuleRegistry {
             )
         ),
         new ClientModule(
+            "Small Totem",
+            "Shrinks the totem pop animation so it doesn't cover your screen.",
+            Category.PVP,
+            () -> ModSettings.pvpSmallTotem,
+            v -> ModSettings.pvpSmallTotem = v,
+            null,
+            () -> List.of(
+                new Setting.Slide("Totem size", 0.1F, 1.0F, 0.05F, 0.5, () -> ModSettings.pvpTotemScale, v -> ModSettings.pvpTotemScale = (float)v)
+            )
+        ),
+        new ClientModule(
+            "Low Fire",
+            "Moves the burning overlay down so you can see while on fire.",
+            Category.PVP,
+            () -> ModSettings.pvpLowFire,
+            v -> ModSettings.pvpLowFire = v,
+            null,
+            () -> List.of(
+                new Setting.Slide("Lower by", 0.0F, 0.6F, 0.02F, 0.3, () -> ModSettings.pvpFireDrop, v -> ModSettings.pvpFireDrop = (float)v)
+            )
+        ),
+        new ClientModule(
+            "No Hurt Cam",
+            "Stops the camera from shaking when you take damage.",
+            Category.PVP,
+            () -> ModSettings.pvpNoHurtCam,
+            v -> ModSettings.pvpNoHurtCam = v,
+            null,
+            null
+        ),
+        new ClientModule(
             "Party",
             "Add friends who use Skysong, see what they're playing and listen along together.",
             Category.UTILS,

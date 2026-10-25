@@ -161,6 +161,7 @@ public class ClickGuiScreen extends VScreen {
             case VISUALS -> ClickGuiScreen.View.VISUALS;
             case DISPLAY -> ClickGuiScreen.View.DISPLAY;
             case UTILS -> ClickGuiScreen.View.UTILS;
+            case PVP -> ClickGuiScreen.View.PVP;
         };
     }
 
@@ -169,6 +170,7 @@ public class ClickGuiScreen extends VScreen {
             case VISUALS -> Category.VISUALS;
             case DISPLAY -> Category.DISPLAY;
             case UTILS -> Category.UTILS;
+            case PVP -> Category.PVP;
             default -> null;
         };
     }
@@ -798,6 +800,7 @@ public class ClickGuiScreen extends VScreen {
         VISUALS,
         DISPLAY,
         UTILS,
+        PVP,
         THEMES
     }
 }
