@@ -288,18 +288,6 @@ public final class ShareCode {
         return out;
     }
 
-    static List<String> missingIds() {
-        List<String> missing = new ArrayList<>();
-
-        for (Field f : ModConfig.sharedFields()) {
-            if (!table().contains(f.getName())) {
-                missing.add(f.getName());
-            }
-        }
-
-        return missing;
-    }
-
     private static long zigzag(long v) {
         return v << 1 ^ v >> 63;
     }

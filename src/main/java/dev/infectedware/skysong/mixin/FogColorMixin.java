@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 abstract class FogColorMixin {
     @Inject(method = "computeFogColor", at = @At("RETURN"), cancellable = true)
     private void skysong$skyFog(Camera camera, float tickDelta, ClientLevel world, int viewDistance, float skyDarkness, CallbackInfoReturnable<Vector4f> cir) {
-        if (SkyFx.active() && camera.getFluidInCamera() == FogType.NONE && !SkyFx.hidesSky(camera)) {
+        if (SkyFx.active() && camera.getFluidInCamera() == FogType.NONE && SkyFx.showsSky(camera)) {
             float[] c = SkyFx.fogColor();
             cir.setReturnValue(new Vector4f(c[0], c[1], c[2], cir.getReturnValue().w()));
         }

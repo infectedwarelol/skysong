@@ -131,7 +131,7 @@ public final class R2D {
         MsdfFont f = font.get();
         if (f != null && s != null) {
             MsdfFont.Font fallback = fallback(font);
-            if (fallback != null && !covers(f, s)) {
+            if (fallback != null && missesAny(f, s)) {
                 float w = 0.0F;
 
                 for (String[] run : runs(f, s)) {
@@ -165,7 +165,7 @@ public final class R2D {
         MsdfFont f = font.get();
         if (f != null && s != null && !s.isEmpty() && (tl | tr | br | bl) >>> 24 != 0) {
             MsdfFont.Font fallback = fallback(font);
-            if (fallback != null && !covers(f, s)) {
+            if (fallback != null && missesAny(f, s)) {
                 float cursor = x;
                 float base = y + f.ascender * size;
                 MsdfFont fb = fallback.get();
@@ -190,13 +190,13 @@ public final class R2D {
         };
     }
 
-    private static boolean covers(MsdfFont f, String s) {
+    private static boolean missesAny(MsdfFont f, String s) {
         int i = 0;
 
         while (i < s.length()) {
             int cp = s.codePointAt(i);
             i += Character.charCount(cp);
-            if (cp > 32 && !f.has(cp)) {
+            if (cp > 32 && f.lacks(cp)) {
                 return false;
             }
         }
@@ -213,7 +213,7 @@ public final class R2D {
         while (i < s.length()) {
             int cp = s.codePointAt(i);
             i += Character.charCount(cp);
-            String k = cp > 32 && !f.has(cp) ? "1" : "0";
+            String k = cp > 32 && f.lacks(cp) ? "1" : "0";
             if (kind != null && !k.equals(kind) && cp > 32) {
                 out.add(new String[]{kind, sb.toString()});
                 sb.setLength(0);

@@ -105,7 +105,7 @@ public class ClickGuiScreen extends VScreen {
         this.openAnim.forwards(true);
         this.lastNs = System.nanoTime();
         int menuKey = Binds.key("Click GUI");
-        this.menuKeyReleased = !InputEvents.isDown(menuKey);
+        this.menuKeyReleased = InputEvents.isUp(menuKey);
     }
 
     @Override

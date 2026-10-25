@@ -58,7 +58,7 @@ public final class SkyFx {
     }
 
     public static boolean render(Matrix4f view, Matrix4f projection, Camera camera, boolean thickFog) {
-        if (active() && !thickFog && !hidesSky(camera)) {
+        if (active() && !thickFog && showsSky(camera)) {
             Minecraft mc = Minecraft.getInstance();
             RenderTarget main = mc.getMainRenderTarget();
 
@@ -189,7 +189,7 @@ public final class SkyFx {
         };
     }
 
-    public static boolean hidesSky(Camera camera) {
+    public static boolean showsSky(Camera camera) {
         FogType submersion = camera.getFluidInCamera();
         return submersion != FogType.POWDER_SNOW && submersion != FogType.LAVA
             ? Compat.camEntity(camera) instanceof LivingEntity living && (living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS))

@@ -146,7 +146,7 @@ public class LiveEditorScreen extends VScreen {
         this.closing = false;
         this.openAnim.forwards(true);
         this.lastNs = System.nanoTime();
-        this.menuKeyReleased = !InputEvents.isDown(Binds.key("Click GUI"));
+        this.menuKeyReleased = InputEvents.isUp(Binds.key("Click GUI"));
         this.select(this.selected);
     }
 

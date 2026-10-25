@@ -87,9 +87,9 @@ public final class NameTags implements HudLayer {
     public static Component displayName(Player p) {
         PlayerTeam team = Compat.team(p);
         Component prefix = team != null ? team.getPlayerPrefix() : null;
-        boolean hasPrefix = prefix != null && !missing(prefix.getString());
+        boolean hasPrefix = prefix != null && present(prefix.getString());
         String name = p.getName().getString();
-        if (!missing(name)) {
+        if (present(name)) {
             MutableComponent out = Component.empty();
             if (hasPrefix) {
                 out.append(prefix.copy());
@@ -107,12 +107,12 @@ public final class NameTags implements HudLayer {
             if (hologram != null) {
                 return hologram;
             } else {
-                return p.getCustomName() != null && !missing(p.getCustomName().getString()) ? p.getCustomName().copy() : null;
+                return p.getCustomName() != null && present(p.getCustomName().getString()) ? p.getCustomName().copy() : null;
             }
         }
     }
 
-    private static boolean missing(String s) {
+    private static boolean present(String s) {
         if (s == null) {
             return true;
         }
@@ -136,7 +136,7 @@ public final class NameTags implements HudLayer {
                     Component t = e instanceof TextDisplay d ? d.getText() : e.getCustomName();
                     if (t != null) {
                         String line = t.getString().split("\n")[0];
-                        if (!missing(line) && !(e.getY() <= bestY)) {
+                        if (present(line) && !(e.getY() <= bestY)) {
                             best = Component.literal(line);
                             bestY = e.getY();
                         }

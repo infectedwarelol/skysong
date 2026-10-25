@@ -44,7 +44,7 @@ public final class MsdfFont {
         }
     }
 
-    public boolean has(int cp) {
+    public boolean lacks(int cp) {
         return this.glyphs.containsKey(cp);
     }
 
