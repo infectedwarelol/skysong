@@ -25,7 +25,6 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
@@ -1453,106 +1452,63 @@ public final class KillFx {
     }
 
     private static void burst(Minecraft mc, KillFx.Effect e) {
+        sound(mc, FxSounds.of("kill", EFFECTS[e.type]), e);
         double cy = e.y + e.height * 0.5;
         switch (e.type) {
             case 0:
                 particles(mc, ParticleTypes.END_ROD, e.x, cy, e.z, 22, 0.35);
                 particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
-                sound(mc, SoundEvents.AMETHYST_BLOCK_BREAK, e, 1.0F, 0.7F);
-                sound(mc, SoundEvents.GLASS_BREAK, e, 0.8F, 1.25F);
                 break;
             case 1:
                 particles(mc, ParticleTypes.SOUL_FIRE_FLAME, e.x, e.y + 0.3, e.z, 18, 0.06);
-                sound(mc, SoundEvents.SOUL_ESCAPE.value(), e, 1.0F, 0.8F);
-                sound(mc, SoundEvents.BEACON_ACTIVATE, e, 0.6F, 1.6F);
                 break;
             case 2:
                 particles(mc, ParticleTypes.ELECTRIC_SPARK, e.x, e.y + 0.3, e.z, 40, 0.9);
                 particles(mc, Compat.flash(), e.x, e.y + 0.5, e.z, 1, 0.0);
                 particles(mc, ParticleTypes.LARGE_SMOKE, e.x, e.y + 0.2, e.z, 6, 0.08);
-                sound(mc, SoundEvents.LIGHTNING_BOLT_IMPACT, e, 0.55F, 1.3F);
-                break;
-            case 3:
-                sound(mc, SoundEvents.ENDERMAN_TELEPORT, e, 0.8F, 0.5F);
-                sound(mc, SoundEvents.END_PORTAL_FRAME_FILL, e, 1.0F, 0.6F);
-                break;
-            case 4:
-                sound(mc, SoundEvents.BLAZE_SHOOT, e, 0.5F, 0.55F);
-                sound(mc, SoundEvents.AMETHYST_BLOCK_CHIME, e, 1.0F, 0.6F);
                 break;
             case FIREWORK:
                 particles(mc, ParticleTypes.FIREWORK, e.x, e.y + 0.2, e.z, 8, 0.05);
-                sound(mc, SoundEvents.FIREWORK_ROCKET_LAUNCH, e, 1.0F, 1.0F);
                 break;
             case FROST:
                 particles(mc, ParticleTypes.SNOWFLAKE, e.x, cy, e.z, 24, 0.12);
-                sound(mc, SoundEvents.PLAYER_HURT_FREEZE, e, 1.0F, 0.8F);
-                sound(mc, SoundEvents.POWDER_SNOW_BREAK, e, 1.0F, 0.7F);
                 break;
             case INFERNO:
                 particles(mc, ParticleTypes.FLAME, e.x, e.y + 0.2, e.z, 30, 0.12);
                 particles(mc, ParticleTypes.LAVA, e.x, e.y + 0.3, e.z, 8, 0.2);
-                sound(mc, SoundEvents.FIRECHARGE_USE, e, 1.0F, 0.6F);
-                sound(mc, SoundEvents.BLAZE_SHOOT, e, 0.6F, 0.5F);
                 break;
             case BLOSSOM:
                 particles(mc, ParticleTypes.CHERRY_LEAVES, e.x, cy, e.z, 30, 0.15);
-                sound(mc, SoundEvents.CHERRY_LEAVES_BREAK, e, 1.0F, 0.8F);
-                sound(mc, SoundEvents.AMETHYST_BLOCK_RESONATE, e, 1.0F, 1.2F);
                 break;
             case WARP:
                 particles(mc, ParticleTypes.REVERSE_PORTAL, e.x, cy, e.z, 30, 0.3);
-                sound(mc, SoundEvents.CHORUS_FRUIT_TELEPORT, e, 1.0F, 0.9F);
                 break;
             case VORTEX:
                 particles(mc, ParticleTypes.GUST, e.x, cy, e.z, 3, 0.0);
                 particles(mc, ParticleTypes.CLOUD, e.x, e.y + 0.3, e.z, 16, 0.15);
-                sound(mc, SoundEvents.WIND_CHARGE_BURST.value(), e, 1.0F, 0.7F);
-                sound(mc, SoundEvents.ELYTRA_FLYING, e, 0.4F, 1.6F);
-                break;
-            case COMET:
-                sound(mc, SoundEvents.FIRECHARGE_USE, e, 0.8F, 0.5F);
                 break;
             case AURORA:
                 particles(mc, ParticleTypes.GLOW, e.x, cy, e.z, 14, 0.08);
-                sound(mc, SoundEvents.AMETHYST_BLOCK_RESONATE, e, 1.0F, 0.6F);
-                sound(mc, SoundEvents.CONDUIT_ACTIVATE, e, 0.7F, 1.3F);
                 break;
             case GLITCH:
                 particles(mc, ParticleTypes.ELECTRIC_SPARK, e.x, cy, e.z, 24, 0.4);
-                sound(mc, SoundEvents.SCULK_CLICKING, e, 1.0F, 1.6F);
-                sound(mc, SoundEvents.BEACON_DEACTIVATE, e, 0.6F, 1.8F);
-                break;
-            case STARFALL:
-                sound(mc, SoundEvents.AMETHYST_BLOCK_CHIME, e, 1.0F, 1.5F);
-                sound(mc, SoundEvents.ILLUSIONER_CAST_SPELL, e, 0.6F, 1.4F);
                 break;
             case SHOCKWAVE:
                 particles(mc, ParticleTypes.SONIC_BOOM, e.x, cy, e.z, 1, 0.0);
                 particles(mc, ParticleTypes.POOF, e.x, e.y + 0.2, e.z, 20, 0.4);
-                sound(mc, SoundEvents.WARDEN_SONIC_BOOM, e, 0.6F, 1.2F);
                 break;
             case ECLIPSE:
                 particles(mc, ParticleTypes.END_ROD, e.x, e.y + e.height + 2.2, e.z, 16, 0.15);
-                sound(mc, SoundEvents.BEACON_ACTIVATE, e, 1.0F, 0.6F);
-                sound(mc, SoundEvents.BELL_RESONATE, e, 0.8F, 0.8F);
                 break;
             case CRYSTAL:
                 particles(mc, ParticleTypes.WAX_OFF, e.x, e.y + 0.4, e.z, 20, 0.3);
-                sound(mc, SoundEvents.AMETHYST_CLUSTER_BREAK, e, 1.0F, 0.7F);
-                sound(mc, SoundEvents.AMETHYST_BLOCK_RESONATE, e, 1.0F, 1.4F);
                 break;
             case HALO:
                 particles(mc, ParticleTypes.END_ROD, e.x, e.y + e.height, e.z, 18, 0.12);
-                sound(mc, SoundEvents.BEACON_POWER_SELECT, e, 1.0F, 1.5F);
-                sound(mc, SoundEvents.TOTEM_USE, e, 0.35F, 1.8F);
                 break;
             case NOVA:
                 particles(mc, ParticleTypes.ENCHANT, e.x, cy, e.z, 40, 1.2);
-                sound(mc, SoundEvents.BEACON_ACTIVATE, e, 0.9F, 1.8F);
                 break;
-            default:
-                sound(mc, SoundEvents.ARROW_SHOOT, e, 0.8F, 0.45F);
         }
     }
 
@@ -1562,7 +1518,6 @@ public final class KillFx {
             e.fired |= 1;
             particles(mc, ParticleTypes.END_ROD, e.x, cy, e.z, 30, 0.6);
             particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
-            sound(mc, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), e, 1.0F, 1.4F);
         }
 
         if (e.type == FIREWORK && t >= FIREWORK_RISE && (e.fired & 1) == 0) {
@@ -1570,26 +1525,18 @@ public final class KillFx {
             double top = e.y + 0.1 + FIREWORK_HEIGHT;
             particles(mc, ParticleTypes.FIREWORK, e.x, top, e.z, 60, 0.35);
             particles(mc, Compat.flash(), e.x, top, e.z, 1, 0.0);
-            sound(mc, SoundEvents.FIREWORK_ROCKET_LARGE_BLAST, e, 1.0F, 1.0F);
         }
 
-        if (e.type == FIREWORK && t >= FIREWORK_RISE + 0.35F && (e.fired & 2) == 0) {
-            e.fired |= 2;
-            sound(mc, SoundEvents.FIREWORK_ROCKET_TWINKLE, e, 1.0F, 1.0F);
-        }
 
         if (e.type == FROST && t >= FROST_FREEZE && (e.fired & 1) == 0) {
             e.fired |= 1;
             particles(mc, ParticleTypes.SNOWFLAKE, e.x, cy, e.z, 40, 0.35);
             particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
-            sound(mc, SoundEvents.GLASS_BREAK, e, 1.0F, 0.9F);
-            sound(mc, SoundEvents.AMETHYST_BLOCK_BREAK, e, 1.0F, 1.4F);
         }
 
         if (e.type == WARP && t >= WARP_TIME && (e.fired & 1) == 0) {
             e.fired |= 1;
             particles(mc, ParticleTypes.PORTAL, e.x, cy, e.z, 50, 0.8);
-            sound(mc, SoundEvents.ENDERMAN_TELEPORT, e, 1.0F, 1.2F);
         }
 
         if (e.type == COMET && t >= COMET_FALL && (e.fired & 1) == 0) {
@@ -1597,20 +1544,16 @@ public final class KillFx {
             particles(mc, Compat.flash(), e.x, e.y + 0.4, e.z, 1, 0.0);
             particles(mc, ParticleTypes.LAVA, e.x, e.y + 0.3, e.z, 14, 0.3);
             particles(mc, ParticleTypes.LARGE_SMOKE, e.x, e.y + 0.2, e.z, 10, 0.12);
-            sound(mc, SoundEvents.GENERIC_EXPLODE.value(), e, 0.7F, 1.2F);
         }
 
         if (e.type == GLITCH && t >= GLITCH_TIME && (e.fired & 1) == 0) {
             e.fired |= 1;
             particles(mc, ParticleTypes.ELECTRIC_SPARK, e.x, cy, e.z, 40, 0.8);
-            sound(mc, SoundEvents.ENDER_EYE_DEATH, e, 1.0F, 1.6F);
         }
 
         if (e.type == CRYSTAL && t >= CRYSTAL_BREAK && (e.fired & 1) == 0) {
             e.fired |= 1;
             particles(mc, ParticleTypes.WAX_OFF, e.x, e.y + 1.0, e.z, 50, 0.6);
-            sound(mc, SoundEvents.GLASS_BREAK, e, 1.0F, 1.3F);
-            sound(mc, SoundEvents.AMETHYST_CLUSTER_BREAK, e, 1.0F, 1.0F);
         }
 
         if (e.type == NOVA && t >= NOVA_GATHER && (e.fired & 1) == 0) {
@@ -1618,8 +1561,6 @@ public final class KillFx {
             particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
             particles(mc, ParticleTypes.FIREWORK, e.x, cy, e.z, 50, 0.45);
             particles(mc, ParticleTypes.END_ROD, e.x, cy, e.z, 30, 0.6);
-            sound(mc, SoundEvents.GENERIC_EXPLODE.value(), e, 0.8F, 0.8F);
-            sound(mc, SoundEvents.BEACON_DEACTIVATE, e, 1.0F, 1.6F);
         }
 
         if (e.type == 5 && t >= 0.22F && (e.fired & 1) == 0) {
@@ -1627,8 +1568,6 @@ public final class KillFx {
             particles(mc, Compat.flash(), e.x, e.y + 0.4, e.z, 1, 0.0);
             particles(mc, ParticleTypes.END_ROD, e.x, e.y + 0.2, e.z, 26, 0.5);
             particles(mc, ParticleTypes.CRIT, e.x, e.y + 0.2, e.z, 30, 0.9);
-            sound(mc, SoundEvents.ANVIL_LAND, e, 0.5F, 0.6F);
-            sound(mc, SoundEvents.BEACON_POWER_SELECT, e, 0.7F, 1.5F);
         }
     }
 
@@ -1706,9 +1645,9 @@ public final class KillFx {
         }
     }
 
-    private static void sound(Minecraft mc, SoundEvent s, KillFx.Effect e, float volume, float pitch) {
+    private static void sound(Minecraft mc, SoundEvent s, KillFx.Effect e) {
         if (ModSettings.killEffectSounds) {
-            mc.getSoundManager().play(new SimpleSoundInstance(s, SoundSource.PLAYERS, volume, pitch, RandomSource.create(), e.x, e.y + 1.0, e.z));
+            mc.getSoundManager().play(new SimpleSoundInstance(s, SoundSource.PLAYERS, 1.0F, 1.0F, RandomSource.create(), e.x, e.y + 1.0, e.z));
         }
     }
 

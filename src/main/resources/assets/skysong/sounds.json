@@ -73,5 +73,278 @@
     "sounds": [
       "skysong:ui/module_off"
     ]
+  },
+  "fx.death_ascension": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_ascension"
+      }
+    ]
+  },
+  "fx.death_burn_away": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_burn_away"
+      }
+    ]
+  },
+  "fx.death_cinematic": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_cinematic"
+      }
+    ]
+  },
+  "fx.death_drowned": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_drowned"
+      }
+    ]
+  },
+  "fx.death_flatline": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_flatline"
+      }
+    ]
+  },
+  "fx.death_frozen": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_frozen"
+      }
+    ]
+  },
+  "fx.death_ghost_echo": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_ghost_echo"
+      }
+    ]
+  },
+  "fx.death_ink_bleed": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_ink_bleed"
+      }
+    ]
+  },
+  "fx.death_kaleidoscope": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_kaleidoscope"
+      }
+    ]
+  },
+  "fx.death_pixelated": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_pixelated"
+      }
+    ]
+  },
+  "fx.death_rewind": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_rewind"
+      }
+    ]
+  },
+  "fx.death_ripple": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_ripple"
+      }
+    ]
+  },
+  "fx.death_shattered_glass": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_shattered_glass"
+      }
+    ]
+  },
+  "fx.death_signal_lost": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_signal_lost"
+      }
+    ]
+  },
+  "fx.death_stained_glass": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_stained_glass"
+      }
+    ]
+  },
+  "fx.death_starry_void": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_starry_void"
+      }
+    ]
+  },
+  "fx.death_swallowed": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_swallowed"
+      }
+    ]
+  },
+  "fx.death_thermal": {
+    "sounds": [
+      {
+        "name": "skysong:fx/death_thermal"
+      }
+    ]
+  },
+  "fx.kill_aurora": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_aurora"
+      }
+    ]
+  },
+  "fx.kill_black_hole": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_black_hole"
+      }
+    ]
+  },
+  "fx.kill_blossom": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_blossom"
+      }
+    ]
+  },
+  "fx.kill_comet": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_comet"
+      }
+    ]
+  },
+  "fx.kill_crystal_spikes": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_crystal_spikes"
+      }
+    ]
+  },
+  "fx.kill_disintegrate": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_disintegrate"
+      }
+    ]
+  },
+  "fx.kill_eclipse": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_eclipse"
+      }
+    ]
+  },
+  "fx.kill_ender_warp": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_ender_warp"
+      }
+    ]
+  },
+  "fx.kill_firework": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_firework"
+      }
+    ]
+  },
+  "fx.kill_frostbite": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_frostbite"
+      }
+    ]
+  },
+  "fx.kill_glitch": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_glitch"
+      }
+    ]
+  },
+  "fx.kill_halo": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_halo"
+      }
+    ]
+  },
+  "fx.kill_inferno": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_inferno"
+      }
+    ]
+  },
+  "fx.kill_judgement": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_judgement"
+      }
+    ]
+  },
+  "fx.kill_shatter": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_shatter"
+      }
+    ]
+  },
+  "fx.kill_shockwave": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_shockwave"
+      }
+    ]
+  },
+  "fx.kill_soul_rift": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_soul_rift"
+      }
+    ]
+  },
+  "fx.kill_starfall": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_starfall"
+      }
+    ]
+  },
+  "fx.kill_supernova": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_supernova"
+      }
+    ]
+  },
+  "fx.kill_thunderclap": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_thunderclap"
+      }
+    ]
+  },
+  "fx.kill_vortex": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_vortex"
+      }
+    ]
   }
 }
