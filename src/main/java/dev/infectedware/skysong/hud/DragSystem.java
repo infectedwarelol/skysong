@@ -389,9 +389,13 @@ public final class DragSystem implements HudLayer {
                 if (eq > 0) {
                     Draggable d = this.byId(entry.substring(0, eq));
                     String[] xy = entry.substring(eq + 1).split(",");
-                    if (d != null && xy.length == 2) {
+                    if (d != null && (xy.length == 2 || xy.length == 4)) {
                         try {
                             d.drag().setTarget(Float.parseFloat(xy[0]), Float.parseFloat(xy[1]));
+                            if (xy.length == 4) {
+                                d.drag().setFractions(Float.parseFloat(xy[2]), Float.parseFloat(xy[3]));
+                            }
+
                             d.drag().syncToTarget();
                             d.placed = true;
                         } catch (NumberFormatException ignored) {
@@ -416,7 +420,12 @@ public final class DragSystem implements HudLayer {
                 sb.append(';');
             }
 
+            d.drag().clamp(d.width(), d.height());
             sb.append(d.id()).append('=').append(String.format(Locale.ROOT, "%.1f,%.1f", d.drag().targetX(), d.drag().targetY()));
+            if (d.drag().fractionX() >= 0.0F) {
+                sb.append(String.format(Locale.ROOT, ",%.4f,%.4f", d.drag().fractionX(), d.drag().fractionY()));
+            }
+
             d.placed = true;
         }
 

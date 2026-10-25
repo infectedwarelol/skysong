@@ -31,6 +31,9 @@ public final class DragController {
     private final DragController.Follow boxAnimX;
     private final DragController.Follow boxAnimY;
     private long grabbedAtMs;
+    private float fracX = -1.0F;
+    private float fracY = -1.0F;
+    private static final float MIN_SPACE = 64.0F;
 
     public DragController(float x, float y) {
         this.x = x;
@@ -64,14 +67,30 @@ public final class DragController {
     public void setTarget(float x, float y) {
         this.x = x;
         this.y = y;
+        this.fracX = -1.0F;
+    }
+
+    public void setFractions(float fx, float fy) {
+        this.fracX = Math.clamp(fx, 0.0F, 1.0F);
+        this.fracY = Math.clamp(fy, 0.0F, 1.0F);
+    }
+
+    public float fractionX() {
+        return this.fracX;
+    }
+
+    public float fractionY() {
+        return this.fracY;
     }
 
     public void setTargetX(float x) {
         this.x = x;
+        this.fracX = -1.0F;
     }
 
     public void adjustY(float dy) {
         this.y += dy;
+        this.fracX = -1.0F;
     }
 
     public void syncToTarget() {
@@ -117,6 +136,7 @@ public final class DragController {
     public void release() {
         if (this.dragging) {
             this.dragging = false;
+            this.fracX = -1.0F;
             this.cancelled = false;
             if (this.outline) {
                 this.x = this.boxX;
@@ -131,6 +151,7 @@ public final class DragController {
             this.dragging = false;
             this.x = this.preX;
             this.y = this.preY;
+            this.fracX = -1.0F;
         }
     }
 
@@ -153,8 +174,21 @@ public final class DragController {
     }
 
     void clamp(float w, float h) {
-        this.x = HudSpace.clampX(this.x, w);
-        this.y = HudSpace.clampY(this.y, h);
+        float screenW = HudSpace.width();
+        float screenH = HudSpace.height();
+        if (screenW < MIN_SPACE || screenH < MIN_SPACE) {
+            return;
+        }
+
+        float spaceX = Math.max(0.0F, screenW - w);
+        float spaceY = Math.max(0.0F, screenH - h);
+        if (this.fracX < 0.0F) {
+            this.fracX = spaceX > 0.0F ? Math.clamp(this.x / spaceX, 0.0F, 1.0F) : 0.0F;
+            this.fracY = spaceY > 0.0F ? Math.clamp(this.y / spaceY, 0.0F, 1.0F) : 0.0F;
+        }
+
+        this.x = this.fracX * spaceX;
+        this.y = this.fracY * spaceY;
     }
 
     void beginRender() {
