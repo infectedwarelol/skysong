@@ -3,9 +3,9 @@
   "id": "skysong",
   "version": "${version}",
   "name": "Skysong",
-  "description": "Sing along in your world: the song you play on Spotify floats around you or across the sky as 3D lyrics, with custom colors and fonts, a glass HUD and shader visuals. Based on Versefall by VerseFall-Development.",
+  "description": "Super Cool visual plugin",
   "authors": [
-    "infectedwarelol"
+    "infectedware"
   ],
   "contributors": [
     "infectedwarelol",
