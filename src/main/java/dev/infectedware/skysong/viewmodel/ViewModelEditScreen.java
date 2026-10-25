@@ -410,6 +410,6 @@ public final class ViewModelEditScreen extends VScreen {
         MOVE,
         YAW,
         PITCH,
-        ROLL;
+        ROLL
     }
 }

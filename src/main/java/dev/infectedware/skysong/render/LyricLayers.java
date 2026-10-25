@@ -148,6 +148,6 @@ public final class LyricLayers {
     public enum Pass {
         GLOW,
         OUTLINE,
-        MAIN;
+        MAIN
     }
 }

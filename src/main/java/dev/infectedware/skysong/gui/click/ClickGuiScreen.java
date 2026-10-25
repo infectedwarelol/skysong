@@ -853,6 +853,6 @@ public class ClickGuiScreen extends VScreen {
         VISUALS,
         DISPLAY,
         UTILS,
-        THEMES;
+        THEMES
     }
 }

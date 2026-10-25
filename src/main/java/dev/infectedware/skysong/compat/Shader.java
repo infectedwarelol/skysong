@@ -260,7 +260,7 @@ public final class Shader {
 
         try (
             InputStream in = resource.open();
-            InputStreamReader r = new InputStreamReader(in, StandardCharsets.UTF_8);
+            InputStreamReader r = new InputStreamReader(in, StandardCharsets.UTF_8)
         ) {
             StringBuilder sb = new StringBuilder();
             char[] buf = new char[4096];

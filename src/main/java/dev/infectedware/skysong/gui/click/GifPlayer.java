@@ -65,7 +65,7 @@ public final class GifPlayer {
 
         try (
             InputStream in = Minecraft.getInstance().getResourceManager().getResourceOrThrow(this.source).open();
-            ImageInputStream stream = ImageIO.createImageInputStream(in);
+            ImageInputStream stream = ImageIO.createImageInputStream(in)
         ) {
             Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("gif");
             ImageReader reader = readers.next();

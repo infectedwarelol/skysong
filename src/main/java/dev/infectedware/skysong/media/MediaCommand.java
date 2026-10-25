@@ -5,5 +5,5 @@ public enum MediaCommand {
     NEXT,
     PREVIOUS,
     SEEK_TO,
-    VOLUME_STEP;
+    VOLUME_STEP
 }

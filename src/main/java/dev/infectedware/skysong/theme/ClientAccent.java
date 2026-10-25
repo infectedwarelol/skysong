@@ -267,6 +267,6 @@ public final class ClientAccent {
     private enum Mode {
         THEMES,
         CUSTOM,
-        RAINBOW;
+        RAINBOW
     }
 }
