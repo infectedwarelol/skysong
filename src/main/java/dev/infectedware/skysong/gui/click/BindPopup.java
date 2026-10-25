@@ -108,14 +108,14 @@ public final class BindPopup {
         Ui.text(c, s, x + (w - Ui.width(s, 6.0F)) * 0.5F, y + 3.0F, 6.0F, color);
     }
 
-    public boolean click(float mx, float my) {
+    public void click(float mx, float my) {
         if (!this.open || this.module == null) {
-            return false;
+            return;
         }
 
         if (!Ui.inside(mx, my, this.x, this.y, 96.0F, 43.0F)) {
             this.close();
-            return false;
+            return;
         }
 
         float row = this.y + 6.0F;
@@ -124,7 +124,7 @@ public final class BindPopup {
         float kx = this.x + 96.0F - 6.0F - kw;
         if (Ui.inside(mx, my, kx, row, kw, 13.0F)) {
             this.listening = !this.listening;
-            return true;
+            return;
         }
 
         float row2 = row + 13.0F + 5.0F;
@@ -132,19 +132,18 @@ public final class BindPopup {
         if (my >= row2 && my <= row2 + 13.0F) {
             if (Ui.inside(mx, my, this.x + 6.0F, row2, half, 13.0F)) {
                 Binds.setHold(this.module.name(), false);
-                return true;
+                return;
             }
 
             if (Ui.inside(mx, my, this.x + 6.0F + half + 5.0F, row2, half, 13.0F)) {
                 Binds.setHold(this.module.name(), true);
-                return true;
+                return;
             }
         }
 
         this.dragging = true;
         this.grabX = mx - this.x;
         this.grabY = my - this.y;
-        return true;
     }
 
     public boolean keyPressed(int key) {

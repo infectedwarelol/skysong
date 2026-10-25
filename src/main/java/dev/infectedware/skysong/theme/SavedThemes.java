@@ -88,11 +88,11 @@ public final class SavedThemes {
         Feedback.show((replaced ? "Updated theme " : "Saved theme ") + name, 2500L);
     }
 
-    public static boolean load(String name) {
+    public static void load(String name) {
         int at = indexOf(name);
         if (at < 0) {
             Feedback.show("No theme named " + name, 2500L);
-            return false;
+            return;
         }
 
         ModConfig.apply(all().get(at).settings(), false);
@@ -100,7 +100,6 @@ public final class SavedThemes {
         Fx.reset("theme changed");
         active = all().get(at).name();
         Feedback.show("Loaded theme " + active, 2500L);
-        return true;
     }
 
     public static void delete(String name) {
@@ -144,15 +143,15 @@ public final class SavedThemes {
         Feedback.show("Theme code copied", 2500L);
     }
 
-    public static boolean importClipboard() {
-        return importCode(Minecraft.getInstance().keyboardHandler.getClipboard());
+    public static void importClipboard() {
+        importCode(Minecraft.getInstance().keyboardHandler.getClipboard());
     }
 
-    public static boolean importCode(String text) {
+    public static void importCode(String text) {
         JsonObject root = decode(text);
         if (root == null) {
             Feedback.show("That is not a Skysong theme code", 2500L);
-            return false;
+            return;
         }
 
         String name = cleanName(root.get("name") != null && root.get("name").isJsonPrimitive() ? root.get("name").getAsString() : "");
@@ -169,7 +168,7 @@ public final class SavedThemes {
         }
 
         write();
-        return load(name);
+        load(name);
     }
 
     private static JsonObject decode(String text) {

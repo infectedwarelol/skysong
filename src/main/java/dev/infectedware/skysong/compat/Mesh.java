@@ -76,8 +76,8 @@ public final class Mesh {
         return this;
     }
 
-    public Mesh setColor(int argb) {
-        return this.setColor(argb >> 16 & 0xFF, argb >> 8 & 0xFF, argb & 0xFF, argb >>> 24);
+    public void setColor(int argb) {
+        this.setColor(argb >> 16 & 0xFF, argb >> 8 & 0xFF, argb & 0xFF, argb >>> 24);
     }
 
     public Mesh setColor(int r, int g, int b, int a) {
@@ -88,8 +88,8 @@ public final class Mesh {
         return this;
     }
 
-    public Mesh setColor(float r, float g, float b, float a) {
-        return this.setColor((int)(r * 255.0F), (int)(g * 255.0F), (int)(b * 255.0F), (int)(a * 255.0F));
+    public void setColor(float r, float g, float b, float a) {
+        this.setColor((int)(r * 255.0F), (int)(g * 255.0F), (int)(b * 255.0F), (int)(a * 255.0F));
     }
 
     public Mesh setUv(float u, float t) {

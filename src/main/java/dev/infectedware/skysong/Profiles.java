@@ -78,21 +78,20 @@ public final class Profiles {
         say((replaced ? "Updated profile " : "Saved profile ") + name);
     }
 
-    public static boolean load(String name) {
+    public static void load(String name) {
         int at = indexOf(name);
         if (at < 0) {
             say("No profile named " + name);
-            return false;
-        } else {
-            backup();
-            ModConfig.resetShared();
-            ModConfig.migrateEffects(all().get(at).settings());
-            ModConfig.apply(all().get(at).settings(), false);
-            applied();
-            active = name;
-            say("Loaded profile " + name);
-            return true;
+            return;
         }
+
+        backup();
+        ModConfig.resetShared();
+        ModConfig.migrateEffects(all().get(at).settings());
+        ModConfig.apply(all().get(at).settings(), false);
+        applied();
+        active = name;
+        say("Loaded profile " + name);
     }
 
     public static void delete(String name) {
@@ -122,11 +121,10 @@ public final class Profiles {
         );
     }
 
-    public static boolean importCode(String text) {
+    public static void importCode(String text) {
         ShareCode.Result r = ShareCode.decode(text);
         if (!r.ok()) {
             say(r.error());
-            return false;
         } else {
             JsonObject json = new JsonObject();
             r.settings().forEach((k, v) -> {
@@ -144,18 +142,17 @@ public final class Profiles {
             applied();
             active = null;
             say("Code loaded: " + r.settings().size() + " settings (Undo brings yours back)");
-            return true;
         }
     }
 
-    public static boolean importClipboard() {
+    public static void importClipboard() {
         String clip = Minecraft.getInstance().keyboardHandler.getClipboard();
-        if (clip != null && !clip.isBlank()) {
-            return importCode(clip);
+        if (!clip.isBlank()) {
+            importCode(clip);
+            return;
         }
 
         say("The clipboard is empty: copy the code first");
-        return false;
     }
 
     public static void saveCodeFile() {
@@ -175,20 +172,20 @@ public final class Profiles {
         }
     }
 
-    public static boolean importFiles(List<Path> files) {
+    public static void importFiles(List<Path> files) {
         for (Path f : files) {
             try {
                 if (Files.isRegularFile(f) && Files.size(f) <= 1048576L) {
-                    return importCode(Files.readString(f, StandardCharsets.UTF_8));
+                    importCode(Files.readString(f, StandardCharsets.UTF_8));
+                    return;
                 }
             } catch (Exception e) {
                 say("Could not read " + f.getFileName());
-                return false;
+                return;
             }
         }
 
         say("That isn't a code file");
-        return false;
     }
 
     private static void backup() {
@@ -206,10 +203,10 @@ public final class Profiles {
         return Files.exists(BACKUP);
     }
 
-    public static boolean undo() {
+    public static void undo() {
         if (!canUndo()) {
             say("Nothing to undo");
-            return false;
+            return;
         }
 
         try {
@@ -220,10 +217,8 @@ public final class Profiles {
             applied();
             active = null;
             say("Your settings are back");
-            return true;
         } catch (Exception e) {
             say("Could not undo: " + e.getMessage());
-            return false;
         }
     }
 

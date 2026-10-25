@@ -109,9 +109,7 @@ public final class ModConfig {
         return json;
     }
 
-    public static int apply(JsonObject json, boolean personal) {
-        int count = 0;
-
+    public static void apply(JsonObject json, boolean personal) {
         for (Class<?> holder : HOLDERS) {
             for (Field f : holder.getFields()) {
                 if (isSetting(f) && json.has(f.getName()) && (personal || !PERSONAL.contains(f.getName()))) {
@@ -132,8 +130,6 @@ public final class ModConfig {
 
                                 f.set(null, p.getAsString());
                             }
-
-                            count++;
                         }
                     } catch (Exception ignored) {
                     }
@@ -141,7 +137,6 @@ public final class ModConfig {
             }
         }
 
-        return count;
     }
 
     public static List<Field> sharedFields() {

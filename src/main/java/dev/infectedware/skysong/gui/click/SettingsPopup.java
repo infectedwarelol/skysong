@@ -247,7 +247,7 @@ public final class SettingsPopup {
         return this.isVisible() && Ui.inside(mx, my, this.renderX, this.renderY, this.width, this.height);
     }
 
-    public boolean click(float mx, float my) {
+    public void click(float mx, float my) {
         if (this.open && this.module != null) {
             boolean overlayOpen = false;
             float wy = this.renderY + 7.0F - this.scroll;
@@ -257,7 +257,7 @@ public final class SettingsPopup {
                     if (w.overlayOpen()) {
                         overlayOpen = true;
                         if (w.clickOverlay(this.renderX + 5.0F, wy, this.width - 10.0F, mx, my)) {
-                            return true;
+                            return;
                         }
                     }
 
@@ -267,17 +267,17 @@ public final class SettingsPopup {
 
             if (overlayOpen) {
                 this.closeOverlays();
-                return true;
+                return;
             }
 
             if (!this.contains(mx, my)) {
                 this.close();
                 Sounds.play("module_settings_close");
-                return true;
+                return;
             }
 
             if (this.scrollBar.tryGrab(mx, my)) {
-                return true;
+                return;
             }
 
             if (my >= this.renderY + 7.0F && my <= this.renderY + 7.0F + this.bodyH) {
@@ -299,7 +299,7 @@ public final class SettingsPopup {
 
                                 if (hit) {
                                     ModConfig.save();
-                                    return true;
+                                    return;
                                 }
                             }
                             break;
@@ -319,9 +319,6 @@ public final class SettingsPopup {
             this.dragging = true;
             this.grabX = mx - this.x;
             this.grabY = my - this.y;
-            return true;
-        } else {
-            return false;
         }
     }
 

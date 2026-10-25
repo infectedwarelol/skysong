@@ -80,25 +80,10 @@ public final class GuiGraphics {
         this.end();
     }
 
-    public int drawString(Font font, String text, int x, int y, int color, boolean shadow) {
+    public void drawString(Font font, FormattedCharSequence text, int x, int y, int color, boolean shadow) {
         this.begin();
         this.g.drawString(font, text, x, y, color, shadow);
         this.end();
-        return x + font.width(text);
-    }
-
-    public int drawString(Font font, Component text, int x, int y, int color, boolean shadow) {
-        this.begin();
-        this.g.drawString(font, text, x, y, color, shadow);
-        this.end();
-        return x + font.width(text);
-    }
-
-    public int drawString(Font font, FormattedCharSequence text, int x, int y, int color, boolean shadow) {
-        this.begin();
-        this.g.drawString(font, text, x, y, color, shadow);
-        this.end();
-        return x + font.width(text);
     }
 
     public void enableScissor(int x1, int y1, int x2, int y2) {
