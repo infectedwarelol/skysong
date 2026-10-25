@@ -266,15 +266,15 @@ public final class DragController {
             this.lastTiltMouse = mx;
             this.lastTiltNs = now;
         } else {
-            float dt = Math.max(0.001F, Math.min(0.05F, (float)(now - this.lastTiltNs) / 1.0E9F));
+            float dt = Math.clamp((float)(now - this.lastTiltNs) / 1.0E9F, 0.001F, 0.05F);
             float v = this.dragging ? (mx - this.lastTiltMouse) / dt : 0.0F;
             this.lastTiltMouse = mx;
             this.lastTiltNs = now;
             this.mouseVel = this.mouseVel + (v - this.mouseVel) * (1.0F - (float)Math.exp(-14.0F * dt));
-            float target = this.dragging ? Math.max(-6.5F, Math.min(6.5F, this.mouseVel * 0.012F)) : 0.0F;
+            float target = this.dragging ? Math.clamp(this.mouseVel * 0.012F, -6.5F, 6.5F) : 0.0F;
             float acc = (target - this.tilt) * 105.0F - this.tiltVel * 16.0F;
             this.tiltVel += acc * dt;
-            this.tilt = Math.max(-7.0F, Math.min(7.0F, this.tilt + this.tiltVel * dt));
+            this.tilt = Math.clamp(this.tilt + this.tiltVel * dt, -7.0F, 7.0F);
             if (!this.dragging && Math.abs(this.tilt) < 0.01F && Math.abs(this.tiltVel) < 0.05F) {
                 this.tilt = this.tiltVel = 0.0F;
             }

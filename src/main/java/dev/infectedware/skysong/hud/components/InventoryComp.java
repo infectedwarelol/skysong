@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud.components;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.hud.DragSystem;
@@ -101,7 +102,7 @@ public final class InventoryComp extends Draggable {
         this.divider.target(divOn ? 1.0F : 0.0F, divOn ? 0.24 : 0.14);
         float dv = ListHudComp.smoothstep(this.divider.get());
         float full = 28.0F + ext * 11.0F + 3.0F;
-        this.h = 22.0F + (full - 22.0F) * Math.max(dv, Math.min(1.0F, ext));
+        this.h = 22.0F + (full - 22.0F) * Mth.clamp(ext, dv, 1.0F);
         this.headerIcon.target(ModSettings.hudIcons ? 1.0F : 0.0F, ModSettings.hudIcons ? 0.25 : 0.2);
         float minW = this.titleMinWidth();
         boolean collapsed = ext < 0.05F && dv < 0.05F;
@@ -273,7 +274,7 @@ public final class InventoryComp extends Draggable {
     }
 
     private static float easeOutBack(float f) {
-        f = Math.max(0.0F, Math.min(1.0F, f));
+        f = Math.clamp(f, 0.0F, 1.0F);
         float c1 = 1.70158F;
         float c3 = c1 + 1.0F;
         float u = f - 1.0F;

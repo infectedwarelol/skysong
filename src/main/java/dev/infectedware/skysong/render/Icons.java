@@ -93,7 +93,7 @@ public final class Icons {
     }
 
     public static void logo(GuiGraphics ctx, float x, float y, float size, float opacity) {
-        int a = Math.round(Math.max(0.0F, Math.min(1.0F, opacity)) * 255.0F);
+        int a = Math.round(Math.clamp(opacity, 0.0F, 1.0F) * 255.0F);
         R2D.image(ctx, LOGO, x, y, size, size, 0.0F, 0.0F, 0.0F, 1.0F, 1.0F, a << 24 | 16777215, true);
     }
 

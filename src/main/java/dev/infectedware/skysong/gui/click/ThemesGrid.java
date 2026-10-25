@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.render.r2d.R2D;
 import dev.infectedware.skysong.theme.ClientTheme;
@@ -30,7 +31,7 @@ public final class ThemesGrid {
 
     public void scroll(double amount, float viewH) {
         float max = Math.max(0.0F, this.contentH - viewH + 8.0F);
-        this.scrollTarget = Math.max(0.0F, Math.min(max, this.scrollTarget - (float)amount * 18.0F));
+        this.scrollTarget = Mth.clamp(this.scrollTarget - (float)amount * 18.0F, 0.0F, max);
     }
 
     private float cardW(float areaW) {
@@ -186,8 +187,8 @@ public final class ThemesGrid {
         int rows = (themes.length + 1) / 2;
         this.contentH = rows * 38.0F - 3.0F;
         float max = Math.max(0.0F, this.contentH - areaH + 8.0F);
-        this.scrollTarget = Math.max(0.0F, Math.min(max, this.scrollTarget));
-        this.scroll = Math.max(0.0F, Math.min(max, this.scroll));
+        this.scrollTarget = Mth.clamp(this.scrollTarget, 0.0F, max);
+        this.scroll = Mth.clamp(this.scroll, 0.0F, max);
         float edgeInset = Math.max(0.0F, ModuleCards.cornerEdgeInset(panelRadius, 1.0F) + 1.5F - 3.0F);
         float s = this.scrollBar.render(c, panelRight - 7.5F, areaY + 3.0F, areaH - 6.0F - edgeInset, areaH, this.contentH + 8.0F, this.scroll, alpha, mx, my);
         if (this.scrollBar.isDragging()) {

@@ -76,7 +76,7 @@ public final class UiText {
     private static int densityAt(GuiGraphics ctx) {
         Matrix4f m = ctx.pose().last().pose();
         double ppu = m.m00() * Minecraft.getInstance().getWindow().getGuiScale();
-        return (int)Math.max(2L, Math.min(4L, Math.round(ppu)));
+        return (int)Math.clamp(Math.round(ppu), 2L, 4L);
     }
 
     private static void drawSnapped(GuiGraphics ctx, FormattedCharSequence t, float x, float y, int color) {

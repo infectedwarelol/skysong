@@ -181,7 +181,7 @@ public class WorldTextRenderer {
                             anchor = pos;
                         } else if (scatter) {
                             long wordGap = words.length > 1 ? (sungAt[words.length - 1] - sungAt[0]) / (words.length - 1) : 300L;
-                            long lifetime = Math.max(1200L, Math.min(2400L, 4L * wordGap));
+                            long lifetime = Math.clamp(4L * wordGap, 1200L, 2400L);
 
                             for (int i = 0; i < words.length; i++) {
                                 if (sungAt[i] + lifetime >= now) {

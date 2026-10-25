@@ -185,7 +185,7 @@ public final class ViewModelEditScreen extends VScreen {
     }
 
     private static float ringRadius(ViewModel.HandState s) {
-        return 30.0F * Math.max(0.8F, Math.min(1.6F, s.screenSize / 60.0F));
+        return 30.0F * Math.clamp(s.screenSize / 60.0F, 0.8F, 1.6F);
     }
 
     private void updateHover(float mx, float my) {

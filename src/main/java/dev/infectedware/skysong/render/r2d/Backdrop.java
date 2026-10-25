@@ -46,7 +46,7 @@ public final class Backdrop {
         sharp = ensure(sharp, w, h);
         blurred = ensure(blurred, w, h);
         float radius = ModSettings.rectBackdropBlur;
-        float perPass = Math.max(1.0F, Math.min(24.0F, radius * 0.5F * pixelsPerGuiUnit(mc)));
+        float perPass = Math.clamp(radius * 0.5F * pixelsPerGuiUnit(mc), 1.0F, 24.0F);
         if (radius > 0.5F) {
             Fx.boxBlur(main, blurred, perPass, 2);
         } else {

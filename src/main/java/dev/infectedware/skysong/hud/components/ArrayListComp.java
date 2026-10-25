@@ -156,7 +156,7 @@ public final class ArrayListComp extends Draggable {
             }
 
             long now = System.currentTimeMillis();
-            long dt = this.lastWave == 0L ? 0L : Math.max(0L, Math.min(100L, now - this.lastWave));
+            long dt = this.lastWave == 0L ? 0L : Math.clamp(now - this.lastWave, 0L, 100L);
             this.lastWave = now;
             this.wavePhase = (this.wavePhase + (float)dt * ModSettings.arrayListWaveSpeed * 1.0E-4) % (Math.PI * 2);
             rowY = y;
@@ -168,7 +168,7 @@ public final class ArrayListComp extends Draggable {
                 float rh = heights[i];
                 float tw = R2D.width(MsdfFont.Font.MEDIUM, m.name(), 7.2F);
                 float tx = this.leftAligned ? x + 1.5F : x + this.width - 1.5F - tw;
-                float ta = Math.max(0.0F, Math.min(1.0F, a * p));
+                float ta = Math.clamp(a * p, 0.0F, 1.0F);
                 float wave = 0.5F + 0.5F * (float)Math.sin((rowY + rh * 0.5F) * 0.05F - this.wavePhase);
                 int color;
                 if (rainbow) {

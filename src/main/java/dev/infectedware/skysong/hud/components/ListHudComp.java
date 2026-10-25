@@ -212,7 +212,7 @@ public abstract class ListHudComp extends Draggable {
             for (ListHudComp.RowState st : this.rows.values()) {
                 float p = st.anim.get();
                 if (!(p <= 0.001F)) {
-                    float pulse = st.pulse != null ? Math.max(0.0F, Math.min(1.0F, st.pulse.alpha())) : 1.0F;
+                    float pulse = st.pulse != null ? Math.clamp(st.pulse.alpha(), 0.0F, 1.0F) : 1.0F;
                     float ra = a * pulse;
                     float valueP = delayed(p, 0.12F);
                     float iconW = st.icon != null ? this.iconSlot() + 4.0F : 0.0F;
@@ -284,7 +284,7 @@ public abstract class ListHudComp extends Draggable {
     }
 
     static float smoothstep(float t) {
-        t = Math.max(0.0F, Math.min(1.0F, t));
+        t = Math.clamp(t, 0.0F, 1.0F);
         return t * t * (3.0F - 2.0F * t);
     }
 

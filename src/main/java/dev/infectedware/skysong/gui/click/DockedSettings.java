@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.module.ClientModule;
@@ -77,7 +78,7 @@ public final class DockedSettings {
         float dt = Math.min(0.1F, (now - this.lastNs) / 1.0E9F);
         this.lastNs = now;
         float max = this.maxScroll();
-        this.scrollTarget = Math.max(0.0F, Math.min(max, this.scrollTarget));
+        this.scrollTarget = Mth.clamp(this.scrollTarget, 0.0F, max);
         this.scroll = Anim.follow(this.scroll, this.scrollTarget, dt, 16.0F);
         if (Math.abs(this.scroll - this.scrollTarget) < 0.05F) {
             this.scroll = this.scrollTarget;
@@ -237,7 +238,7 @@ public final class DockedSettings {
         }
 
         if (this.contains(mx, my)) {
-            this.scrollTarget = Math.max(0.0F, Math.min(this.maxScroll(), this.scrollTarget - (float)amount * SCROLL_STEP));
+            this.scrollTarget = Mth.clamp(this.scrollTarget - (float)amount * SCROLL_STEP, 0.0F, this.maxScroll());
             return true;
         }
 

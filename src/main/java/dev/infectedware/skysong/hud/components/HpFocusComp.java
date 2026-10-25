@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud.components;
 
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import dev.infectedware.skysong.ModSettings;
@@ -73,8 +74,8 @@ public final class HpFocusComp extends Draggable {
                 double gui = mc.getWindow().getGuiScale();
                 int cw = (int)Math.round(ModSettings.hpFocusWidth * gui);
                 int ch = (int)Math.round(ModSettings.hpFocusHeight * gui);
-                cw = Math.max(2, Math.min(cw, main.width));
-                ch = Math.max(2, Math.min(ch, main.height));
+                cw = Mth.clamp(cw, 2, main.width);
+                ch = Mth.clamp(ch, 2, main.height);
                 if (capture == null) {
                     capture = Targets.create(cw, ch, false);
                 } else if (capture.width != cw || capture.height != ch) {

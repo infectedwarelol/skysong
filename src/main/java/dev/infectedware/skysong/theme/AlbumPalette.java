@@ -110,9 +110,9 @@ public final class AlbumPalette {
     }
 
     private static int rgb(double r, double g, double b) {
-        int red = (int)Math.round(Math.max(0.0, Math.min(255.0, r)));
-        int green = (int)Math.round(Math.max(0.0, Math.min(255.0, g)));
-        int blueValue = (int)Math.round(Math.max(0.0, Math.min(255.0, b)));
+        int red = (int)Math.round(Math.clamp(r, 0.0, 255.0));
+        int green = (int)Math.round(Math.clamp(g, 0.0, 255.0));
+        int blueValue = (int)Math.round(Math.clamp(b, 0.0, 255.0));
         return 0xFF000000 | red << 16 | green << 8 | blueValue;
     }
 }

@@ -38,6 +38,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 
 public class SpotifyManager {
@@ -766,7 +767,7 @@ public class SpotifyManager {
                     return;
                 }
 
-                int volume = Math.max(0, Math.min(100, device.get("volume_percent").getAsInt() + Integer.signum(direction) * VOLUME_STEP));
+                int volume = Mth.clamp(device.get("volume_percent").getAsInt() + Integer.signum(direction) * VOLUME_STEP, 0, 100);
                 this.control("PUT", "/me/player/volume?volume_percent=" + volume, () -> Feedback.show("Volume " + volume + "%", 1200L));
             } catch (RuntimeException e) {
                 SkysongClient.LOGGER.warn("[Skysong] Could not read Spotify volume: {}", e.getMessage());

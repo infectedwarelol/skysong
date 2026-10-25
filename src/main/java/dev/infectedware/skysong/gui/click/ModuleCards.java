@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.module.Binds;
 import dev.infectedware.skysong.module.Category;
@@ -63,7 +64,7 @@ public final class ModuleCards {
 
     public void scroll(double amount, float viewH) {
         float max = Math.max(0.0F, this.contentH - viewH);
-        this.scrollTarget = Math.max(0.0F, Math.min(max, this.scrollTarget - (float)amount * 16.0F));
+        this.scrollTarget = Mth.clamp(this.scrollTarget - (float)amount * 16.0F, 0.0F, max);
     }
 
     List<String> descLines(ClientModule m, float colW) {
@@ -186,7 +187,7 @@ public final class ModuleCards {
 
         this.contentH = this.totalHeight(list, cw);
         float max = Math.max(0.0F, this.contentH - areaH);
-        this.scrollTarget = Math.max(0.0F, Math.min(this.scrollTarget, max));
+        this.scrollTarget = Mth.clamp(this.scrollTarget, 0.0F, max);
         int focusIndex = -1;
         if (this.focusName != null) {
             for (int i = 0; i < list.size(); i++) {
@@ -200,7 +201,7 @@ public final class ModuleCards {
         if (this.focusScrollPending && focusIndex >= 0) {
             float top = 5.0F + this.topInColumn(list, focusIndex, cw);
             float h = this.cardHeight(list.get(focusIndex), cw);
-            this.scrollTarget = Math.max(0.0F, Math.min(max, top - (areaH - h) * 0.5F));
+            this.scrollTarget = Mth.clamp(top - (areaH - h) * 0.5F, 0.0F, max);
             this.focusScrollPending = false;
         }
 

@@ -386,7 +386,7 @@ public final class R2D {
     }
 
     public static void accentIcon(GuiGraphics c, String glyph, float x, float y, float size, float alpha, float t) {
-        t = Math.max(0.0F, Math.min(1.0F, t));
+        t = Math.clamp(t, 0.0F, 1.0F);
         int a = ClientAccent.gradientColor(t * 0.42F, alpha);
         int b = ClientAccent.gradientColor(0.28F + t * 0.72F, alpha);
         text(c, MsdfFont.Font.ICONS, glyph, x, y, size, a, b, b, a);

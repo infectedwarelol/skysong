@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.SkysongClient;
 import dev.infectedware.skysong.SpotifyManager;
@@ -135,7 +136,7 @@ public class LyricsScreen extends VScreen {
             this.scroll += (target - this.scroll) * 0.15F;
         }
 
-        this.scroll = Math.max(0.0F, Math.min(this.scroll, maxScroll));
+        this.scroll = Mth.clamp(this.scroll, 0.0F, maxScroll);
     }
 
     @Override

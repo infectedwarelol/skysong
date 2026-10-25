@@ -1,5 +1,8 @@
 package dev.infectedware.skysong.module;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import net.minecraft.util.Mth;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -80,16 +83,16 @@ public sealed interface Setting
         }
 
         public float fraction() {
-            return (float)Math.max(0.0, Math.min(1.0, (this.get.getAsDouble() - this.min) / (this.max - this.min)));
+            return (float)Math.clamp((this.get.getAsDouble() - this.min) / (this.max - this.min), 0.0, 1.0);
         }
 
         public void setFraction(float f) {
-            double v = this.min + Math.max(0.0F, Math.min(1.0F, f)) * (this.max - this.min);
+            double v = this.min + Math.clamp(f, 0.0F, 1.0F) * (this.max - this.min);
             if (this.step > 0.0F) {
                 v = (float)Math.round(v / this.step) * this.step;
             }
 
-            this.set.accept(Math.max(this.min, Math.min(this.max, v)));
+            this.set.accept(Mth.clamp(v, this.min, this.max));
         }
 
         public String text() {

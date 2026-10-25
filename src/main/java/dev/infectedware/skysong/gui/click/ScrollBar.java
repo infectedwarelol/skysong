@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.render.r2d.R2D;
 
@@ -31,11 +32,11 @@ public final class ScrollBar {
         float th = Math.max(12.0F, trackHeight * (viewH / contentH));
         float travel = Math.max(1.0F, trackHeight - th);
         if (this.dragging) {
-            float ty = Math.max(y, Math.min(y + travel, my - this.grabOffset));
+            float ty = Mth.clamp(my - this.grabOffset, y, y + travel);
             scroll = (ty - y) / travel * max;
         }
 
-        scroll = Math.max(0.0F, Math.min(max, scroll));
+        scroll = Mth.clamp(scroll, 0.0F, max);
         float ty = y + travel * (scroll / max);
         boolean over = mx >= x - 4.0F && mx <= x + 1.5F + 4.0F && my >= ty - 2.0F && my <= ty + th + 2.0F;
         this.hoverT = Anim.follow(this.hoverT, over ? 1.0F : 0.0F, dt, 16.0F);

@@ -280,7 +280,7 @@ public final class DragSystem implements HudLayer {
     }
 
     private static int white(float a) {
-        return Math.round(Math.max(0.0F, Math.min(1.0F, a)) * 255.0F) << 24 | 16777215;
+        return Math.round(Math.clamp(a, 0.0F, 1.0F) * 255.0F) << 24 | 16777215;
     }
 
     private static void dashedLine(GuiGraphics c, float x0, float y0, float x1, float y1, float thickness, int col) {

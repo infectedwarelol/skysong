@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.render.fx;
 
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import dev.infectedware.skysong.ModSettings;
@@ -81,7 +82,7 @@ public final class MotionBlur {
                     Fx.set(Fx.motion, "InvViewProj", inv);
                     Fx.set(Fx.motion, "PrevViewProj", prev);
                     Fx.set(Fx.motion, "CamDelta", (float)delta.x, (float)delta.y, (float)delta.z, ModSettings.motionBlurMovement ? 1.0F : 0.0F);
-                    int q = Math.max(0, Math.min(SAMPLES.length - 1, ModSettings.motionBlurQuality));
+                    int q = Mth.clamp(ModSettings.motionBlurQuality, 0, SAMPLES.length - 1);
                     Fx.set(Fx.motion, "Params", scale, ModSettings.motionBlurMax / 100.0F, SAMPLES[q], ModSettings.motionBlurSharpCenter ? 1.0F : 0.0F);
                     Fx.set(Fx.motion, "OutSize", main.width, main.height);
                     Fx.draw(Fx.motion);

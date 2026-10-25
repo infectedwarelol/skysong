@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.GuiGraphics;
@@ -1004,7 +1005,7 @@ public abstract class Widget {
                 this.drop.forwards(this.open);
                 if (this.open) {
                     int idx = Math.max(0, this.ch.get().getAsInt());
-                    this.scrollTarget = this.scroll = Math.max(0, Math.min(idx - 3, this.ch.options().length - 7)) * 12.0F;
+                    this.scrollTarget = this.scroll = Mth.clamp(idx - 3, 0, Math.max(0, this.ch.options().length - 7)) * 12.0F;
                 }
 
                 return true;
@@ -1030,7 +1031,7 @@ public abstract class Widget {
                 long now = System.nanoTime();
                 float dt = Math.min(0.05F, (float)(now - this.lastNs) / 1.0E9F);
                 this.lastNs = now;
-                this.scrollTarget = Math.max(0.0F, Math.min(this.maxScroll(), this.scrollTarget));
+                this.scrollTarget = Mth.clamp(this.scrollTarget, 0.0F, this.maxScroll());
                 this.scroll = Anim.follow(this.scroll, this.scrollTarget, dt, 18.0F);
                 float fa = a * p;
                 String[] opts = this.ch.options();
@@ -1117,7 +1118,7 @@ public abstract class Widget {
                 return false;
             }
 
-            this.scrollTarget = Math.max(0.0F, Math.min(this.maxScroll(), this.scrollTarget - (float)amount * 12.0F));
+            this.scrollTarget = Mth.clamp(this.scrollTarget - (float)amount * 12.0F, 0.0F, this.maxScroll());
             return true;
         }
 
@@ -1239,7 +1240,7 @@ public abstract class Widget {
 
             float kw = 6.5F;
             float kh = 4.0F;
-            float kx = Math.max(tx, Math.min(tx + tw - kw, fillEnd - kw * 0.5F));
+            float kx = Mth.clamp(fillEnd - kw * 0.5F, tx, tx + tw - kw);
             float ky = ty + 1.5F - kh * 0.5F;
             R2D.rect(c, kx, ky, kw, kh, 2.0F, Colors.rgba(255, 255, 255, 245.0F * a));
             R2D.outline(c, kx - 0.5F, ky - 0.5F, kw + 1.0F, kh + 1.0F, 2.0F, 0.5F, Colors.rgba(16, 16, 16, 128.0F * a));

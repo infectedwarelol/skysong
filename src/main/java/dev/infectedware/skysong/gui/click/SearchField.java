@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.render.r2d.MsdfFont;
@@ -80,7 +81,7 @@ public final class SearchField {
         this.y = y;
         this.w = w;
         this.h = h;
-        this.cursor = Math.max(0, Math.min(this.cursor, this.text.length()));
+        this.cursor = Mth.clamp(this.cursor, 0, this.text.length());
         boolean over = Ui.inside(mx, my, x, y, w, h);
         this.hoverT = Anim.follow(this.hoverT, over ? 1.0F : 0.0F, dt, 16.0F);
         this.focusT = Anim.follow(this.focusT, this.typing ? 1.0F : 0.0F, dt, 11.0F);
@@ -181,7 +182,7 @@ public final class SearchField {
             this.xOffset = cursorPos;
         }
 
-        this.xOffset = Math.max(0.0F, Math.min(this.xOffset, Math.max(0.0F, total - this.visibleW)));
+        this.xOffset = Mth.clamp(this.xOffset, 0.0F, Math.max(0.0F, total - this.visibleW));
     }
 
     private int indexAt(float mx) {

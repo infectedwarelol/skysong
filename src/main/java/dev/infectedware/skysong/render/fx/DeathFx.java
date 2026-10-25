@@ -271,7 +271,7 @@ public final class DeathFx {
     }
 
     private static float smooth(float a, float b, float x) {
-        float t = Math.max(0.0F, Math.min(1.0F, (x - a) / (b - a)));
+        float t = Math.clamp((x - 0.0F) / (b - 0.0F), 0.0F, 1.0F);
         return t * t * (3.0F - 2.0F * t);
     }
 

@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.viewmodel;
 
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
@@ -312,7 +313,7 @@ public final class ViewModel {
     }
 
     static float clamp(float v, float min, float max) {
-        return Math.max(min, Math.min(max, v));
+        return Mth.clamp(v, min, max);
     }
 
     static final class HandState {

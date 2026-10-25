@@ -27,7 +27,7 @@ public final class ClientAccent {
         long now = System.currentTimeMillis();
         if (hueLast == 0L || now - hueLast >= 2L) {
             if (hueLast != 0L) {
-                long dt = Math.max(0L, Math.min(200L, now - hueLast));
+                long dt = Math.clamp(now - hueLast, 0L, 200L);
                 huePhase = huePhase + (float)dt * Math.max(0.1F, ModSettings.rainbowSpeed) / 6000.0;
                 huePhase = huePhase - Math.floor(huePhase);
             }
@@ -131,7 +131,7 @@ public final class ClientAccent {
             return ThemeManager.shade(i, alpha);
         }
 
-        int a = Math.max(0, Math.min(255, Math.round(alpha)));
+        int a = Math.clamp(Math.round(alpha), 0, 255);
         if (a <= 0) {
             return 0;
         }

@@ -162,7 +162,7 @@ public final class SkyFx {
         }
 
         float angle = Compat.timeOfDay(mc.level) * (float) (Math.PI * 2);
-        return Math.max(0.06F, Math.min(1.0F, (float)Math.cos(angle) * 2.0F + 0.5F));
+        return Math.clamp((float)Math.cos(angle) * 2.0F + 0.5F, 0.06F, 1.0F);
     }
 
     static float[] sunDirection() {

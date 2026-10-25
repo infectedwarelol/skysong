@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.GuiGraphics;
@@ -91,13 +92,13 @@ public final class SettingsPopup {
             pref = Math.max(pref, w.preferredWidth());
         }
 
-        this.width = Math.max(110.0F, Math.min(180.0F, pref + 10.0F + 4.0F));
+        this.width = Math.clamp(pref + 10.0F + 4.0F, 110.0F, 180.0F);
         float[] saved = savedPosition(m.name());
         this.x = saved != null ? saved[0] : mx + 2.5F;
         this.y = saved != null ? saved[1] : my;
-        this.x = Math.max(4.0F, Math.min(screenW - this.width - 4.0F, this.x));
+        this.x = Mth.clamp(this.x, 4.0F, screenW - this.width - 4.0F);
         this.layout();
-        this.y = Math.max(4.0F, Math.min(screenH - this.height - 4.0F, this.y));
+        this.y = Mth.clamp(this.y, 4.0F, screenH - this.height - 4.0F);
         this.renderX = this.x;
         this.renderY = this.y;
         this.anim.forwards(true);
@@ -108,8 +109,8 @@ public final class SettingsPopup {
         if (!this.isOpenFor(m)) {
             this.toggle(m, atX - 2.5F, atY, areaH, screenW, screenH);
             if (savedPosition(m.name()) == null) {
-                this.x = Math.max(4.0F, Math.min(screenW - this.width - 4.0F, atX));
-                this.y = Math.max(4.0F, Math.min(screenH - this.height - 4.0F, atY));
+                this.x = Mth.clamp(atX, 4.0F, screenW - this.width - 4.0F);
+                this.y = Mth.clamp(atY, 4.0F, screenH - this.height - 4.0F);
             }
 
             this.renderX = this.x;
@@ -162,8 +163,8 @@ public final class SettingsPopup {
         this.bodyH = Math.min(content, this.maxBodyH);
         this.height = 7.0F + this.bodyH + 7.0F;
         float max = Math.max(0.0F, content - this.bodyH);
-        this.scrollTarget = Math.max(0.0F, Math.min(max, this.scrollTarget));
-        this.scroll = Math.max(0.0F, Math.min(max, this.scroll));
+        this.scrollTarget = Mth.clamp(this.scrollTarget, 0.0F, max);
+        this.scroll = Mth.clamp(this.scroll, 0.0F, max);
     }
 
     public void render(GuiGraphics c, float alpha, float mx, float my) {
@@ -186,8 +187,8 @@ public final class SettingsPopup {
                 float dt = Math.min(0.1F, (float)(now - this.lastNs) / 1.0E9F);
                 this.lastNs = now;
                 if (this.dragging) {
-                    this.x = Math.max(4.0F, Math.min(this.screenW - this.width - 4.0F, mx - this.grabX));
-                    this.y = Math.max(4.0F, Math.min(this.screenH - this.height - 4.0F, my - this.grabY));
+                    this.x = Mth.clamp(mx - this.grabX, 4.0F, this.screenW - this.width - 4.0F);
+                    this.y = Mth.clamp(my - this.grabY, 4.0F, this.screenH - this.height - 4.0F);
                 }
 
                 this.renderX = Anim.follow(this.renderX, this.x, dt, 22.0F);
@@ -365,7 +366,7 @@ public final class SettingsPopup {
 
             if (this.contains(mx, my)) {
                 float max = Math.max(0.0F, this.contentHeight() - this.bodyH);
-                this.scrollTarget = Math.max(0.0F, Math.min(max, this.scrollTarget - (float)amount * 12.0F));
+                this.scrollTarget = Mth.clamp(this.scrollTarget - (float)amount * 12.0F, 0.0F, max);
                 return true;
             } else {
                 return false;

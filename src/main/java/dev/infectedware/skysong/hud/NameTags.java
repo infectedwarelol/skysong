@@ -154,7 +154,7 @@ public final class NameTags implements HudLayer {
         Minecraft mc = Minecraft.getInstance();
         if (ModSettings.nameTagsEnabled && mc.player != null && mc.level != null) {
             long now = System.currentTimeMillis();
-            long frameMs = Math.max(1L, Math.min(now - this.lastFrame, 100L));
+            long frameMs = Math.clamp(now - this.lastFrame, 1L, 100L);
             this.lastFrame = now;
             float partial = ctx.partialTick();
             float k = ModSettings.nameTagsScale;

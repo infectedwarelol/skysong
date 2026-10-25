@@ -148,7 +148,7 @@ public final class LinuxMprisReader implements MediaReader {
             volume = 0.5;
         }
 
-        double next = Math.max(0.0, Math.min(1.0, volume + Long.signum(direction) * VOLUME_STEP));
+        double next = Math.clamp(volume + Long.signum(direction) * VOLUME_STEP, 0.0, 1.0);
         String variant = "<" + String.format(Locale.ROOT, "%.3f", next) + ">";
         return run(
                 "call", "--session", "--dest", dest, "--object-path", OBJECT_PATH, "--method", "org.freedesktop.DBus.Properties.Set", PLAYER, "Volume", variant

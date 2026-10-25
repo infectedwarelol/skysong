@@ -66,7 +66,7 @@ public final class ThemeManager {
     }
 
     static int shade(int i, float alpha) {
-        int a = Math.max(0, Math.min(255, Math.round(alpha)));
+        int a = Math.clamp(Math.round(alpha), 0, 255);
         if (a <= 0) {
             return 0;
         }

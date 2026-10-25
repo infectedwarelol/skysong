@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud;
 
+import net.minecraft.util.Mth;
 import com.mojang.blaze3d.platform.Window;
 import dev.infectedware.skysong.ui.Theme;
 import net.minecraft.client.Minecraft;
@@ -33,10 +34,10 @@ public final class HudSpace {
     }
 
     public static float clampX(float x, float w) {
-        return Math.max(0.0F, Math.min(x, width() - w));
+        return Mth.clamp(x, 0.0F, width() - w);
     }
 
     public static float clampY(float y, float h) {
-        return Math.max(0.0F, Math.min(y, height() - h));
+        return Mth.clamp(y, 0.0F, height() - h);
     }
 }

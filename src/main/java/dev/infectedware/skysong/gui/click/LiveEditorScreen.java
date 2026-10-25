@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.gui.click;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.Profiles;
@@ -399,7 +400,7 @@ public class LiveEditorScreen extends VScreen {
         List<String[]> rows = this.rows();
         float content = this.listContentHeight(rows);
         float max = Math.max(0.0F, content - h);
-        this.listScrollTarget = Math.max(0.0F, Math.min(max, this.listScrollTarget));
+        this.listScrollTarget = Mth.clamp(this.listScrollTarget, 0.0F, max);
         this.listScroll = Anim.follow(this.listScroll, this.listScrollTarget, this.dt, 16.0F);
         Clip.push(c, x, y, x + LIST_W, y + h);
         float ry = y + LIST_TOP_PAD - this.listScroll;
@@ -703,7 +704,7 @@ public class LiveEditorScreen extends VScreen {
         float barW = w - 60.0F;
         float barY = this.bodyY() + this.bodyH() - 14.0F;
         if (Ui.inside(x, y, barX, barY - 5.0F, barW, 12.0F)) {
-            float pct = Math.max(0.0F, Math.min(1.0F, (x - barX) / barW));
+            float pct = Math.clamp((x - barX) / barW, 0.0F, 1.0F);
             spotify.seekTo(Math.round(pct * spotify.getDurationMs()));
             return true;
         }

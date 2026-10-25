@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud.components;
 
+import net.minecraft.util.Mth;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.GuiGraphics;
@@ -369,7 +370,7 @@ public final class TargetHudComp extends Draggable {
     }
 
     private static float barRadius(float h) {
-        return Math.max(0.0F, Math.min(ModSettings.rectCornerRadius, h * 0.5F));
+        return Mth.clamp(h * 0.5F, 0.0F, ModSettings.rectCornerRadius);
     }
 
     private void updateParticles(LivingEntity e, float cx, float cy) {
