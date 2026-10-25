@@ -114,6 +114,7 @@ public final class Compat {
         return server.getCurrentSmoothedTickTime();
     }
 
+    @SuppressWarnings("resource")
     public static int belowNameScore(Player player) {
         Scoreboard board = level(player).getScoreboard();
         Objective below = board.getDisplayObjective(DisplaySlot.BELOW_NAME);
@@ -261,9 +262,10 @@ public final class Compat {
         state.shadowPieces.clear();
         BufferSource source = consumers instanceof BufferSource b ? b : new Compat.Forwarding(consumers);
         SubmitNodeStorage storage = new SubmitNodeStorage();
-        FeatureRenderDispatcher features = featureDispatcher(storage, source);
-        dispatcher.submit(state, cameraState(), x, y, z, pose, storage);
-        features.renderAllFeatures();
+        try (FeatureRenderDispatcher features = featureDispatcher(storage, source)) {
+            dispatcher.submit(state, cameraState(), x, y, z, pose, storage);
+            features.renderAllFeatures();
+        }
         storage.clear();
     }
 
