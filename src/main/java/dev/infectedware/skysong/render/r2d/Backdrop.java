@@ -5,7 +5,6 @@ import com.mojang.blaze3d.pipeline.TextureTarget;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Gpu;
-import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.compat.Targets;
 import dev.infectedware.skysong.render.fx.Fx;
 import net.minecraft.client.Minecraft;

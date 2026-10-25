@@ -1,7 +1,6 @@
 package dev.infectedware.skysong.compat;
 
 import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;

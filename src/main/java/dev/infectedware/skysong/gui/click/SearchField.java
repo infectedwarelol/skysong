@@ -347,6 +347,7 @@ public final class SearchField {
                 return false;
             }
         }
+
     }
 
     private void move(int to, boolean select) {

@@ -3,7 +3,6 @@ package dev.infectedware.skysong.render.fx;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.SkysongClient;

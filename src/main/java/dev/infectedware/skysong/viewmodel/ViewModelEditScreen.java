@@ -1,7 +1,6 @@
 package dev.infectedware.skysong.viewmodel;
 
 import dev.infectedware.skysong.ModConfig;
-import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.compat.VScreen;

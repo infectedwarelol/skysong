@@ -7,7 +7,6 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 public final class Binds {

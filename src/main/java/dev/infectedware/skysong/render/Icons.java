@@ -3,7 +3,6 @@ package dev.infectedware.skysong.render;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.compat.Ids;
 import dev.infectedware.skysong.render.r2d.R2D;
-import dev.infectedware.skysong.ui.Theme;
 import net.minecraft.resources.Identifier;
 
 public final class Icons {

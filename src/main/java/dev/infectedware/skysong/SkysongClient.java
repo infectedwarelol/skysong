@@ -28,7 +28,6 @@ import dev.infectedware.skysong.render.fx.KillFx;
 import dev.infectedware.skysong.render.fx.MotionBlur;
 import dev.infectedware.skysong.render.fx.StormFx;
 import dev.infectedware.skysong.render.fx.WorldFx;
-import dev.infectedware.skysong.render.r2d.R2D;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;

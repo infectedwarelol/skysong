@@ -22,7 +22,6 @@ import net.minecraft.client.gui.navigation.ScreenRectangle;
 import net.minecraft.client.gui.render.state.GuiRenderState;
 import net.minecraft.client.gui.render.state.ScreenArea;
 import net.minecraft.client.gui.render.state.GuiRenderState.TraverseRange;
-import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;

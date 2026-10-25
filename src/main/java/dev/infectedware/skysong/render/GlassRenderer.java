@@ -1,23 +1,16 @@
 package dev.infectedware.skysong.render;
 
-import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.pipeline.TextureTarget;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Gpu;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.compat.Mesh;
 import dev.infectedware.skysong.compat.Shader;
-import dev.infectedware.skysong.compat.Targets;
-import dev.infectedware.skysong.render.fx.Fx;
 import dev.infectedware.skysong.ui.Theme;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.lwjgl.opengl.GL14;
 
 public final class GlassRenderer {
 

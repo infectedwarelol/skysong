@@ -3,7 +3,6 @@ package dev.infectedware.skysong.gui.click;
 import net.minecraft.util.Mth;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.module.Binds;
-import dev.infectedware.skysong.module.Category;
 import dev.infectedware.skysong.module.ClientModule;
 import dev.infectedware.skysong.render.r2d.MsdfFont;
 import dev.infectedware.skysong.render.r2d.R2D;

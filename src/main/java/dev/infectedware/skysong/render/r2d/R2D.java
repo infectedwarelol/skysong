@@ -1,6 +1,5 @@
 package dev.infectedware.skysong.render.r2d;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Compat;
@@ -9,7 +8,6 @@ import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.compat.Mesh;
 import dev.infectedware.skysong.compat.Shader;
 import dev.infectedware.skysong.theme.ClientAccent;
-import dev.infectedware.skysong.theme.Colors;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;

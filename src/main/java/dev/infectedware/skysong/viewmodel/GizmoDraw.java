@@ -1,6 +1,5 @@
 package dev.infectedware.skysong.viewmodel;
 
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat.Mode;
 import dev.infectedware.skysong.compat.Gpu;
 import dev.infectedware.skysong.compat.GuiGraphics;

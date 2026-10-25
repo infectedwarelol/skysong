@@ -1,7 +1,6 @@
 package dev.infectedware.skysong.ui;
 
 import com.mojang.blaze3d.platform.Window;
-import dev.infectedware.skysong.theme.ClientAccent;
 import net.minecraft.client.Minecraft;
 
 public final class Theme {

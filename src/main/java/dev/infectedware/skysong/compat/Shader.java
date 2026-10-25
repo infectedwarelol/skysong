@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.blaze3d.opengl.GlStateManager;
 import com.mojang.blaze3d.pipeline.RenderTarget;
-import com.mojang.blaze3d.vertex.VertexFormat;
 import dev.infectedware.skysong.SkysongClient;
 import java.io.FileNotFoundException;
 import java.io.IOException;

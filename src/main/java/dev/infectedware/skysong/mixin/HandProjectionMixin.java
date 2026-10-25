@@ -6,7 +6,6 @@ import dev.infectedware.skysong.render.AspectRatio;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.CachedPerspectiveProjectionMatrixBuffer;
 import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
