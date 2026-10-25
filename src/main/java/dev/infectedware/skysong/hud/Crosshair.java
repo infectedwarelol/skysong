@@ -207,7 +207,7 @@ public final class Crosshair {
         }
 
         if (mc.options.attackIndicator().get() == AttackIndicatorStatus.CROSSHAIR) {
-            float progress = mc.player.getAttackStrengthScale(0.0F);
+            float progress = player.getAttackStrengthScale(0.0F);
             if (!(progress >= 1.0F)) {
                 c.pose().pushPose();
                 c.pose().scale(1.0F / gui, 1.0F / gui, 1.0F);

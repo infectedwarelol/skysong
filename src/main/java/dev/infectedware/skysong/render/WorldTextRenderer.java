@@ -1,5 +1,7 @@
 package dev.infectedware.skysong.render;
 
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.infectedware.skysong.ModSettings;
@@ -98,7 +100,12 @@ public class WorldTextRenderer {
     }
 
     private static void updateFollow(Minecraft mc, float tickDelta) {
-        Vec3 target = mc.player.getPosition(tickDelta);
+        LocalPlayer player = mc.player;
+        if (player == null) {
+            return;
+        }
+
+        Vec3 target = player.getPosition(tickDelta);
         long nowNs = System.nanoTime();
         float dt = lastFollowNanos == 0L ? 1.0F : Math.min(0.25F, (float)(nowNs - lastFollowNanos) / 1.0E9F);
         lastFollowNanos = nowNs;
@@ -482,18 +489,23 @@ public class WorldTextRenderer {
 
     private static double floorBelow(Vec3 at) {
         Minecraft mc = Minecraft.getInstance();
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return at.y - 2.0;
+        }
+
         MutableBlockPos b = new MutableBlockPos();
         int x = Mth.floor(at.x);
         int z = Mth.floor(at.z);
 
         for (int y = Mth.floor(at.y); y > Mth.floor(at.y) - 16; y--) {
             b.set(x, y, z);
-            FluidState fluid = mc.level.getFluidState(b);
+            FluidState fluid = level.getFluidState(b);
             if (!fluid.isEmpty()) {
-                return y + fluid.getHeight(mc.level, b);
+                return y + fluid.getHeight(level, b);
             }
 
-            VoxelShape shape = mc.level.getBlockState(b).getCollisionShape(mc.level, b);
+            VoxelShape shape = level.getBlockState(b).getCollisionShape(level, b);
             if (!shape.isEmpty()) {
                 return y + shape.max(Axis.Y);
             }
@@ -579,12 +591,18 @@ public class WorldTextRenderer {
 
     private static Vec3 aboveFloor(Vec3 pos) {
         Minecraft mc = Minecraft.getInstance();
-        double floor = mc.player.getY() + 1.35;
+        LocalPlayer player = mc.player;
+        ClientLevel level = mc.level;
+        if (player == null || level == null) {
+            return pos;
+        }
+
+        double floor = player.getY() + 1.35;
         double y = Math.max(pos.y, floor);
 
         for (int i = 0; i < 12; i++) {
             BlockPos block = BlockPos.containing(pos.x, y, pos.z);
-            if (mc.level.getBlockState(block).getCollisionShape(mc.level, block).isEmpty()) {
+            if (level.getBlockState(block).getCollisionShape(level, block).isEmpty()) {
                 break;
             }
 

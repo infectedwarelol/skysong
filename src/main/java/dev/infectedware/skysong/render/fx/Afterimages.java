@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.render.fx;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import dev.infectedware.skysong.ModSettings;
@@ -62,9 +63,14 @@ public final class Afterimages {
     }
 
     private static void spawn(Minecraft mc, long now, float tickDelta) {
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return;
+        }
+
         long every = Math.max(50L, (long)(ModSettings.afterimagesInterval * 1000.0F));
 
-        for (Player p : mc.level.players()) {
+        for (Player p : level.players()) {
             if ((p == mc.player || ModSettings.afterimagesTargets == 1)
                 && p.isAlive()
                 && !p.isInvisible()
@@ -88,7 +94,7 @@ public final class Afterimages {
         }
 
         if (lastSpawn.size() > 64) {
-            lastSpawn.keySet().removeIf(id -> mc.level.getPlayerByUUID(id) == null);
+            lastSpawn.keySet().removeIf(id -> level.getPlayerByUUID(id) == null);
         }
     }
 
@@ -100,6 +106,11 @@ public final class Afterimages {
     }
 
     private static void draw(Minecraft mc, RenderTarget main, Vec3 cam, long now, long life, float tickDelta) {
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return;
+        }
+
         capture = ModelSnapshot.beginCapture(capture, main);
         int drawn = 0;
 
@@ -107,7 +118,7 @@ public final class Afterimages {
             float t = Mth.clamp((float)(now - g.born()) / (float)life, 0.0F, 1.0F);
             float s = Mth.clamp((t - 0.3F) / 0.7F, 0.0F, 1.0F);
             float fade = 1.0F - s * s * (3.0F - 2.0F * s);
-            Player owner = mc.level.getPlayerByUUID(g.owner());
+            Player owner = level.getPlayerByUUID(g.owner());
             if (owner != null) {
                 double gap = owner.getPosition(tickDelta).distanceTo(new Vec3(g.x(), g.y(), g.z()));
                 fade *= (float)Mth.clamp((gap - 0.3) / 0.7, 0.0, 1.0);

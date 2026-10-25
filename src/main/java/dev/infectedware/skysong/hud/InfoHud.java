@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud;
 
+import net.minecraft.client.multiplayer.ClientLevel;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.compat.HudLayer;
@@ -38,7 +39,8 @@ public final class InfoHud implements HudLayer {
     @Override
     public void render(GuiGraphics c) {
         Minecraft mc = Minecraft.getInstance();
-        if (ModSettings.infoEnabled && mc.player != null && mc.level != null && !mc.options.hideGui && R2D.available()) {
+        Player player = mc.player;
+        if (ModSettings.infoEnabled && player != null && mc.level != null && !mc.options.hideGui && R2D.available()) {
             float s = HudSpace.scale();
             float w = HudSpace.width();
             float h = HudSpace.height();
@@ -47,7 +49,7 @@ public final class InfoHud implements HudLayer {
             switch (ModSettings.infoStyle) {
                 case 1:
                     if (ModSettings.infoCoords) {
-                        this.coordsCard(c, mc, h);
+                        this.coordsCard(c, mc, player, h);
                     }
 
                     if (ModSettings.infoPerformance) {
@@ -55,11 +57,11 @@ public final class InfoHud implements HudLayer {
                     }
                     break;
                 case 2:
-                    classic(c, mc, w, h);
+                    classic(c, mc, player, w, h);
                     break;
                 default:
                     if (ModSettings.infoCoords) {
-                        this.cleanCoords(c, mc, h);
+                        this.cleanCoords(c, mc, player, h);
                     }
 
                     if (ModSettings.infoPerformance) {
@@ -71,8 +73,7 @@ public final class InfoHud implements HudLayer {
         }
     }
 
-    private void cleanCoords(GuiGraphics c, Minecraft mc, float h) {
-        Player p = mc.player;
+    private void cleanCoords(GuiGraphics c, Minecraft mc, Player p, float h) {
         String[] axes = new String[]{"X", "Y", "Z"};
         int[] vals = new int[]{Mth.floor(p.getX()), Mth.floor(p.getY()), Mth.floor(p.getZ())};
         String extra = cleanExtra(mc, p);
@@ -106,9 +107,14 @@ public final class InfoHud implements HudLayer {
     }
 
     private static String cleanExtra(Minecraft mc, Player p) {
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
         if (ModSettings.infoOtherDimension) {
-            boolean nether = mc.level.dimensionType().coordinateScale() > 1.0;
+            boolean nether = level.dimensionType().coordinateScale() > 1.0;
             double k = nether ? 8.0 : 0.125;
             sb.append(nether ? "OVERWORLD " : "NETHER ").append(Mth.floor(p.getX() * k)).append("  ").append(Mth.floor(p.getZ() * k));
         }
@@ -162,8 +168,7 @@ public final class InfoHud implements HudLayer {
         R2D.textCentered(c, font, s, x, cy, size, color);
     }
 
-    private void coordsCard(GuiGraphics c, Minecraft mc, float h) {
-        Player p = mc.player;
+    private void coordsCard(GuiGraphics c, Minecraft mc, Player p, float h) {
         String[] axes = new String[]{"X", "Y", "Z"};
         String[] values = new String[]{Integer.toString(Mth.floor(p.getX())), Integer.toString(Mth.floor(p.getY())), Integer.toString(Mth.floor(p.getZ()))};
         float badge = 12.0F;
@@ -205,6 +210,11 @@ public final class InfoHud implements HudLayer {
     }
 
     private static String subline(Minecraft mc, Player p) {
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return "";
+        }
+
         StringBuilder sb = new StringBuilder();
         if (ModSettings.infoFacing) {
             int i = Math.floorMod(Math.round(Mth.wrapDegrees(p.getYRot()) / 45.0F), 8);
@@ -216,7 +226,7 @@ public final class InfoHud implements HudLayer {
                 sb.append("  ·  ");
             }
 
-            boolean nether = mc.level.dimensionType().coordinateScale() > 1.0;
+            boolean nether = level.dimensionType().coordinateScale() > 1.0;
             double k = nether ? 8.0 : 0.125;
             sb.append(nether ? "Overworld " : "Nether ").append(Mth.floor(p.getX() * k)).append(", ").append(Mth.floor(p.getZ() * k));
         }
@@ -278,10 +288,9 @@ public final class InfoHud implements HudLayer {
         }
     }
 
-    private static void classic(GuiGraphics c, Minecraft mc, float w, float h) {
+    private static void classic(GuiGraphics c, Minecraft mc, Player p, float w, float h) {
         float bottom = h - 5.0F - 7.0F;
         float above = bottom - 10.0F;
-        Player p = mc.player;
         if (ModSettings.infoSpeed) {
             draw(c, 5.0F, above, new InfoHud.Seg("BPS ", -3618608), new InfoHud.Seg(bps(p), -11665561));
         }
@@ -348,7 +357,12 @@ public final class InfoHud implements HudLayer {
     }
 
     private static String otherDimension(Minecraft mc, Player p) {
-        boolean nether = mc.level.dimensionType().coordinateScale() > 1.0;
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return "";
+        }
+
+        boolean nether = level.dimensionType().coordinateScale() > 1.0;
         double k = nether ? 8.0 : 0.125;
         return "[" + Mth.floor(p.getX() * k) + ", " + Mth.floor(p.getY()) + ", " + Mth.floor(p.getZ() * k) + "]";
     }

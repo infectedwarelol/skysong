@@ -1,5 +1,7 @@
 package dev.infectedware.skysong.hud;
 
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.GuiGraphics;
@@ -113,12 +115,16 @@ public final class NameTags implements HudLayer {
     }
 
     private static Component topHologram(Player p) {
-        Minecraft mc = Minecraft.getInstance();
+        ClientLevel level = Minecraft.getInstance().level;
+        if (level == null) {
+            return null;
+        }
+
         Component best = null;
         double bestY = Double.NEGATIVE_INFINITY;
         double top = p.getY() + p.getBbHeight();
 
-        for (Entity e : mc.level.entitiesForRendering()) {
+        for (Entity e : level.entitiesForRendering()) {
             if (!(e instanceof Player)) {
                 double dx = e.getX() - p.getX();
                 double dz = e.getZ() - p.getZ();
@@ -225,13 +231,23 @@ public final class NameTags implements HudLayer {
     }
 
     private static boolean visible(Minecraft mc, Player p, float partial) {
-        Vec3 eye = mc.player.getEyePosition(partial);
+        LocalPlayer player = mc.player;
+        if (player == null) {
+            return false;
+        }
+
+        Vec3 eye = player.getEyePosition(partial);
         return clear(mc, eye, p.getEyePosition(partial), p) || clear(mc, eye, p.getPosition(partial).add(0.0, p.getBbHeight() * 0.5, 0.0), p);
     }
 
     private static boolean clear(Minecraft mc, Vec3 from, Vec3 to, Entity e) {
-        BlockHitResult hit = mc.level.clip(new ClipContext(from, to, Block.VISUAL, Fluid.NONE, e));
-        return hit == null || hit.getType() == Type.MISS;
+        ClientLevel level = mc.level;
+        if (level == null) {
+            return true;
+        }
+
+        BlockHitResult hit = level.clip(new ClipContext(from, to, Block.VISUAL, Fluid.NONE, e));
+        return hit.getType() == Type.MISS;
     }
 
     private static List<NameTags.Run> runs(Component text) {

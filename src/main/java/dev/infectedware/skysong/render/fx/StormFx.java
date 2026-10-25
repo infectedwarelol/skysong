@@ -1,5 +1,7 @@
 package dev.infectedware.skysong.render.fx;
 
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.player.LocalPlayer;
 import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.pipeline.TextureTarget;
 import dev.infectedware.skysong.ModSettings;
@@ -152,16 +154,22 @@ public final class StormFx {
     }
 
     private static double floorUnder(Minecraft mc) {
-        MutableBlockPos b = mc.player.blockPosition().mutable();
+        LocalPlayer player = mc.player;
+        ClientLevel level = mc.level;
+        if (player == null || level == null) {
+            return 0.0;
+        }
+
+        MutableBlockPos b = player.blockPosition().mutable();
         int i = 0;
 
         while (i < 8) {
-            FluidState fluid = mc.level.getFluidState(b);
+            FluidState fluid = level.getFluidState(b);
             if (!fluid.isEmpty()) {
-                return b.getY() + fluid.getHeight(mc.level, b);
+                return b.getY() + fluid.getHeight(level, b);
             }
 
-            VoxelShape shape = mc.level.getBlockState(b).getCollisionShape(mc.level, b);
+            VoxelShape shape = level.getBlockState(b).getCollisionShape(level, b);
             if (!shape.isEmpty()) {
                 return b.getY() + shape.max(Axis.Y);
             }
@@ -170,7 +178,7 @@ public final class StormFx {
             b.move(0, -1, 0);
         }
 
-        return mc.player.getY();
+        return player.getY();
     }
 
     private static boolean raining(Minecraft mc) {
