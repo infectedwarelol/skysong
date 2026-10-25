@@ -36,7 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public final class KillFx {
-    public static final String[] EFFECTS = new String[]{"Shatter", "Soul Rift", "Thunderclap", "Black Hole", "Disintegrate", "Judgement", "Firework", "Frostbite", "Inferno", "Blossom", "Ender Warp", "Random"};
+    public static final String[] EFFECTS = new String[]{"Shatter", "Soul Rift", "Thunderclap", "Black Hole", "Disintegrate", "Judgement", "Firework", "Frostbite", "Inferno", "Blossom", "Ender Warp", "Vortex", "Comet", "Aurora", "Glitch", "Starfall", "Shockwave", "Eclipse", "Crystal Spikes", "Halo", "Supernova", "Random"};
     public static final String[] COLORS = new String[]{"Theme", "White", "Custom", "Two colors"};
     public static final int SHATTER = 0;
     public static final int SOUL = 1;
@@ -47,8 +47,32 @@ public final class KillFx {
     public static final int INFERNO = 8;
     public static final int BLOSSOM = 9;
     public static final int WARP = 10;
-    private static final int KINDS = 11;
-    private static final float[] LIFE = new float[]{1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F, 1.9F, 2.0F, 2.2F, 2.6F, 1.2F};
+    public static final int VORTEX = 11;
+    public static final int COMET = 12;
+    public static final int AURORA = 13;
+    public static final int GLITCH = 14;
+    public static final int STARFALL = 15;
+    public static final int SHOCKWAVE = 16;
+    public static final int ECLIPSE = 17;
+    public static final int CRYSTAL = 18;
+    public static final int HALO = 19;
+    public static final int NOVA = 20;
+    private static final int KINDS = 21;
+    private static final float[] LIFE = new float[]{
+        1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F, 1.9F, 2.0F, 2.2F, 2.6F, 1.2F, 2.2F, 1.9F, 2.6F, 1.4F, 2.3F, 1.5F, 2.4F, 2.0F, 2.4F, 1.8F
+    };
+    private static final float COMET_FALL = 0.45F;
+    private static final float GLITCH_TIME = 0.95F;
+    private static final float CRYSTAL_BREAK = 1.15F;
+    private static final float NOVA_GATHER = 0.35F;
+    private static final float[] WIND6 = new float[]{0.75F, 1.0F, 1.0F, 0.35F, 0.6F, 1.0F};
+    private static final float[] COMET6 = new float[]{1.0F, 0.85F, 0.4F, 1.0F, 0.25F, 0.1F};
+    private static final float[] AURORA6 = new float[]{0.25F, 1.0F, 0.6F, 0.6F, 0.3F, 1.0F};
+    private static final float[] GLITCH6 = new float[]{0.2F, 1.0F, 0.9F, 1.0F, 0.2F, 0.6F};
+    private static final float[] STAR6 = new float[]{1.0F, 0.95F, 0.7F, 0.7F, 0.8F, 1.0F};
+    private static final float[] GOLD6 = new float[]{1.0F, 0.9F, 0.55F, 1.0F, 0.55F, 0.15F};
+    private static final float[] AMETHYST6 = new float[]{0.85F, 0.6F, 1.0F, 0.5F, 0.3F, 0.95F};
+    private static final float[] NOVA6 = new float[]{1.0F, 1.0F, 1.0F, 0.4F, 0.6F, 1.0F};
     private static final float FIREWORK_RISE = 0.35F;
     private static final float FIREWORK_HEIGHT = 5.0F;
     private static final float FROST_FREEZE = 0.45F;
@@ -133,7 +157,7 @@ public final class KillFx {
     }
 
     private static boolean usesModel(int type) {
-        return type == SHATTER || type == SOUL || type == VOID || type == DUST || type == FROST || type == INFERNO || type == BLOSSOM || type == WARP;
+        return type == SHATTER || type == SOUL || type == VOID || type == DUST || type == FROST || type == INFERNO || type == BLOSSOM || type == WARP || type == GLITCH;
     }
 
     private static boolean usesShards(int type) {
@@ -232,6 +256,7 @@ public final class KillFx {
                                     case 4, INFERNO -> drawDust(e, t, cam);
                                     case FROST -> drawFrost(e, t, cam);
                                     case WARP -> drawWarp(e, t, cam);
+                                    case GLITCH -> drawGlitch(e, t, cam);
                                     default -> {
                                     }
                                 }
@@ -262,6 +287,16 @@ public final class KillFx {
                                 case INFERNO -> drawInferno(e, t, cam, themed(FIRE6, tint));
                                 case BLOSSOM -> drawBlossom(e, t, cam, themed(PINK6, tint));
                                 case WARP -> drawWarpLight(e, t, cam, themed(ENDER6, tint));
+                                case VORTEX -> drawVortex(e, t, cam, themed(WIND6, tint));
+                                case COMET -> drawComet(e, t, cam, themed(COMET6, tint));
+                                case AURORA -> drawAurora(e, t, cam, themed(AURORA6, tint));
+                                case GLITCH -> drawGlitchLight(e, t, cam, themed(GLITCH6, tint));
+                                case STARFALL -> drawStarfall(e, t, cam, themed(STAR6, tint));
+                                case SHOCKWAVE -> drawShockwave(e, t, cam, tint);
+                                case ECLIPSE -> drawEclipse(e, t, cam, themed(GOLD6, tint));
+                                case CRYSTAL -> drawCrystal(e, t, cam, themed(AMETHYST6, tint));
+                                case HALO -> drawHalo(e, t, cam, themed(GOLD6, tint));
+                                case NOVA -> drawSupernova(e, t, cam, themed(NOVA6, tint));
                                 default -> drawShatterFlash(e, t, cam, tint);
                             }
                         }
@@ -691,6 +726,338 @@ public final class KillFx {
             beam(base, 5.0F * (1.0F - q) + 1.0F, 0.1F, WHITE6, a);
             facingRing(chest, 0.2F + 2.8F * easeOut(q), 0.15F * (1.0F - q) + 0.03F, tint, a);
         }
+    }
+
+    private static float envelope(float t, float in, float outStart, float life) {
+        return smooth(0.0F, in, t) * (1.0F - smooth(outStart, life, t));
+    }
+
+    private static void drawVortex(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = envelope(t, 0.2F, LIFE[VORTEX] * 0.6F, LIFE[VORTEX]);
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 base = new Vec3(e.x, e.y, e.z).subtract(cam);
+        float grow = easeOut(t / 0.6F);
+        for (int i = 0; i < 10; i++) {
+            float level = i / 9.0F;
+            double wob = t * 6.0F + i * 0.55F;
+            Vec3 c = base.add(Math.cos(wob) * 0.12F * i, (0.1F + i * 0.5F) * grow, Math.sin(wob) * 0.12F * i);
+            ring(c, (0.35F + level * 2.4F) * grow, 0.06F + 0.05F * level, tint, env * (0.85F - 0.45F * level));
+        }
+
+        for (int arm = 0; arm < 3; arm++) {
+            List<Vec3> pts = new ArrayList<>();
+            for (int j = 0; j <= 20; j++) {
+                float f = j / 20.0F;
+                double ang = t * 9.0F + arm * Math.PI * 2.0 / 3.0 + f * 6.0;
+                float r = (0.3F + f * 2.6F) * grow;
+                pts.add(base.add(Math.cos(ang) * r, f * 4.6F * grow, Math.sin(ang) * r));
+            }
+
+            ribbon(pts, 0.08F, whiter(tint, 0.3F), 0.7F * env, null);
+        }
+
+        beam(base, 5.0F * grow, 0.35F, WHITE6, 0.35F * env);
+    }
+
+    private static Vec3 cometStart(KillFx.Effect e) {
+        Random r = new Random(e.seed);
+        double ang = r.nextDouble() * Math.PI * 2.0;
+        return new Vec3(e.x + Math.cos(ang) * 9.0, e.y + 22.0, e.z + Math.sin(ang) * 9.0);
+    }
+
+    private static void drawComet(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 target = new Vec3(e.x, e.y + 0.2, e.z);
+        Vec3 start = cometStart(e);
+        if (t < COMET_FALL) {
+            float q = t / COMET_FALL;
+            q *= q;
+            Vec3 head = start.add(target.subtract(start).scale(q)).subtract(cam);
+            Vec3 back = target.subtract(start).normalize().scale(-1.0);
+            List<Vec3> tail = new ArrayList<>();
+            for (int j = 0; j <= 8; j++) {
+                tail.add(head.add(back.scale(j * 0.9F)));
+            }
+
+            ribbon(tail.reversed(), 0.45F, tint, 0.75F, null);
+            ribbon(tail.reversed(), 0.14F, WHITE6, 1.0F, null);
+            facingRing(head, 0.25F, 0.3F, WHITE6, 1.0F);
+            facingRing(head, 0.5F, 0.35F, tint, 0.7F);
+            return;
+        }
+
+        float q = Mth.clamp((t - COMET_FALL) / (LIFE[COMET] - COMET_FALL), 0.0F, 1.0F);
+        float a = (1.0F - q) * (1.0F - q);
+        Vec3 feet = new Vec3(e.x, e.y + 0.05, e.z).subtract(cam);
+        ring(feet, 0.4F + 6.5F * easeOut(q), 0.5F * (1.0F - q) + 0.06F, tint, a);
+        ring(feet, 0.3F + 3.5F * easeOut(Math.min(1.0F, q * 1.5F)), 0.12F, WHITE6, a);
+        ring(feet, 1.1F, 0.9F, tint, 0.5F * (1.0F - smooth(0.2F, 1.0F, q)));
+        if (q < 0.3F) {
+            beam(feet, 9.0F * (1.0F - q / 0.3F), 1.1F, tint, 1.0F - q / 0.3F);
+        }
+
+        Random r = new Random(e.seed + 3L);
+        for (int i = 0; i < 6; i++) {
+            double ang = Math.PI * 2.0 * i / 6.0 + r.nextFloat() * 0.6F;
+            float len = (1.8F + r.nextFloat() * 1.6F) * easeOut(Math.min(1.0F, q * 5.0F));
+            List<Vec3> crack = new ArrayList<>();
+            for (int j = 0; j <= 5; j++) {
+                float f = j / 5.0F;
+                double wob = ang + (r.nextFloat() - 0.5F) * 0.5F;
+                crack.add(feet.add(Math.cos(wob) * len * f, 0.01, Math.sin(wob) * len * f));
+            }
+
+            groundLine(crack, tint, 0.9F * (1.0F - smooth(0.4F, 1.0F, q)));
+        }
+    }
+
+    private static void drawAurora(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = envelope(t, 0.5F, LIFE[AURORA] * 0.62F, LIFE[AURORA]);
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 base = new Vec3(e.x, e.y, e.z).subtract(cam);
+        Random r = new Random(e.seed);
+        for (int curtain = 0; curtain < 3; curtain++) {
+            float radius = 2.2F + curtain * 0.8F;
+            double start = r.nextDouble() * Math.PI * 2.0;
+            for (int i = 0; i < 12; i++) {
+                double ang = start + i * 0.14;
+                float wave = Mth.sin(t * 2.5F + i * 0.7F + curtain * 1.9F);
+                Vec3 foot = base.add(Math.cos(ang) * (radius + wave * 0.25F), 1.6F + curtain * 0.5F + wave * 0.3F, Math.sin(ang) * (radius + wave * 0.25F));
+                float height = 2.2F + 0.9F * Mth.sin(t * 1.7F + i * 0.45F);
+                beam(foot, height, 0.32F, tint, 0.22F * env);
+            }
+        }
+
+        ring(base.add(0.0, 0.05, 0.0), 1.6F + 0.6F * smooth(0.0F, 1.0F, t), 0.9F, tint, 0.25F * env);
+        beam(base, 3.5F, 0.4F, whiter(tint, 0.5F), 0.3F * env);
+    }
+
+    private static void drawGlitch(KillFx.Effect e, float t, Vec3 cam) {
+        float k = Mth.clamp(t / GLITCH_TIME, 0.0F, 1.0F);
+        long frame = (long)(t * 24.0F);
+        if (k >= 1.0F || (frame % 5L == 3L && k > 0.4F)) {
+            return;
+        }
+
+        int alpha = alpha(1.0F - smooth(0.75F, 1.0F, k));
+        float ox = (float)(e.x - cam.x);
+        float oy = (float)(e.y - cam.y);
+        float oz = (float)(e.z - cam.z);
+        float amount = 0.08F + 0.5F * k * k;
+        long seed = e.seed;
+        for (ModelSnapshot.Part part : e.parts) {
+            ModelSnapshot.draw(part, capture, (v, pos, n) -> {
+                int slice = (int)Math.floor(pos[1] * 7.0F);
+                long h = (slice * 73856093L) ^ (frame * 19349663L) ^ seed;
+                float shift = ((h >>> 8) % 1000L) / 1000.0F - 0.5F;
+                float lift = ((h >>> 20) % 1000L) / 1000.0F > 0.85F ? 0.12F * k : 0.0F;
+                pos[0] += shift * amount + ox;
+                pos[1] += lift + oy;
+                pos[2] += oz;
+            }, alpha);
+        }
+    }
+
+    private static void drawGlitchLight(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = 1.0F - smooth(0.8F, LIFE[GLITCH], t);
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 chest = new Vec3(e.x, e.y + e.height * 0.5, e.z).subtract(cam);
+        long frame = (long)(t * 18.0F);
+        Random r = new Random(e.seed + frame);
+        for (int i = 0; i < 5; i++) {
+            Vec3 at = chest.add((r.nextFloat() - 0.5F) * 1.6F, (r.nextFloat() - 0.5F) * e.height, (r.nextFloat() - 0.5F) * 1.6F);
+            facingRing(at, 0.1F + r.nextFloat() * 0.35F, 0.03F, i % 2 == 0 ? tint : WHITE6, 0.8F * env);
+        }
+
+        if (t > GLITCH_TIME && t < GLITCH_TIME + 0.4F) {
+            float q = (t - GLITCH_TIME) / 0.4F;
+            facingRing(chest, 0.2F + 2.4F * easeOut(q), 0.08F, tint, 1.0F - q);
+            beam(new Vec3(e.x, e.y, e.z).subtract(cam), 6.0F * (1.0F - q), 0.25F, WHITE6, 1.0F - q);
+        }
+    }
+
+    private static void drawStarfall(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 base = new Vec3(e.x, e.y, e.z).subtract(cam);
+        Random r = new Random(e.seed);
+        for (int i = 0; i < 16; i++) {
+            double ang = r.nextDouble() * Math.PI * 2.0;
+            float dist = 0.6F + r.nextFloat() * 2.8F;
+            float delay = r.nextFloat() * 0.9F;
+            float fall = 0.55F + r.nextFloat() * 0.25F;
+            float local = t - delay;
+            if (local < 0.0F) {
+                continue;
+            }
+
+            Vec3 ground = base.add(Math.cos(ang) * dist, 0.05, Math.sin(ang) * dist);
+            if (local < fall) {
+                float q = local / fall;
+                Vec3 star = ground.add(0.0, 12.0F * (1.0F - q * q), 0.0);
+                ribbon(List.of(star.add(0.0, 2.2, 0.0), star), 0.07F, tint, 0.8F, null);
+                facingRing(star, 0.08F, 0.12F, WHITE6, 1.0F);
+            } else {
+                float q = Mth.clamp((local - fall) / 0.6F, 0.0F, 1.0F);
+                if (q < 1.0F) {
+                    ring(ground, 0.1F + 0.9F * easeOut(q), 0.1F * (1.0F - q) + 0.02F, tint, 1.0F - q);
+                    beam(ground, 1.4F * (1.0F - q), 0.18F, WHITE6, 0.8F * (1.0F - q));
+                }
+            }
+        }
+
+        float env = envelope(t, 0.3F, LIFE[STARFALL] * 0.7F, LIFE[STARFALL]);
+        ring(base.add(0.0, 0.04, 0.0), 3.4F, 0.6F, tint, 0.18F * env);
+    }
+
+    private static void drawShockwave(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 chest = new Vec3(e.x, e.y + e.height * 0.5, e.z).subtract(cam);
+        Vec3 feet = new Vec3(e.x, e.y + 0.05, e.z).subtract(cam);
+        for (int i = 0; i < 4; i++) {
+            float q = (t - i * 0.12F) / 0.9F;
+            if (q > 0.0F && q < 1.0F) {
+                float a = (1.0F - q) * (1.0F - q);
+                facingRing(chest, 0.2F + (3.0F + i) * easeOut(q), 0.18F * (1.0F - q) + 0.03F, i % 2 == 0 ? tint : WHITE6, a);
+            }
+        }
+
+        for (int i = 0; i < 2; i++) {
+            float q = (t - 0.05F - i * 0.2F) / 1.1F;
+            if (q > 0.0F && q < 1.0F) {
+                float a = (1.0F - q) * (1.0F - q);
+                ring(feet, 0.3F + 8.0F * easeOut(q), 0.6F * (1.0F - q) + 0.05F, tint, a);
+            }
+        }
+
+        if (t < 0.25F) {
+            beam(feet, 10.0F, 0.9F, whiter(tint, 0.4F), 1.0F - t / 0.25F);
+        }
+    }
+
+    private static void drawEclipse(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = envelope(t, 0.35F, LIFE[ECLIPSE] * 0.65F, LIFE[ECLIPSE]);
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 feet = new Vec3(e.x, e.y, e.z).subtract(cam);
+        Vec3 sun = feet.add(0.0, e.height + 2.2F, 0.0);
+        float size = 0.9F * easeOut(t / 0.5F);
+        facingRing(sun, size, 0.06F, WHITE6, env);
+        facingRing(sun, size * 1.15F, 0.35F, tint, 0.7F * env);
+        Vec3[] basis = facing(sun);
+        for (int i = 0; i < 18; i++) {
+            double ang = Math.PI * 2.0 * i / 18.0 + t * 0.6F;
+            float flick = 0.6F + 0.4F * Mth.sin(t * 9.0F + i * 1.3F);
+            float reach = size * (1.5F + 1.4F * flick);
+            ribbon(List.of(around(sun, basis, ang, size * 1.1F), around(sun, basis, ang + 0.05, reach)), 0.05F, tint, 0.6F * env * flick, null);
+        }
+
+        beam(feet, e.height + 2.2F, 0.5F, tint, 0.3F * env);
+        ring(feet.add(0.0, 0.05, 0.0), 1.4F, 0.9F, tint, 0.3F * env);
+    }
+
+    private static void drawCrystal(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 feet = new Vec3(e.x, e.y, e.z).subtract(cam);
+        float grow = easeOut(t / 0.35F);
+        float fade = 1.0F - smooth(CRYSTAL_BREAK, CRYSTAL_BREAK + 0.25F, t);
+        Random r = new Random(e.seed);
+        for (int i = 0; i < 9; i++) {
+            double ang = Math.PI * 2.0 * i / 9.0 + r.nextFloat() * 0.4F;
+            float dist = 0.55F + r.nextFloat() * 0.5F;
+            float len = (1.4F + r.nextFloat() * 1.6F) * grow;
+            float lean = 0.35F + r.nextFloat() * 0.35F;
+            Vec3 root = feet.add(Math.cos(ang) * dist, 0.0, Math.sin(ang) * dist);
+            Vec3 tip = root.add(Math.cos(ang) * len * lean, len, Math.sin(ang) * len * lean);
+            if (fade > 0.01F) {
+                Vec3 mid = root.add(tip.subtract(root).scale(0.55));
+                ribbon(List.of(root, mid, tip), 0.22F, tint, 0.55F * fade, null);
+                ribbon(List.of(root, mid, tip), 0.07F, WHITE6, 0.9F * fade, null);
+            }
+        }
+
+        ring(feet.add(0.0, 0.05, 0.0), 1.3F * grow, 0.7F, tint, 0.4F * (1.0F - smooth(0.6F, LIFE[CRYSTAL], t)));
+        float q = (t - CRYSTAL_BREAK) / 0.6F;
+        if (q > 0.0F && q < 1.0F) {
+            facingRing(feet.add(0.0, 1.0, 0.0), 0.3F + 3.0F * easeOut(q), 0.15F * (1.0F - q) + 0.03F, tint, (1.0F - q) * (1.0F - q));
+        }
+    }
+
+    private static void drawHalo(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        float env = envelope(t, 0.3F, LIFE[HALO] * 0.6F, LIFE[HALO]);
+        if (env <= 0.01F) {
+            return;
+        }
+
+        Vec3 feet = new Vec3(e.x, e.y, e.z).subtract(cam);
+        float rise = 1.6F * smooth(0.2F, LIFE[HALO], t);
+        Vec3 crown = feet.add(0.0, e.height + 0.45F + rise, 0.0);
+        ring(crown, 0.42F, 0.05F, WHITE6, env);
+        ring(crown, 0.45F, 0.16F, tint, 0.7F * env);
+        Vec3 back = feet.add(0.0, e.height * 0.7F + rise, 0.0);
+        Vec3 toCam = new Vec3(-back.x, 0.0, -back.z);
+        Vec3 side = toCam.lengthSqr() < 1.0E-4 ? new Vec3(1.0, 0.0, 0.0) : new Vec3(0.0, 1.0, 0.0).cross(toCam).normalize();
+        float spread = easeOut(t / 0.6F);
+        for (int wing = -1; wing <= 1; wing += 2) {
+            for (int f = 0; f < 6; f++) {
+                List<Vec3> feather = new ArrayList<>();
+                float lift = (f - 2.0F) * 0.22F;
+                for (int j = 0; j <= 6; j++) {
+                    float k = j / 6.0F;
+                    float out = (0.25F + k * (1.5F - f * 0.12F)) * spread;
+                    feather.add(back.add(side.scale(wing * out)).add(0.0, lift + Mth.sin(k * 2.4F) * 0.5F * spread - k * f * 0.08F, 0.0));
+                }
+
+                ribbon(feather, 0.07F, f % 2 == 0 ? tint : whiter(tint, 0.5F), 0.6F * env, null);
+            }
+        }
+
+        beam(feet, 9.0F, 0.6F, whiter(tint, 0.6F), 0.28F * env);
+    }
+
+    private static void drawSupernova(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
+        Vec3 chest = new Vec3(e.x, e.y + e.height * 0.5, e.z).subtract(cam);
+        if (t < NOVA_GATHER) {
+            float q = t / NOVA_GATHER;
+            for (int i = 0; i < 3; i++) {
+                facingRing(chest, (2.4F - i * 0.5F) * (1.0F - q) + 0.05F, 0.05F, i == 1 ? WHITE6 : tint, q);
+            }
+
+            facingRing(chest, 0.08F + 0.2F * q, 0.2F * q, WHITE6, q);
+            return;
+        }
+
+        float q = Mth.clamp((t - NOVA_GATHER) / (LIFE[NOVA] - NOVA_GATHER), 0.0F, 1.0F);
+        float a = (1.0F - q) * (1.0F - q);
+        float radius = 0.3F + 5.0F * easeOut(q);
+        Random r = new Random(e.seed);
+        for (int i = 0; i < 6; i++) {
+            Vec3 axis = new Vec3(r.nextFloat() - 0.5F, r.nextFloat() - 0.5F, r.nextFloat() - 0.5F).normalize();
+            Vec3 u = axis.cross(new Vec3(0.0, 1.0, 0.0));
+            if (u.lengthSqr() < 1.0E-4) {
+                u = new Vec3(1.0, 0.0, 0.0);
+            }
+
+            u = u.normalize();
+            ringIn(chest, new Vec3[]{u, axis.cross(u).normalize()}, radius * (0.8F + 0.2F * i / 5.0F), 0.12F * (1.0F - q) + 0.03F, i % 2 == 0 ? tint : WHITE6, a);
+        }
+
+        for (int i = 0; i < 12; i++) {
+            Vec3 dir = new Vec3(r.nextFloat() - 0.5F, r.nextFloat() - 0.3F, r.nextFloat() - 0.5F).normalize();
+            ribbon(List.of(chest.add(dir.scale(radius * 0.3F)), chest.add(dir.scale(radius * 1.25F))), 0.06F, tint, 0.8F * a, null);
+        }
+
+        if (q < 0.2F) {
+            facingRing(chest, 1.2F * (q / 0.2F) + 0.2F, 1.2F * (1.0F - q / 0.2F), WHITE6, 1.0F - q / 0.2F);
+        }
+
+        ring(new Vec3(e.x, e.y + 0.05, e.z).subtract(cam), 0.3F + 6.0F * easeOut(q), 0.4F * (1.0F - q) + 0.05F, tint, a);
     }
 
     private static void drawThunder(KillFx.Effect e, float t, Vec3 cam, float[] tint) {
@@ -1137,6 +1504,53 @@ public final class KillFx {
                 particles(mc, ParticleTypes.REVERSE_PORTAL, e.x, cy, e.z, 30, 0.3);
                 sound(mc, SoundEvents.CHORUS_FRUIT_TELEPORT, e, 1.0F, 0.9F);
                 break;
+            case VORTEX:
+                particles(mc, ParticleTypes.GUST, e.x, cy, e.z, 3, 0.0);
+                particles(mc, ParticleTypes.CLOUD, e.x, e.y + 0.3, e.z, 16, 0.15);
+                sound(mc, SoundEvents.WIND_CHARGE_BURST.value(), e, 1.0F, 0.7F);
+                sound(mc, SoundEvents.ELYTRA_FLYING, e, 0.4F, 1.6F);
+                break;
+            case COMET:
+                sound(mc, SoundEvents.FIRECHARGE_USE, e, 0.8F, 0.5F);
+                break;
+            case AURORA:
+                particles(mc, ParticleTypes.GLOW, e.x, cy, e.z, 14, 0.08);
+                sound(mc, SoundEvents.AMETHYST_BLOCK_RESONATE, e, 1.0F, 0.6F);
+                sound(mc, SoundEvents.CONDUIT_ACTIVATE, e, 0.7F, 1.3F);
+                break;
+            case GLITCH:
+                particles(mc, ParticleTypes.ELECTRIC_SPARK, e.x, cy, e.z, 24, 0.4);
+                sound(mc, SoundEvents.SCULK_CLICKING, e, 1.0F, 1.6F);
+                sound(mc, SoundEvents.BEACON_DEACTIVATE, e, 0.6F, 1.8F);
+                break;
+            case STARFALL:
+                sound(mc, SoundEvents.AMETHYST_BLOCK_CHIME, e, 1.0F, 1.5F);
+                sound(mc, SoundEvents.ILLUSIONER_CAST_SPELL, e, 0.6F, 1.4F);
+                break;
+            case SHOCKWAVE:
+                particles(mc, ParticleTypes.SONIC_BOOM, e.x, cy, e.z, 1, 0.0);
+                particles(mc, ParticleTypes.POOF, e.x, e.y + 0.2, e.z, 20, 0.4);
+                sound(mc, SoundEvents.WARDEN_SONIC_BOOM, e, 0.6F, 1.2F);
+                break;
+            case ECLIPSE:
+                particles(mc, ParticleTypes.END_ROD, e.x, e.y + e.height + 2.2, e.z, 16, 0.15);
+                sound(mc, SoundEvents.BEACON_ACTIVATE, e, 1.0F, 0.6F);
+                sound(mc, SoundEvents.BELL_RESONATE, e, 0.8F, 0.8F);
+                break;
+            case CRYSTAL:
+                particles(mc, ParticleTypes.WAX_OFF, e.x, e.y + 0.4, e.z, 20, 0.3);
+                sound(mc, SoundEvents.AMETHYST_CLUSTER_BREAK, e, 1.0F, 0.7F);
+                sound(mc, SoundEvents.AMETHYST_BLOCK_RESONATE, e, 1.0F, 1.4F);
+                break;
+            case HALO:
+                particles(mc, ParticleTypes.END_ROD, e.x, e.y + e.height, e.z, 18, 0.12);
+                sound(mc, SoundEvents.BEACON_POWER_SELECT, e, 1.0F, 1.5F);
+                sound(mc, SoundEvents.TOTEM_USE, e, 0.35F, 1.8F);
+                break;
+            case NOVA:
+                particles(mc, ParticleTypes.ENCHANT, e.x, cy, e.z, 40, 1.2);
+                sound(mc, SoundEvents.BEACON_ACTIVATE, e, 0.9F, 1.8F);
+                break;
             default:
                 sound(mc, SoundEvents.ARROW_SHOOT, e, 0.8F, 0.45F);
         }
@@ -1176,6 +1590,36 @@ public final class KillFx {
             e.fired |= 1;
             particles(mc, ParticleTypes.PORTAL, e.x, cy, e.z, 50, 0.8);
             sound(mc, SoundEvents.ENDERMAN_TELEPORT, e, 1.0F, 1.2F);
+        }
+
+        if (e.type == COMET && t >= COMET_FALL && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, Compat.flash(), e.x, e.y + 0.4, e.z, 1, 0.0);
+            particles(mc, ParticleTypes.LAVA, e.x, e.y + 0.3, e.z, 14, 0.3);
+            particles(mc, ParticleTypes.LARGE_SMOKE, e.x, e.y + 0.2, e.z, 10, 0.12);
+            sound(mc, SoundEvents.GENERIC_EXPLODE.value(), e, 0.7F, 1.2F);
+        }
+
+        if (e.type == GLITCH && t >= GLITCH_TIME && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, ParticleTypes.ELECTRIC_SPARK, e.x, cy, e.z, 40, 0.8);
+            sound(mc, SoundEvents.ENDER_EYE_DEATH, e, 1.0F, 1.6F);
+        }
+
+        if (e.type == CRYSTAL && t >= CRYSTAL_BREAK && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, ParticleTypes.WAX_OFF, e.x, e.y + 1.0, e.z, 50, 0.6);
+            sound(mc, SoundEvents.GLASS_BREAK, e, 1.0F, 1.3F);
+            sound(mc, SoundEvents.AMETHYST_CLUSTER_BREAK, e, 1.0F, 1.0F);
+        }
+
+        if (e.type == NOVA && t >= NOVA_GATHER && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, Compat.flash(), e.x, cy, e.z, 1, 0.0);
+            particles(mc, ParticleTypes.FIREWORK, e.x, cy, e.z, 50, 0.45);
+            particles(mc, ParticleTypes.END_ROD, e.x, cy, e.z, 30, 0.6);
+            sound(mc, SoundEvents.GENERIC_EXPLODE.value(), e, 0.8F, 0.8F);
+            sound(mc, SoundEvents.BEACON_DEACTIVATE, e, 1.0F, 1.6F);
         }
 
         if (e.type == 5 && t >= 0.22F && (e.fired & 1) == 0) {
@@ -1228,6 +1672,13 @@ public final class KillFx {
                                 0.0
                             );
                     }
+                } else if (e.type == AURORA && t < 2.0F) {
+                    mc.particleEngine.createParticle(
+                        ParticleTypes.END_ROD, e.x + (RNG.nextDouble() - 0.5) * 4.0, e.y + 1.5 + RNG.nextDouble() * 2.0, e.z + (RNG.nextDouble() - 0.5) * 4.0, 0.0, 0.02, 0.0
+                    );
+                } else if (e.type == VORTEX && t < 1.6F) {
+                    double ang = RNG.nextDouble() * Math.PI * 2.0;
+                    mc.particleEngine.createParticle(ParticleTypes.CLOUD, e.x + Math.cos(ang) * 1.2, e.y + RNG.nextDouble() * 3.0, e.z + Math.sin(ang) * 1.2, -Math.sin(ang) * 0.2, 0.08, Math.cos(ang) * 0.2);
                 } else if (e.type == 4 && t < 1.4F) {
                     for (int i = 0; i < 3; i++) {
                         mc.particleEngine
