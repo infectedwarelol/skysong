@@ -16,11 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(KeyboardHandler.class)
 abstract class KeyboardMixin {
     @Inject(method = "keyPress", at = @At("HEAD"))
-    private void skysong$onKey(long window, int action, KeyEvent event, CallbackInfo ci) {
-        int key = event.key();
-        if (window == Compat.window()) {
+    private void skysong$onKey(long l, int i, KeyEvent keyEvent, CallbackInfo ci) {
+        int key = keyEvent.key();
+        if (l == Compat.window()) {
             Minecraft mc = Minecraft.getInstance();
-            if (key == ModSettings.viewModelEditKey && action == 1 && mc.screen == null && mc.player != null && ViewModel.enabled()) {
+            if (key == ModSettings.viewModelEditKey && i == 1 && mc.screen == null && mc.player != null && ViewModel.enabled()) {
                 Compat.later(() -> {
                     if (mc.screen == null) {
                         mc.setScreen(new ViewModelEditScreen());
@@ -28,7 +28,7 @@ abstract class KeyboardMixin {
                 });
             }
 
-            InputEvents.key(key, action);
+            InputEvents.key(key, i);
         }
     }
 }

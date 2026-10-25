@@ -16,11 +16,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(MouseHandler.class)
 abstract class MouseMixin {
     @Inject(method = "onButton", at = @At("HEAD"), cancellable = true)
-    private void skysong$onMouseButton(long window, MouseButtonInfo info, int action, CallbackInfo ci) {
-        int button = info.button();
+    private void skysong$onMouseButton(long l, MouseButtonInfo mouseButtonInfo, int i, CallbackInfo ci) {
+        int button = mouseButtonInfo.button();
         Minecraft mc = Minecraft.getInstance();
-        if (window == Compat.window()) {
-            if (-100 - button == ModSettings.viewModelEditKey && action == 1 && mc.screen == null && mc.player != null && ViewModel.enabled()) {
+        if (l == Compat.window()) {
+            if (-100 - button == ModSettings.viewModelEditKey && i == 1 && mc.screen == null && mc.player != null && ViewModel.enabled()) {
                 Compat.later(() -> {
                     if (mc.screen == null) {
                         mc.setScreen(new ViewModelEditScreen());
@@ -28,7 +28,7 @@ abstract class MouseMixin {
                 });
                 ci.cancel();
             } else {
-                InputEvents.mouseButton(button, action);
+                InputEvents.mouseButton(button, i);
             }
         }
     }

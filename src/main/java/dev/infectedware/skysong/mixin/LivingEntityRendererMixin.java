@@ -12,8 +12,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(LivingEntityRenderer.class)
 abstract class LivingEntityRendererMixin {
     @Inject(method = "shouldShowName(Lnet/minecraft/world/entity/LivingEntity;D)Z", at = @At("HEAD"), cancellable = true)
-    private void skysong$hasLabel(LivingEntity entity, double distance, CallbackInfoReturnable<Boolean> cir) {
-        if (NameTags.hidesNameTagFor(entity) || EntityFx.capturing()) {
+    private void skysong$hasLabel(LivingEntity livingEntity, double d, CallbackInfoReturnable<Boolean> cir) {
+        if (NameTags.hidesNameTagFor(livingEntity) || EntityFx.capturing()) {
             cir.setReturnValue(false);
         }
     }

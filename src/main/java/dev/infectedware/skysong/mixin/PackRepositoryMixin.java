@@ -11,16 +11,17 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 @Mixin(PackRepository.class)
 abstract class PackRepositoryMixin {
-    @ModifyVariable(method = "<init>", at = @At("HEAD"), argsOnly = true)
-    private static RepositorySource[] skysong$addCustomFonts(RepositorySource[] sources) {
-        for (RepositorySource source : sources) {
+    @SuppressWarnings("ModifyVariableMayUseName")
+    @ModifyVariable(method = "<init>", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+    private static RepositorySource[] skysong$addCustomFonts(RepositorySource[] repositorySources) {
+        for (RepositorySource source : repositorySources) {
             if (source instanceof ClientPackSource) {
-                RepositorySource[] extended = Arrays.copyOf(sources, sources.length + 1);
-                extended[sources.length] = CustomFonts.source();
+                RepositorySource[] extended = Arrays.copyOf(repositorySources, repositorySources.length + 1);
+                extended[repositorySources.length] = CustomFonts.source();
                 return extended;
             }
         }
 
-        return sources;
+        return repositorySources;
     }
 }

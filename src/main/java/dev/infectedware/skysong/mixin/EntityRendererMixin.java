@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(EntityRenderer.class)
 abstract class EntityRendererMixin {
     @Inject(method = "shouldShowName", at = @At("HEAD"), cancellable = true)
-    private void skysong$hasLabel(Entity entity, double distance, CallbackInfoReturnable<Boolean> cir) {
+    private void skysong$hasLabel(Entity entity, double d, CallbackInfoReturnable<Boolean> cir) {
         if (NameTags.hidesNameTagFor(entity) || EntityFx.capturing() || Afterimages.recording()) {
             cir.setReturnValue(false);
         }

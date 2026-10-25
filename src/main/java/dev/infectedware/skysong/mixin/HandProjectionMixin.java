@@ -23,10 +23,10 @@ abstract class HandProjectionMixin {
     private float skysong$builtAspect = Float.NaN;
 
     @Inject(method = "getBuffer", at = @At("HEAD"))
-    private void skysong$rebuild(int w, int h, float fov, CallbackInfoReturnable<GpuBufferSlice> cir) {
+    private void skysong$rebuild(int i, int j, float f, CallbackInfoReturnable<GpuBufferSlice> cir) {
         if (this.skysong$isHands()) {
-            float want = AspectRatio.handAspect((float)w / Math.max(1, h));
-            if (want != this.skysong$builtAspect) {
+            float want = AspectRatio.handAspect((float)i / Math.max(1, j));
+            if (want != this.skysong$builtAspect && this.width != -1) {
                 this.skysong$builtAspect = want;
                 this.width = -1;
             }
@@ -48,9 +48,9 @@ abstract class HandProjectionMixin {
     }
 
     @Inject(method = "createProjectionMatrix", at = @At("RETURN"))
-    private void skysong$keep(int width, int height, float fov, CallbackInfoReturnable<Matrix4f> cir) {
+    private void skysong$keep(int i, int j, float f, CallbackInfoReturnable<Matrix4f> cir) {
         if (this.skysong$isHands()) {
-            Compat.handProjection.set((Matrix4fc)cir.getReturnValue());
+            Compat.handProjection.set(cir.getReturnValue());
         }
     }
 }

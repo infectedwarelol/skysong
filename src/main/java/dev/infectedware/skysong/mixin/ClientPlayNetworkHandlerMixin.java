@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ClientPacketListener.class)
 abstract class ClientPlayNetworkHandlerMixin {
     @Inject(method = "handleSetTime", at = @At("TAIL"))
-    private void skysong$onWorldTime(ClientboundSetTimePacket packet, CallbackInfo ci) {
-        ServerStats.onTimePacket(packet.gameTime());
+    private void skysong$onWorldTime(ClientboundSetTimePacket clientboundSetTimePacket, CallbackInfo ci) {
+        ServerStats.onTimePacket(clientboundSetTimePacket.gameTime());
     }
 }
