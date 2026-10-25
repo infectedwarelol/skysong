@@ -270,7 +270,7 @@ public final class InventoryComp extends Draggable {
     }
 
     private static float cellY(float y, int i) {
-        return y + 28.0F + 1.0F + i / 9 * 11.0F;
+        return y + 28.0F + 1.0F + (float)(i / 9) * 11.0F;
     }
 
     private static float easeOutBack(float f) {

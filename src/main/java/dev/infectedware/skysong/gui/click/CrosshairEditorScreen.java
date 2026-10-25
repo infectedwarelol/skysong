@@ -102,7 +102,7 @@ public final class CrosshairEditorScreen extends VScreen {
         for (int i = 0; i < this.cells.length; i++) {
             if (this.cells[i]) {
                 float cx = gx + i % 15 * cs;
-                float cy = gy + i / 15 * cs;
+                float cy = gy + (float)(i / 15) * cs;
                 R2D.rect(c, cx + 0.9F, cy + 0.9F, cs - 1.8F, cs - 1.8F, 1.8F, Ui.white(238.0F * a));
             }
         }
@@ -162,7 +162,7 @@ public final class CrosshairEditorScreen extends VScreen {
                 for (int i = 0; i < this.cells.length; i++) {
                     if (this.cells[i]) {
                         float x = cx - half + i % 15 * cell;
-                        float y = cy - half + i / 15 * cell;
+                        float y = cy - half + (float)(i / 15) * cell;
                         if (pass == 0) {
                             R2D.rect(c, x - o, y - o, cell + o * 2.0F, cell + o * 2.0F, 0.0F, dark);
                         } else {

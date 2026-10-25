@@ -60,7 +60,7 @@ public final class ThemesGrid {
 
         for (int i = 0; i < themes.length; i++) {
             float cx = i % 2 == 0 ? areaX + 4.0F : areaX + 4.0F + cw + 3.0F;
-            float cy = areaY + 4.0F + i / 2 * 38.0F - this.scroll;
+            float cy = areaY + 4.0F + (float)(i / 2) * 38.0F - this.scroll;
             if (Ui.inside(mx, my, cx, cy, cw, 35.0F)) {
                 if (ThemeManager.current() != themes[i]) {
                     Sounds.play("button");
