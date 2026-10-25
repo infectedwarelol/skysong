@@ -61,7 +61,7 @@ public class LiveEditorScreen extends VScreen {
     private static final float BUTTON = 14.0F;
     private static final float TOGGLE_W = 16.0F;
     private static final float TOGGLE_H = 8.0F;
-    private static final Map<String, Item> ICONS = Map.ofEntries(
+    static final Map<String, Item> ICONS = Map.ofEntries(
         Map.entry("Lyrics Text", Items.MUSIC_DISC_CAT),
         Map.entry("HUD Lyrics", Items.SPYGLASS),
         Map.entry("Name Tags", Items.NAME_TAG),

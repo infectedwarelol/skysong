@@ -316,7 +316,7 @@ public final class CrosshairEditorScreen extends VScreen {
     @Override
     public void onClose() {
         this.save();
-        Minecraft.getInstance().setScreen(ModSettings.classicMenu ? ClickGuiScreen.shared() : new LiveEditorScreen());
+        Minecraft.getInstance().setScreen(ClientMenuScreen.create());
     }
 
     @Override

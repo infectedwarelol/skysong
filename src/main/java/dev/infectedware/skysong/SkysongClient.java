@@ -6,7 +6,7 @@ import dev.infectedware.skysong.compat.Ids;
 import dev.infectedware.skysong.compat.Shader;
 import dev.infectedware.skysong.gui.HudEditorScreen;
 import dev.infectedware.skysong.gui.LyricsScreen;
-import dev.infectedware.skysong.gui.click.ClickGuiScreen;
+import dev.infectedware.skysong.gui.click.ClientMenuScreen;
 import dev.infectedware.skysong.gui.click.LiveEditorScreen;
 import dev.infectedware.skysong.hud.DragSystem;
 import dev.infectedware.skysong.hud.InfoHud;
@@ -147,7 +147,7 @@ public class SkysongClient implements ClientModInitializer {
             Minecraft mc = Minecraft.getInstance();
             Compat.later(() -> {
                 if (mc.screen == null && mc.player != null) {
-                    mc.setScreen(ModSettings.classicMenu ? ClickGuiScreen.shared() : new LiveEditorScreen());
+                    mc.setScreen(ClientMenuScreen.create());
                 }
             });
         };

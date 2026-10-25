@@ -253,3 +253,4 @@ lyricShakeEmphasis
 lyricParticles
 effectListVersion
 classicMenu
+liveEditorMenu
