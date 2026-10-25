@@ -91,7 +91,14 @@ public sealed interface Setting
         }
 
         public String text() {
-            double v = this.get.getAsDouble();
+            return this.format(this.get.getAsDouble());
+        }
+
+        public String maxText() {
+            return this.format(this.max);
+        }
+
+        private String format(double v) {
             if (this.step >= 1.0F) {
                 return String.format(Locale.ROOT, "%.0f", v);
             }

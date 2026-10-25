@@ -6,6 +6,7 @@ import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.module.Binds;
 import dev.infectedware.skysong.module.Setting;
+import dev.infectedware.skysong.render.GlassRenderer;
 import dev.infectedware.skysong.render.r2d.R2D;
 import dev.infectedware.skysong.theme.ClientAccent;
 import dev.infectedware.skysong.theme.Colors;
@@ -16,6 +17,7 @@ import java.util.Locale;
 import net.minecraft.client.Minecraft;
 
 public abstract class Widget {
+    public static boolean flat;
     protected final Setting setting;
 
     protected Widget(Setting setting) {
@@ -125,6 +127,24 @@ public abstract class Widget {
         R2D.outline(c, kx, ky, knob, knob, knob * 0.5F, 0.5F, Colors.rgba(255, 255, 255, 210.0F * a));
     }
 
+    static void flatField(GuiGraphics c, float x, float y, float w, float h, float a, boolean hover) {
+        R2D.rect(c, x, y, w, h, 0.0F, Colors.rgba(0, 0, 0, (hover ? 95.0F : 70.0F) * a));
+        R2D.outline(c, x, y, w, h, 0.0F, 0.5F, Ui.white((hover ? 42.0F : 22.0F) * a));
+    }
+
+    static void flatCheck(GuiGraphics c, float x, float y, float size, float on, float a, boolean hover) {
+        flatField(c, x, y, size, size, a, hover);
+        if (on > 0.001F) {
+            int ga = ClientAccent.gradientA(255.0F * a * on);
+            int gb = ClientAccent.gradientB(255.0F * a * on);
+            R2D.rect(c, x + 0.5F, y + 0.5F, size - 1.0F, size - 1.0F, 0.0F, ga, gb, gb, ga);
+        }
+    }
+
+    static void flatLabel(GuiGraphics c, String label, float x, float y, float maxW, float a) {
+        Ui.scrollingText(c, label, x + 4.0F, y, Math.max(8.0F, maxW), 6.0F, Ui.white(205.0F * a));
+    }
+
     public static List<Widget> build(List<Setting> settings) {
         return settings.stream().map(Widget::of).toList();
     }
@@ -141,7 +161,7 @@ public abstract class Widget {
 
         @Override
         public float height() {
-            return 16.0F;
+            return flat ? 12.0F : 16.0F;
         }
 
         @Override
@@ -151,6 +171,15 @@ public abstract class Widget {
 
         @Override
         public void render(GuiGraphics c, float x, float y, float w, float a, float mx, float my) {
+            if (flat) {
+                this.anim.forwards(this.t.get().getAsBoolean());
+                float on = this.anim.get();
+                flatCheck(c, x + 4.0F, y + 2.5F, 7.0F, on, a, Ui.inside(mx, my, x, y, w, 12.0F));
+
+                flatLabel(c, this.t.label(), x + 11.0F, y + 2.5F, w - 19.0F, a);
+                return;
+            }
+
             float px = x + w - 19.1F - 4.0F;
             float py = y + 2.8F;
             Ui.name(c, this.t.label(), x, y, px - (x + 6.0F) - 4.0F, a);
@@ -162,7 +191,8 @@ public abstract class Widget {
         public boolean click(float x, float y, float w, float mx, float my) {
             float px = x + w - 19.1F - 4.0F;
             float py = y + 2.8F;
-            if (Ui.inside(mx, my, px - 2.0F, py - 2.0F, 23.1F, 14.4F)) {
+            boolean hit = flat ? Ui.inside(mx, my, x, y, w, 12.0F) : Ui.inside(mx, my, px - 2.0F, py - 2.0F, 23.1F, 14.4F);
+            if (hit) {
                 boolean now = !this.t.get().getAsBoolean();
                 this.t.set().accept(now);
                 Sounds.play(now ? "switch_right" : "switch_left");
@@ -184,7 +214,7 @@ public abstract class Widget {
 
         @Override
         public float height() {
-            return 16.0F;
+            return flat ? 14.0F : 16.0F;
         }
 
         @Override
@@ -194,8 +224,15 @@ public abstract class Widget {
 
         @Override
         public void render(GuiGraphics c, float x, float y, float w, float a, float mx, float my) {
-            boolean over = Ui.inside(mx, my, x + 4.0F, y + 1.0F, w - 8.0F, 14.0F);
+            boolean over = Ui.inside(mx, my, x + 4.0F, y + 1.0F, w - 8.0F, flat ? 12.0F : 14.0F);
             this.hover = this.hover + ((over ? 1.0F : 0.0F) - this.hover) * 0.25F;
+            if (flat) {
+                flatField(c, x + 4.0F, y + 1.0F, w - 8.0F, 12.0F, a, over);
+                float lw = Ui.width(this.ac.label(), 6.0F);
+                Ui.text(c, this.ac.label(), x + (w - lw) / 2.0F, y + 3.6F, 6.0F, Ui.white(235.0F * a));
+                return;
+            }
+
             Ui.panelBg(c, x + 4.0F, y + 1.0F, w - 8.0F, 14.0F, 3.0F, a * (1.0F + this.hover * 0.6F));
             R2D.outline(
                 c, x + 4.0F, y + 1.0F, w - 8.0F, 14.0F, Ui.cornerRadius(3.0F, w, 14.0F), 0.5F, ClientAccent.accentSoft((30.0F + 50.0F * this.hover) * a)
@@ -244,7 +281,11 @@ public abstract class Widget {
 
         @Override
         public float height() {
-            return 16.0F;
+            return flat ? 12.0F : 16.0F;
+        }
+
+        private static float pickerTop(float y) {
+            return flat ? y + 13.0F : y + 17.0F;
         }
 
         @Override
@@ -259,12 +300,20 @@ public abstract class Widget {
         @Override
         public void render(GuiGraphics c, float x, float y, float w, float a, float mx, float my) {
             int color = this.cp.get().getAsInt();
+            int swatch = color & 16777215 | Math.round((color >>> 24) * a) << 24;
+            if (flat) {
+                float sx = x + w - 20.0F;
+                flatField(c, sx, y + 2.5F, 16.0F, 7.0F, a, this.open || Ui.inside(mx, my, sx - 2.0F, y, 20.0F, 12.0F));
+                R2D.rect(c, sx + 1.0F, y + 3.5F, 14.0F, 5.0F, 0.0F, swatch);
+                flatLabel(c, this.cp.label(), x, y + 2.5F, w - 30.0F, a);
+                return;
+            }
+
             float bw = this.buttonW();
             float bx = x + w - bw - 4.0F;
             float by = y + 2.0F;
             Ui.name(c, this.cp.label(), x, y, bx - (x + 6.0F) - 4.0F, a);
             Ui.panelBg(c, bx, by, bw, 12.0F, 3.0F, a);
-            int swatch = color & 16777215 | Math.round((color >>> 24) * a) << 24;
             R2D.rect(c, bx + 3.0F, by + 2.0F, 8.0F, 8.0F, 2.0F, swatch);
             Ui.text(c, this.hex(), bx + 3.0F + 8.0F + 4.0F, by + 3.0F, 5.5F, ClientAccent.accentSoft(200.0F * a));
         }
@@ -273,7 +322,8 @@ public abstract class Widget {
         public boolean click(float x, float y, float w, float mx, float my) {
             float bw = this.buttonW();
             float bx = x + w - bw - 4.0F;
-            if (Ui.inside(mx, my, bx, y + 2.0F, bw, 12.0F)) {
+            boolean hit = flat ? Ui.inside(mx, my, x + w - 22.0F, y, 20.0F, 12.0F) : Ui.inside(mx, my, bx, y + 2.0F, bw, 12.0F);
+            if (hit) {
                 if (this.open) {
                     this.closeOverlay();
                 } else {
@@ -335,7 +385,11 @@ public abstract class Widget {
                 this.dSat = this.dSat + this.velX * dt;
                 this.dVal = this.dVal + this.velY * dt;
                 float px = x + w - 82.0F - 4.0F;
-                float py = y + 17.0F;
+                float py = pickerTop(y);
+                if (flat) {
+                    R2D.rect(c, px, py, 82.0F, 78.0F, 0.0F, Colors.rgba(10, 9, 16, 235.0F * fa));
+                }
+
                 Ui.dropBackground(c, px, py, 82.0F, 78.0F, fa);
                 float sx = px + 6.0F;
                 float sy = py + 6.0F;
@@ -383,7 +437,7 @@ public abstract class Widget {
         public boolean clickOverlay(float x, float y, float w, float mx, float my) {
             if (this.open && !(this.anim.linear() <= 0.1F)) {
                 float px = x + w - 82.0F - 4.0F;
-                float py = y + 17.0F;
+                float py = pickerTop(y);
                 if (!Ui.inside(mx, my, px, py, 82.0F, 78.0F)) {
                     return false;
                 }
@@ -412,7 +466,7 @@ public abstract class Widget {
 
         private void updateDrag(float mx, float my, float x, float y, float w) {
             float px = x + w - 82.0F - 4.0F;
-            float py = y + 17.0F;
+            float py = pickerTop(y);
             float sx = px + 6.0F;
             float sy = py + 6.0F;
             if (this.drag == 1) {
@@ -600,7 +654,7 @@ public abstract class Widget {
 
         @Override
         public float height() {
-            return 16.0F;
+            return flat ? 13.0F : 16.0F;
         }
 
         @Override
@@ -613,11 +667,25 @@ public abstract class Widget {
         }
 
         private float pillW() {
-            return Math.max(34.0F, Ui.width(this.label(), 6.0F) + 12.0F);
+            return flat ? Math.max(18.0F, Ui.width(this.label(), 5.5F) + 8.0F) : Math.max(34.0F, Ui.width(this.label(), 6.0F) + 12.0F);
         }
 
         @Override
         public void render(GuiGraphics c, float x, float y, float w, float a, float mx, float my) {
+            if (flat) {
+                float kw = this.pillW();
+                float kx = x + w - kw - 4.0F;
+                flatField(c, kx, y + 1.5F, kw, 10.0F, a, this.listening || Ui.inside(mx, my, kx, y + 1.5F, kw, 10.0F));
+                if (this.listening) {
+                    R2D.outline(c, kx, y + 1.5F, kw, 10.0F, 0.0F, 0.6F, ClientAccent.accentBright(220.0F * a));
+                }
+
+                String s = this.label();
+                Ui.text(c, s, kx + (kw - Ui.width(s, 5.5F)) / 2.0F, y + 3.7F, 5.5F, Ui.white(235.0F * a));
+                flatLabel(c, this.kp.label(), x, y + 3.0F, kx - x - 8.0F, a);
+                return;
+            }
+
             float kw = this.pillW();
             float kx = x + w - kw - 4.0F;
             float ky = y + 1.5F;
@@ -636,7 +704,7 @@ public abstract class Widget {
         public boolean click(float x, float y, float w, float mx, float my) {
             float kw = this.pillW();
             float kx = x + w - kw - 4.0F;
-            if (Ui.inside(mx, my, kx, y + 1.5F, kw, 13.0F)) {
+            if (Ui.inside(mx, my, kx, y + 1.5F, kw, flat ? 10.0F : 13.0F)) {
                 this.listening = !this.listening;
                 Sounds.play("button");
                 return true;
@@ -931,7 +999,15 @@ public abstract class Widget {
 
         @Override
         public float height() {
-            return 16.0F;
+            return flat ? 23.0F : 16.0F;
+        }
+
+        private float dropWidth(float w) {
+            return flat ? Math.max(this.dropW(), w - 8.0F) : this.dropW();
+        }
+
+        private static float dropTop(float y) {
+            return flat ? y + 23.0F : y + 17.0F;
         }
 
         @Override
@@ -945,6 +1021,19 @@ public abstract class Widget {
 
         @Override
         public void render(GuiGraphics c, float x, float y, float w, float a, float mx, float my) {
+            if (flat) {
+                float bx = x + 4.0F;
+                float by = y + 10.0F;
+                float bw = w - 8.0F;
+                flatLabel(c, this.ch.label(), x, y + 1.0F, w - 8.0F, a);
+                flatField(c, bx, by, bw, 12.0F, a, this.open || Ui.inside(mx, my, bx, by, bw, 12.0F));
+                Ui.scrollingText(c, this.selected(), bx + 4.0F, by + 2.6F, bw - 16.0F, 6.0F, Ui.white(232.0F * a));
+                float ax = bx + bw - 7.0F;
+                float ay = by + 6.0F;
+                GlassRenderer.fillPolygon(c, new float[][]{{ax - 2.5F, ay - 1.2F}, {ax + 2.5F, ay - 1.2F}, {ax, ay + 1.6F}}, Ui.white(170.0F * a));
+                return;
+            }
+
             float bw = this.buttonW();
             float bx = x + w - bw - 4.0F;
             Ui.name(c, this.ch.label(), x, y, bx - (x + 6.0F) - 4.0F, a);
@@ -969,7 +1058,8 @@ public abstract class Widget {
         public boolean click(float x, float y, float w, float mx, float my) {
             float bw = this.buttonW();
             float bx = x + w - bw - 4.0F;
-            if (Ui.inside(mx, my, bx, y + 2.0F, bw, 12.0F)) {
+            boolean hit = flat ? Ui.inside(mx, my, x + 4.0F, y + 10.0F, w - 8.0F, 12.0F) : Ui.inside(mx, my, bx, y + 2.0F, bw, 12.0F);
+            if (hit) {
                 this.open = !this.open;
                 Sounds.play(this.open ? "settings_open" : "settings_close");
                 this.drop.forwards(this.open);
@@ -1005,12 +1095,16 @@ public abstract class Widget {
                 this.scroll = Anim.follow(this.scroll, this.scrollTarget, dt, 18.0F);
                 float fa = a * p;
                 String[] opts = this.ch.options();
-                float dw = this.dropW();
+                float dw = this.dropWidth(w);
                 float dx = x + w - dw - 4.0F;
-                float dy = y + 17.0F;
+                float dy = dropTop(y);
                 int rows = Math.min(opts.length, 7);
                 float dh = rows * 12.0F + 6.0F;
                 boolean scrolling = opts.length > 7;
+                if (flat) {
+                    R2D.rect(c, dx, dy, dw, dh, 0.0F, Colors.rgba(10, 9, 16, 235.0F * fa));
+                }
+
                 Ui.dropBackground(c, dx, dy, dw, dh, fa);
                 float top = dy + 1.0F;
                 float bottom = dy + dh - 1.0F;
@@ -1053,9 +1147,9 @@ public abstract class Widget {
         public boolean clickOverlay(float x, float y, float w, float mx, float my) {
             if (this.open && !(this.drop.linear() <= 0.1F)) {
                 String[] opts = this.ch.options();
-                float dw = this.dropW();
+                float dw = this.dropWidth(w);
                 float dx = x + w - dw - 4.0F;
-                float dy = y + 17.0F;
+                float dy = dropTop(y);
                 float dh = Math.min(opts.length, 7) * 12.0F + 6.0F;
                 if (!Ui.inside(mx, my, dx, dy + 3.0F, dw, dh - 6.0F)) {
                     return false;
@@ -1080,9 +1174,9 @@ public abstract class Widget {
                 return false;
             }
 
-            float dw = this.dropW();
+            float dw = this.dropWidth(w);
             float dx = x + w - dw - 4.0F;
-            float dy = y + 17.0F;
+            float dy = dropTop(y);
             float dh = Math.min(this.ch.options().length, 7) * 12.0F + 6.0F;
             if (!Ui.inside(mx, my, dx, dy, dw, dh)) {
                 return false;
@@ -1108,6 +1202,10 @@ public abstract class Widget {
         Separator(Setting s, Setting.Header h) {
             super(s);
             this.h = h;
+        }
+
+        public String title() {
+            return this.h.title();
         }
 
         @Override
@@ -1159,7 +1257,19 @@ public abstract class Widget {
 
         @Override
         public float height() {
-            return 22.0F;
+            return flat ? 21.0F : 22.0F;
+        }
+
+        private static float trackX(float x) {
+            return flat ? x + 4.0F : x + 6.0F;
+        }
+
+        private static float trackW(float w) {
+            return flat ? w - 8.0F : w - 12.0F;
+        }
+
+        private static float trackY(float y) {
+            return flat ? y + 10.0F : y + 16.0F;
         }
 
         @Override
@@ -1173,9 +1283,9 @@ public abstract class Widget {
             long now = System.nanoTime();
             float dt = Math.min(0.1F, (float)(now - this.lastNs) / 1.0E9F);
             this.lastNs = now;
-            float tx = x + 6.0F;
-            float tw = w - 12.0F;
-            float ty = y + 16.0F;
+            float tx = trackX(x);
+            float tw = trackW(w);
+            float ty = trackY(y);
             if (this.dragging) {
                 this.s.setFraction((mx - tx) / tw);
                 String text = this.s.text();
@@ -1183,6 +1293,11 @@ public abstract class Widget {
                     this.lastSoundText = text;
                     Sounds.play("slider", 0.6F);
                 }
+            }
+
+            if (flat) {
+                this.renderFlat(c, x, w, tx, tw, ty, a, mx, my, dt);
+                return;
             }
 
             String value = this.s.text();
@@ -1217,12 +1332,40 @@ public abstract class Widget {
             R2D.outline(c, kx - 0.5F, ky - 0.5F, kw + 1.0F, kh + 1.0F, 2.0F, 0.5F, Colors.rgba(16, 16, 16, 128.0F * a));
         }
 
+        private void renderFlat(GuiGraphics c, float x, float w, float tx, float tw, float ty, float a, float mx, float my, float dt) {
+            float target = this.s.fraction();
+            if (this.shown < 0.0F) {
+                this.shown = target;
+            }
+
+            this.shown = Anim.follow(this.shown, target, dt, 18.0F);
+            if (Math.abs(target - this.shown) < 0.0015F) {
+                this.shown = target;
+            }
+
+            flatLabel(c, this.s.label(), x, ty - 9.0F, w - 8.0F, a);
+            flatField(c, tx, ty, tw, 9.0F, a, this.dragging || Ui.inside(mx, my, tx, ty, tw, 9.0F));
+            float fill = (tw - 1.0F) * Anim.clamp01(this.shown);
+            if (fill > 0.4F) {
+                int ga = ClientAccent.gradientA(225.0F * a);
+                int gb = ClientAccent.gradientB(225.0F * a);
+                R2D.rect(c, tx + 0.5F, ty + 0.5F, fill, 8.0F, 0.0F, ga, gb, gb, ga);
+            }
+
+            String value = this.s.text() + "/" + this.s.maxText();
+            float vw = Ui.width(value, 5.5F);
+            float vx = tx + (tw - vw) / 2.0F;
+            Ui.text(c, value, vx + 0.4F, ty + 2.2F, 5.5F, Colors.rgba(0, 0, 0, 150.0F * a));
+            Ui.text(c, value, vx, ty + 1.8F, 5.5F, Ui.white(245.0F * a));
+        }
+
         @Override
         public boolean click(float x, float y, float w, float mx, float my) {
-            float tx = x + 6.0F;
-            float tw = w - 12.0F;
-            float ty = y + 16.0F;
-            if (Ui.inside(mx, my, tx - 4.0F, ty - 5.0F, tw + 8.0F, 13.0F)) {
+            float tx = trackX(x);
+            float tw = trackW(w);
+            float ty = trackY(y);
+            boolean hit = flat ? Ui.inside(mx, my, tx - 2.0F, ty - 1.0F, tw + 4.0F, 11.0F) : Ui.inside(mx, my, tx - 4.0F, ty - 5.0F, tw + 8.0F, 13.0F);
+            if (hit) {
                 this.dragging = true;
                 this.s.setFraction((mx - tx) / tw);
                 this.lastSoundText = this.s.text();
@@ -1234,9 +1377,9 @@ public abstract class Widget {
 
         @Override
         public boolean middleClick(float x, float y, float w, float mx, float my) {
-            float tx = x + 6.0F;
-            float tw = w - 12.0F;
-            float ty = y + 16.0F;
+            float tx = trackX(x);
+            float tw = trackW(w);
+            float ty = trackY(y);
             if (!Double.isNaN(this.s.resetTo()) && Ui.inside(mx, my, tx - 4.0F, ty - 8.0F, tw + 8.0F, 16.0F)) {
                 this.dragging = false;
                 this.s.set().accept(this.s.resetTo());
