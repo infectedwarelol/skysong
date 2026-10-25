@@ -21,7 +21,8 @@ void main() {
     vec2 unitRange = vec2(DistanceRange) / vec2(textureSize(Sampler0, 0));
     vec2 screenTexSize = vec2(1.0) / fwidth(texCoord0);
     float screenPxRange = max(0.5 * dot(unitRange, screenTexSize), 1.0);
-    float coverage = clamp(screenPxRange * (sd - 0.5) * 1.45 + 0.5, 0.0, 1.0);
+    float coverage = clamp(screenPxRange * (sd - 0.5) * 1.6 + 0.5, 0.0, 1.0);
+    coverage = pow(coverage, 0.85);
     vec4 color = vertexColor * ColorModulator;
     float a = coverage * color.a;
     if (a <= 0.002) {

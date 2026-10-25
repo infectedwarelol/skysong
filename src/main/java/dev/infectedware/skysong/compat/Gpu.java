@@ -17,6 +17,7 @@ import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.joml.Vector4f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
 import org.lwjgl.opengl.GL30;
@@ -28,6 +29,8 @@ public final class Gpu {
     private static final Matrix4f modelView = new Matrix4f();
     private static final Matrix4f worldProjection = new Matrix4f();
     private static final Matrix4f worldView = new Matrix4f();
+    private static final Matrix4f guiTransform = new Matrix4f();
+    private static boolean guiTransformed;
     private static final int[] textures = new int[8];
     private static final Map<Integer, GlTexture> glTextures = new HashMap<>();
     private static final Map<Integer, Integer> sampling = new HashMap<>();
@@ -106,6 +109,32 @@ public final class Gpu {
         float h = (float)(window.getHeight() / window.getGuiScale());
         projection.setOrtho(0.0F, w, h, 0.0F, 1000.0F, 11000.0F);
         modelView.identity().translate(0.0F, 0.0F, -10000.0F);
+        if (guiTransformed) {
+            modelView.mul(guiTransform);
+        }
+    }
+
+    public static void setGuiTransform(Matrix4f transform) {
+        guiTransformed = transform != null;
+        if (transform == null) {
+            guiTransform.identity();
+        } else {
+            guiTransform.set(transform);
+        }
+    }
+
+    public static boolean guiIsFlat() {
+        return !guiTransformed;
+    }
+
+    public static Vector3f projectGui(float x, float y) {
+        if (!guiTransformed) {
+            return new Vector3f(x, y, 0.0F);
+        }
+
+        Vector4f v = guiTransform.transform(new Vector4f(x, y, 0.0F, 1.0F));
+        float w = Math.max(1.0E-3F, v.w);
+        return new Vector3f(v.x / w, v.y / w, 0.0F);
     }
 
     public static void setWorldCamera(Matrix4f proj, Matrix4f view) {
@@ -369,12 +398,25 @@ public final class Gpu {
     static void pushGuiClip(Matrix4f m, int x1, int y1, int x2, int y2) {
         Window window = Minecraft.getInstance().getWindow();
         double scale = window.getGuiScale();
-        Vector3f a = m.transformPosition(x1, y1, 0.0F, new Vector3f());
-        Vector3f b = m.transformPosition(x2, y2, 0.0F, new Vector3f());
-        int left = (int)Math.floor(Math.min(a.x, b.x) * scale);
-        int right = (int)Math.ceil(Math.max(a.x, b.x) * scale);
-        int top = (int)Math.floor(Math.min(a.y, b.y) * scale);
-        int bottom = (int)Math.ceil(Math.max(a.y, b.y) * scale);
+        float minX = Float.MAX_VALUE;
+        float minY = Float.MAX_VALUE;
+        float maxX = -Float.MAX_VALUE;
+        float maxY = -Float.MAX_VALUE;
+        int[][] corners = new int[][]{{x1, y1}, {x2, y1}, {x2, y2}, {x1, y2}};
+
+        for (int[] corner : corners) {
+            Vector3f local = m.transformPosition(corner[0], corner[1], 0.0F, new Vector3f());
+            Vector3f p = projectGui(local.x, local.y);
+            minX = Math.min(minX, p.x);
+            minY = Math.min(minY, p.y);
+            maxX = Math.max(maxX, p.x);
+            maxY = Math.max(maxY, p.y);
+        }
+
+        int left = (int)Math.floor(minX * scale);
+        int right = (int)Math.ceil(maxX * scale);
+        int top = (int)Math.floor(minY * scale);
+        int bottom = (int)Math.ceil(maxY * scale);
         int height = window.getHeight();
         int[] box = new int[]{left, height - bottom, Math.max(0, right - left), Math.max(0, bottom - top)};
         int[] outer = guiClips.peek();

@@ -230,8 +230,8 @@ public final class R2D {
         Gpu.texture(0, Gpu.textureId(f.atlas, true));
         begin();
         Mesh b = Mesh.begin(Mode.QUADS);
-        float cursor = x;
-        float baseline = y + f.ascender * size;
+        float cursor = snapX(m, x);
+        float baseline = snapY(m, y + f.ascender * size);
         int prev = -1;
         int i = 0;
 
@@ -266,6 +266,30 @@ public final class R2D {
 
         b.draw();
         end();
+    }
+
+    private static boolean skewed(Matrix4f m) {
+        return !Gpu.guiIsFlat() || m.m01() != 0.0F || m.m10() != 0.0F || m.m02() != 0.0F || m.m12() != 0.0F || m.m03() != 0.0F || m.m13() != 0.0F || m.m00() <= 0.0F || m.m11() <= 0.0F;
+    }
+
+    private static float snapX(Matrix4f m, float x) {
+        if (skewed(m)) {
+            return x;
+        }
+
+        double gui = Minecraft.getInstance().getWindow().getGuiScale();
+        double device = (m.m30() + m.m00() * x) * gui;
+        return x + (float)((Math.round(device) - device) / (m.m00() * gui));
+    }
+
+    private static float snapY(Matrix4f m, float y) {
+        if (skewed(m)) {
+            return y;
+        }
+
+        double gui = Minecraft.getInstance().getWindow().getGuiScale();
+        double device = (m.m31() + m.m11() * y) * gui;
+        return y + (float)((Math.round(device) - device) / (m.m11() * gui));
     }
 
     public static void textCentered(GuiGraphics c, MsdfFont.Font font, String s, float x, float cy, float size, int color) {

@@ -33,6 +33,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.joml.Matrix4f;
 import org.jspecify.annotations.NullMarked;
 
 public class ClientMenuScreen extends VScreen {
@@ -50,6 +51,9 @@ public class ClientMenuScreen extends VScreen {
     private static final float CHECK = 7.0F;
     private static final float SEARCH_W = 130.0F;
     private static final float THEME_BUTTON_W = 96.0F;
+    private static final float TOGGLE_3D_W = 22.0F;
+    private static final float[] HOLO_LIFT = new float[]{-16.0F, 8.0F, 0.0F};
+    private static final float[] AWAY = new float[]{-100000.0F, -100000.0F};
     private static final String MENU_MODULE = "Click GUI";
     private static final String PROFILES_MODULE = "Config";
     private static final String VERSION = versionLabel();
@@ -69,6 +73,8 @@ public class ClientMenuScreen extends VScreen {
     private float dt;
     private float mx;
     private float my;
+    private float rawMx;
+    private float rawMy;
 
     private enum View {
         VISUALS("Visuals", Items.ENDER_EYE, Category.VISUALS),
@@ -175,11 +181,16 @@ public class ClientMenuScreen extends VScreen {
     }
 
     private float winX() {
-        return (this.vw() - this.winW()) / 2.0F;
+        return this.toPixel((this.vw() - this.winW()) / 2.0F);
     }
 
     private float winY() {
-        return (this.vh() - this.winH()) / 2.0F;
+        return this.toPixel((this.vh() - this.winH()) / 2.0F);
+    }
+
+    private float toPixel(float v) {
+        double perUnit = this.scale() * Minecraft.getInstance().getWindow().getGuiScale();
+        return (float)(Math.round(v * perUnit) / perUnit);
     }
 
     private float innerX() {
@@ -346,9 +357,10 @@ public class ClientMenuScreen extends VScreen {
 
         Backdrop.capture();
         float s = this.scale();
-        this.mx = mouseX / s;
-        this.my = mouseY / s;
+        this.mx = this.rawMx = mouseX / s;
+        this.my = this.rawMy = mouseY / s;
         float a = this.openAnim.get();
+        this.grid.holo = ModSettings.menu3d;
         boolean previous = R2D.squareCorners;
         R2D.squareCorners = true;
         ctx.pose().pushPose();
@@ -356,6 +368,16 @@ public class ClientMenuScreen extends VScreen {
         ctx.pose().scale(s, s, 1.0F);
 
         try {
+            if (ModSettings.menu3d) {
+                R2D.rect(ctx, -5.0F, -5.0F, this.vw() + 10.0F, this.vh() + 10.0F, 0.0F, Colors.rgba(2, 10, 16, 150.0F * a));
+                this.drawHolo(ctx, a);
+                if (this.bind.isVisible()) {
+                    this.bind.render(ctx, a, this.mx, this.my);
+                }
+
+                return;
+            }
+
             R2D.rect(ctx, -5.0F, -5.0F, this.vw() + 10.0F, this.vh() + 10.0F, 0.0F, Colors.rgba(0, 0, 0, 70.0F * a));
             float motion = 0.97F + 0.03F * a;
             float cx = this.vw() / 2.0F;
@@ -397,6 +419,83 @@ public class ClientMenuScreen extends VScreen {
         }
     }
 
+    private float[][] holoAreas(List<Tab> tabs) {
+        float railTop = this.innerY() + PAD;
+        float headerH = this.themesShown() ? this.mainBottom() - this.mainTop() : this.contentTop(tabs) - this.mainTop() - 3.0F;
+        return new float[][]{
+            {this.winX(), this.winY(), this.winW(), TITLE_H},
+            {this.innerX() + PAD, railTop, RAIL_W, this.mainBottom() - railTop},
+            {this.mainX(), this.mainTop(), this.mainW(), headerH}
+        };
+    }
+
+    private float[] holoPoint(float x, float y) {
+        float[][] areas = this.holoAreas(this.tabs());
+        for (int i = 0; i < areas.length; i++) {
+            float[] r = areas[i];
+            float[] p = Holo.inside(Holo.place(r[0], r[1], r[2], r[3], i, HOLO_LIFT[i]), x, y, r[0] - 3.0F, r[1] - 3.0F, r[2] + 6.0F, r[3] + 6.0F);
+            if (p != null) {
+                return p;
+            }
+        }
+
+        return AWAY;
+    }
+
+    private void drawHolo(GuiGraphics c, float a) {
+        Holo.frame(this.vw(), this.vh(), this.scale(), a, this.rawMx);
+        List<Tab> tabs = this.tabs();
+        float[][] areas = this.holoAreas(tabs);
+        for (int i = 0; i < areas.length; i++) {
+            float[] r = areas[i];
+            Matrix4f t = Holo.place(r[0], r[1], r[2], r[3], i, HOLO_LIFT[i]);
+            float[] m = Holo.unproject(t, this.rawMx, this.rawMy);
+            this.mx = m == null ? AWAY[0] : m[0];
+            this.my = m == null ? AWAY[1] : m[1];
+            Holo.begin(t);
+            try {
+                Holo.backing(c, r[0] - 3.0F, r[1] - 3.0F, r[2] + 6.0F, r[3] + 6.0F, a, i);
+                switch (i) {
+                    case 0 -> this.drawTitleBar(c, this.winX(), this.winY(), this.winW(), a);
+                    case 1 -> this.drawRail(c, a);
+                    default -> {
+                        if (this.themesShown()) {
+                            this.drawThemes(c, a);
+                        } else {
+                            this.drawHeader(c, a, tabs);
+                        }
+                    }
+                }
+            } finally {
+                Holo.end();
+            }
+        }
+
+        this.mx = this.rawMx;
+        this.my = this.rawMy;
+        if (!this.themesShown()) {
+            this.drawContent(c, a, tabs);
+        }
+    }
+
+    private float toggle3dX() {
+        return this.winX() + this.winW() - PAD - SEARCH_W - 6.0F - TOGGLE_3D_W;
+    }
+
+    private void drawToggle3d(GuiGraphics c, float cy, float a) {
+        float x = this.toggle3dX();
+        float y = cy - 6.0F;
+        boolean hover = Ui.inside(this.mx, this.my, x, y, TOGGLE_3D_W, 12.0F);
+        if (ModSettings.menu3d) {
+            R2D.rect(c, x, y, TOGGLE_3D_W, 12.0F, 0.0F, Holo.cyan((hover ? 120.0F : 80.0F) * a));
+            R2D.outline(c, x, y, TOGGLE_3D_W, 12.0F, 0.0F, 0.6F, Holo.cyan(230.0F * a));
+        } else {
+            Widget.flatField(c, x, y, TOGGLE_3D_W, 12.0F, a, hover);
+        }
+
+        R2D.text(c, MsdfFont.Font.SEMIBOLD, "3D", x + (TOGGLE_3D_W - R2D.width(MsdfFont.Font.SEMIBOLD, "3D", 6.0F)) / 2.0F, y + 2.8F, 6.0F, Ui.white(240.0F * a));
+    }
+
     private void drawTitleBar(GuiGraphics c, float wx, float wy, float ww, float a) {
         float cy = wy + TITLE_H / 2.0F;
         Icons.logo(c, wx + 7.0F, cy - 5.0F, 10.0F, a);
@@ -405,6 +504,7 @@ public class ClientMenuScreen extends VScreen {
         float vx = wx + 21.0F + R2D.width(MsdfFont.Font.PIXEL, "SKYSONG", 8.0F) + 6.0F;
         Ui.text(c, "| " + VERSION, vx, cy - 3.2F, 6.0F, Ui.white(140.0F * a));
         this.search.render(c, wx + ww - PAD - SEARCH_W, cy - 6.0F, SEARCH_W, 12.0F, a, this.mx, this.my, this.dt);
+        this.drawToggle3d(c, cy, a);
     }
 
     private float railY(int index) {
@@ -441,6 +541,11 @@ public class ClientMenuScreen extends VScreen {
 
     private void drawModuleView(GuiGraphics c, float a) {
         List<Tab> tabs = this.tabs();
+        this.drawHeader(c, a, tabs);
+        this.drawContent(c, a, tabs);
+    }
+
+    private void drawHeader(GuiGraphics c, float a, List<Tab> tabs) {
         for (Tab t : tabs) {
             this.drawTab(c, t, a);
         }
@@ -457,7 +562,15 @@ public class ClientMenuScreen extends VScreen {
         if (!m.description().isEmpty()) {
             Ui.scrollingText(c, m.description(), x + 1.0F, top, w - 2.0F, 5.5F, Ui.white(135.0F * a));
         }
+    }
 
+    private void drawContent(GuiGraphics c, float a, List<Tab> tabs) {
+        if (this.selected == null) {
+            return;
+        }
+
+        float x = this.mainX();
+        float w = this.mainW();
         float contentTop = this.contentTop(tabs);
         float contentH = this.mainBottom() - contentTop;
         if (this.grid.isEmpty()) {
@@ -583,7 +696,11 @@ public class ClientMenuScreen extends VScreen {
             return true;
         }
 
-        Tab tab = this.tabAt(x, y);
+        this.grid.holo = ModSettings.menu3d;
+        float[] p = ModSettings.menu3d ? this.holoPoint(x, y) : new float[]{x, y};
+        float hx = p[0];
+        float hy = p[1];
+        Tab tab = this.tabAt(hx, hy);
         if (button == 2) {
             if (!this.themesShown() && this.grid.middleClick(x, y)) {
                 return true;
@@ -600,12 +717,21 @@ public class ClientMenuScreen extends VScreen {
             return true;
         }
 
-        if (this.search.mouseClicked(x, y, button)) {
+        if (this.search.mouseClicked(hx, hy, button)) {
+            return true;
+        }
+
+        if (button == 0 && Ui.inside(hx, hy, this.toggle3dX(), this.winY() + TITLE_H / 2.0F - 6.0F, TOGGLE_3D_W, 12.0F)) {
+            ModSettings.menu3d = !ModSettings.menu3d;
+            this.grid.holo = ModSettings.menu3d;
+            this.grid.closeOverlays();
+            ModConfig.save();
+            Sounds.play("button");
             return true;
         }
 
         if (button == 0) {
-            View v = this.railAt(x, y);
+            View v = this.railAt(hx, hy);
             if (v != null) {
                 boolean cleared = this.search.hasText();
                 if (cleared) {
@@ -624,7 +750,7 @@ public class ClientMenuScreen extends VScreen {
 
         if (tab != null && (button == 0 || button == 1)) {
             ClientModule m = tab.module();
-            boolean onCheck = m.hasToggle() && x >= tab.x() + tab.w() - 5.0F - CHECK - 2.0F;
+            boolean onCheck = m.hasToggle() && hx >= tab.x() + tab.w() - 5.0F - CHECK - 2.0F;
             if (m.hasToggle() && (onCheck || button == 1)) {
                 toggle(m);
             } else if (!m.name().equals(this.selected)) {
@@ -637,19 +763,19 @@ public class ClientMenuScreen extends VScreen {
 
         if (button == 0 && this.themesShown()) {
             float top = this.mainTop();
-            if (Ui.inside(x, y, this.themeButtonX(), top, THEME_BUTTON_W, TAB_H)) {
+            if (Ui.inside(hx, hy, this.themeButtonX(), top, THEME_BUTTON_W, TAB_H)) {
                 SavedThemes.save("");
                 SettingsPopup.rebuildSoon();
                 Sounds.play("button");
                 return true;
             }
 
-            if (this.themes.scrollbarGrab(x, y)) {
+            if (this.themes.scrollbarGrab(hx, hy)) {
                 return true;
             }
 
             float areaTop = this.contentTop(List.of());
-            if (this.themes.click(this.mainX(), areaTop, this.mainW(), this.mainBottom() - areaTop, x, y)) {
+            if (this.themes.click(this.mainX(), areaTop, this.mainW(), this.mainBottom() - areaTop, hx, hy)) {
                 return true;
             }
         }
@@ -684,8 +810,10 @@ public class ClientMenuScreen extends VScreen {
             return true;
         }
 
+        this.grid.holo = ModSettings.menu3d;
         if (this.themesShown()) {
-            if (this.overContent(x, y)) {
+            float[] p = ModSettings.menu3d ? this.holoPoint(x, y) : new float[]{x, y};
+            if (this.overContent(p[0], p[1])) {
                 float areaTop = this.contentTop(List.of());
                 this.themes.scroll(amount, this.mainBottom() - areaTop);
                 return true;

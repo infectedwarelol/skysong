@@ -8,6 +8,7 @@ import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 
 public final class GuiGraphics {
     private final net.minecraft.client.gui.GuiGraphics g;
@@ -41,6 +42,24 @@ public final class GuiGraphics {
         this.g.pose().set(m.m00(), m.m01(), m.m10(), m.m11(), m.m30(), m.m31());
     }
 
+    private void beginItem(int x, int y) {
+        if (Gpu.guiIsFlat()) {
+            this.begin();
+            return;
+        }
+
+        Compat.guiChanged();
+        Matrix4f m = this.pose.last().pose();
+        Vector3f a = m.transformPosition(x, y, 0.0F, new Vector3f());
+        Vector3f b = m.transformPosition(x + 16.0F, y + 16.0F, 0.0F, new Vector3f());
+        Vector3f pa = Gpu.projectGui(a.x, a.y);
+        Vector3f pb = Gpu.projectGui(b.x, b.y);
+        float sx = (pb.x - pa.x) / 16.0F;
+        float sy = (pb.y - pa.y) / 16.0F;
+        this.g.pose().pushMatrix();
+        this.g.pose().set(sx, 0.0F, 0.0F, sy, pa.x - sx * x, pa.y - sy * y);
+    }
+
     private void end() {
         this.g.pose().popMatrix();
     }
@@ -52,7 +71,7 @@ public final class GuiGraphics {
     }
 
     public void renderItem(ItemStack stack, int x, int y) {
-        this.begin();
+        this.beginItem(x, y);
         this.g.renderItem(stack, x, y);
         this.end();
     }

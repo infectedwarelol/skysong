@@ -254,3 +254,4 @@ lyricParticles
 effectListVersion
 classicMenu
 liveEditorMenu
+menu3d
