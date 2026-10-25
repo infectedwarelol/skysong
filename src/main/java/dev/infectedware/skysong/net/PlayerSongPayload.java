@@ -7,7 +7,9 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public record PlayerSongPayload(UUID player, String track, String artist) implements CustomPacketPayload {
     public static final CustomPacketPayload.Type<PlayerSongPayload> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath("skysong", "player_song"));
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerSongPayload> CODEC = StreamCodec.composite(

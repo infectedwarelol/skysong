@@ -31,6 +31,7 @@ import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NullMarked;
 
 public class ClickGuiScreen extends VScreen {
     private static final Category[] MAIN = new Category[]{Category.VISUALS, Category.DISPLAY, Category.UTILS};
@@ -128,6 +129,7 @@ public class ClickGuiScreen extends VScreen {
         return false;
     }
 
+    @NullMarked
     @Override
     public void onFilesDrop(List<Path> paths) {
         Profiles.importFiles(paths);

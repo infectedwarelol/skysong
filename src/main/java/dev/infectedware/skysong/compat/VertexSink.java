@@ -1,7 +1,9 @@
 package dev.infectedware.skysong.compat;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public abstract class VertexSink implements VertexConsumer {
     protected abstract void onVertex(float var1, float var2, float var3);
 

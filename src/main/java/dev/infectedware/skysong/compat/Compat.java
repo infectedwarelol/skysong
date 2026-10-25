@@ -62,6 +62,7 @@ import net.minecraft.world.scores.ReadOnlyScoreInfo;
 import net.minecraft.world.scores.Scoreboard;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
+import org.jspecify.annotations.NullMarked;
 
 public final class Compat {
     private static Supplier<PlayerSkin> ownSkin;
@@ -316,6 +317,7 @@ public final class Compat {
         return (float)(d * 2.0 + e) / 3.0F;
     }
 
+    @NullMarked
     private static final class Forwarding extends BufferSource {
         private final MultiBufferSource target;
 

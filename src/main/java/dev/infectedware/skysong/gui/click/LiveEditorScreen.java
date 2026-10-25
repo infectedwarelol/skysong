@@ -35,6 +35,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import org.jspecify.annotations.NullMarked;
 
 public class LiveEditorScreen extends VScreen {
     public static final long PREVIEW_LINE_MS = 3500L;
@@ -173,6 +174,7 @@ public class LiveEditorScreen extends VScreen {
         return false;
     }
 
+    @NullMarked
     @Override
     public void onFilesDrop(List<Path> paths) {
         Profiles.importFiles(paths);

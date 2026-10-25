@@ -6,6 +6,7 @@ import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.input.MouseButtonInfo;
 import net.minecraft.network.chat.Component;
+import org.jspecify.annotations.NullMarked;
 
 public abstract class VScreen extends Screen {
     private int mods;
@@ -93,11 +94,13 @@ public abstract class VScreen extends Screen {
         return used;
     }
 
+    @NullMarked
     @Override
     public final void render(net.minecraft.client.gui.GuiGraphics g, int mouseX, int mouseY, float delta) {
         this.draw(Compat.gui(g), mouseX, mouseY, delta);
     }
 
+    @NullMarked
     @Override
     public final void renderBackground(net.minecraft.client.gui.GuiGraphics g, int mouseX, int mouseY, float delta) {
     }

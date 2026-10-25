@@ -14,6 +14,7 @@ import java.util.Map;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
+import org.jspecify.annotations.NullMarked;
 
 public final class LyricLayers {
     private static final Shader TEXT = Shader.of("fx_text");
@@ -33,6 +34,7 @@ public final class LyricLayers {
         return batch;
     }
 
+    @NullMarked
     public static final class Batch implements MultiBufferSource {
         private LyricLayers.Pass pass = LyricLayers.Pass.MAIN;
         private boolean throughWalls;
