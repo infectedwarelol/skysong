@@ -67,7 +67,7 @@ import org.joml.Quaternionf;
 public final class Compat {
     private static Supplier<PlayerSkin> ownSkin;
     private static boolean guiPending;
-    public static Matrix4f handProjection = new Matrix4f();
+    public static final Matrix4f handProjection = new Matrix4f();
     private static final Category KEY_CATEGORY = Category.register(Identifier.fromNamespaceAndPath("skysong", "main"));
 
     private Compat() {

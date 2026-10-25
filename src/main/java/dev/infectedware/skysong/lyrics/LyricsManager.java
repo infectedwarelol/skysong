@@ -300,9 +300,9 @@ public class LyricsManager {
     }
 
     public static class LyricLine {
-        public long timeMs;
-        public long endMs;
-        public String text;
+        public final long timeMs;
+        public final long endMs;
+        public final String text;
         public long[] wordTimes;
         public volatile String translation;
 
