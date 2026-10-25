@@ -27,14 +27,19 @@ import java.net.http.HttpRequest.BodyPublishers;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.network.chat.Component;
@@ -78,6 +83,8 @@ public class SpotifyManager {
     private static final int VOLUME_STEP = 10;
     private volatile String currentTrackId = "";
     private static final Pattern TRACK_ID = Pattern.compile("[A-Za-z0-9]{22}");
+    private static final int MAX_ART_BYTES = 8 * 1024 * 1024;
+    private static final long MAX_ART_PIXELS = 4096L * 4096L;
 
     public long getSmoothedProgressMs() {
         if (this.isPlaying && this.lastUpdateTime != 0L) {
@@ -238,6 +245,10 @@ public class SpotifyManager {
 
             json.addProperty("expires_at", this.expiresAt);
             Files.writeString(TOKEN_FILE.toPath(), json.toString(), StandardCharsets.UTF_8);
+            try {
+                Files.setPosixFilePermissions(TOKEN_FILE.toPath(), PosixFilePermissions.fromString("rw-------"));
+            } catch (UnsupportedOperationException | IOException ignored) {
+            }
         } catch (Exception e) {
             SkysongClient.LOGGER.warn("[Skysong] Could not save Spotify login: {}", e.getMessage());
         }
@@ -619,49 +630,88 @@ public class SpotifyManager {
     }
 
     private void fetchAlbumArt(String url) {
-        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(url)).GET().build();
+        URI uri;
+        try {
+            uri = URI.create(url);
+        } catch (IllegalArgumentException e) {
+            return;
+        }
+
+        if (!"https".equalsIgnoreCase(uri.getScheme()) && !"http".equalsIgnoreCase(uri.getScheme())) {
+            return;
+        }
+
+        HttpRequest req = HttpRequest.newBuilder().uri(uri).timeout(Duration.ofSeconds(10L)).GET().build();
         this.httpClient.sendAsync(req, BodyHandlers.ofByteArray()).thenAccept(res -> {
-            if (res.statusCode() == 200) {
-                Minecraft.getInstance().execute(() -> {
-                    try {
-                        BufferedImage buffered = ImageIO.read(new ByteArrayInputStream(res.body()));
-                        if (buffered == null) {
-                            SkysongClient.LOGGER.error("Album art ImageIO returned null");
-                            return;
-                        }
-
-                        buffered = downscale(buffered);
-                        int[] palette = AlbumPalette.extract(buffered);
-                        this.primaryColor = palette[0];
-                        this.secondaryColor = palette[1];
-                        this.hasAlbumPalette = true;
-                        int w = buffered.getWidth();
-                        int h = buffered.getHeight();
-                        NativeImage image = new NativeImage(Format.RGBA, w, h, false);
-
-                        for (int py = 0; py < h; py++) {
-                            for (int px = 0; px < w; px++) {
-                                int argb = buffered.getRGB(px, py);
-                                int a = argb >> 24 & 0xFF;
-                                int r = argb >> 16 & 0xFF;
-                                int g = argb >> 8 & 0xFF;
-                                int b = argb & 0xFF;
-                                int abgr = a << 24 | b << 16 | g << 8 | r;
-                                Compat.setPixelAbgr(image, px, py, abgr);
-                            }
-                        }
-
-                        DynamicTexture texture = Compat.dynamicTexture("album art", image);
-                        Identifier id = Ids.of("skysong", "album_art");
-                        Minecraft.getInstance().getTextureManager().register(id, texture);
-                        this.albumArtId = id;
-                        SkysongClient.LOGGER.info("Album art loaded: {}x{}", w, h);
-                    } catch (Exception e) {
-                        SkysongClient.LOGGER.error("Failed to load album art", e);
-                    }
-                });
+            if (res.statusCode() != 200 || res.body().length > MAX_ART_BYTES) {
+                return;
             }
+
+            BufferedImage buffered;
+            try {
+                buffered = readLimited(res.body());
+            } catch (IOException e) {
+                SkysongClient.LOGGER.warn("[Skysong] Could not read album art: {}", e.getMessage());
+                return;
+            }
+
+            if (buffered == null) {
+                return;
+            }
+
+            BufferedImage small = downscale(buffered);
+            int[] palette = AlbumPalette.extract(small);
+            int w = small.getWidth();
+            int h = small.getHeight();
+            int[] pixels = small.getRGB(0, 0, w, h, null, 0, w);
+            Minecraft.getInstance().execute(() -> {
+                try {
+                    this.primaryColor = palette[0];
+                    this.secondaryColor = palette[1];
+                    this.hasAlbumPalette = true;
+                    NativeImage image = new NativeImage(Format.RGBA, w, h, false);
+                    for (int py = 0; py < h; py++) {
+                        for (int px = 0; px < w; px++) {
+                            int argb = pixels[py * w + px];
+                            int abgr = argb & 0xFF00FF00 | (argb >> 16 & 0xFF) | (argb & 0xFF) << 16;
+                            Compat.setPixelAbgr(image, px, py, abgr);
+                        }
+                    }
+
+                    DynamicTexture texture = Compat.dynamicTexture("album art", image);
+                    Identifier id = Ids.of("skysong", "album_art");
+                    Minecraft.getInstance().getTextureManager().register(id, texture);
+                    this.albumArtId = id;
+                } catch (RuntimeException e) {
+                    SkysongClient.LOGGER.warn("[Skysong] Could not show album art: {}", e.getMessage());
+                }
+            });
         });
+    }
+
+    private static BufferedImage readLimited(byte[] data) throws IOException {
+        try (ImageInputStream in = ImageIO.createImageInputStream(new ByteArrayInputStream(data))) {
+            if (in == null) {
+                return null;
+            }
+
+            Iterator<ImageReader> readers = ImageIO.getImageReaders(in);
+            if (!readers.hasNext()) {
+                return null;
+            }
+
+            ImageReader reader = readers.next();
+            try {
+                reader.setInput(in, true, true);
+                if ((long)reader.getWidth(0) * reader.getHeight(0) > MAX_ART_PIXELS) {
+                    return null;
+                }
+
+                return reader.read(0);
+            } finally {
+                reader.dispose();
+            }
+        }
     }
 
     private static BufferedImage downscale(BufferedImage src) {
