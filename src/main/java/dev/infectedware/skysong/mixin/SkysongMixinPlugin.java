@@ -7,6 +7,7 @@ import org.objectweb.asm.tree.ClassNode;
 import org.spongepowered.asm.mixin.extensibility.IMixinConfigPlugin;
 import org.spongepowered.asm.mixin.extensibility.IMixinInfo;
 
+@SuppressWarnings("RedundantMethodOverride")
 public final class SkysongMixinPlugin implements IMixinConfigPlugin {
     private static final String MOD_MENU_MIXIN = "dev.infectedware.skysong.mixin.ModMenuCreditsMixin";
 
