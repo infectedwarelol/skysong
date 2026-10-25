@@ -33,16 +33,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 public class ClickGuiScreen extends VScreen {
-    public static final float PANEL_W = 430.0F;
-    public static final float PANEL_H = 290.0F;
-    public static final float SIDEBAR_W = 110.0F;
-    private static final float CONTENT_X = 117.0F;
-    private static final float CONTENT_INSET = 122.0F;
-    private static final float CONTENT_H = 280.0F;
-    private static final float HEADER_H = 30.0F;
     private static final Category[] MAIN = new Category[]{Category.VISUALS, Category.DISPLAY, Category.UTILS};
-    private static final String RU = "йцукенгшщзхъфывапролджэячсмитьбюё";
-    private static final String EN = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`";
     private ClickGuiScreen.View target = ClickGuiScreen.View.NONE;
     private ClickGuiScreen.View content = ClickGuiScreen.View.NONE;
     private float categoryT = 1.0F;
@@ -142,52 +133,6 @@ public class ClickGuiScreen extends VScreen {
         Profiles.importFiles(paths);
     }
 
-    public void openSettingsFor(String name) {
-        ClientModule m = ModuleRegistry.byName(name);
-        if (m != null && m.hasSettings()) {
-            ClickGuiScreen.View v = viewOf(m.category());
-            this.target = v;
-            this.content = v;
-            this.categoryT = 1.0F;
-            float s = this.scale();
-            float px = this.panelX();
-            float py = this.panelY();
-            this.settings.toggle(m, px + 117.0F + 150.0F, py + 40.0F, 250.0F, this.vw(), this.vh());
-        }
-    }
-
-    public void resetForTest() {
-        this.bind.close();
-        this.settings.close();
-        this.search.setText("");
-        this.search.blur();
-    }
-
-    public SettingsPopup settingsPopup() {
-        return this.settings;
-    }
-
-    public SearchField searchField() {
-        return this.search;
-    }
-
-    public void openBindFor(String name) {
-        ClientModule m = ModuleRegistry.byName(name);
-        if (m != null) {
-            this.bind.open(m, this.panelX() + 117.0F + 120.0F, this.panelY() + 80.0F);
-        }
-    }
-
-    public ThemesGrid themesForTest() {
-        return this.themes;
-    }
-
-    public void selectForTest(String view) {
-        this.select(ClickGuiScreen.View.valueOf(view.toUpperCase(Locale.ROOT)));
-        this.content = this.target;
-        this.categoryT = 1.0F;
-    }
-
     private float scale() {
         float fit = Math.min((this.width - 16.0F) / 430.0F, (this.height - 16.0F) / 290.0F);
         return Math.min(Theme.unitScale(), fit);
@@ -245,11 +190,10 @@ public class ClickGuiScreen extends VScreen {
             Backdrop.release();
             Minecraft.getInstance().setScreen(null);
         } else {
-            Backdrop.capture(ctx, delta);
+            Backdrop.capture();
             float s = this.scale();
             this.mx = mouseX / s;
             this.my = mouseY / s;
-            float alpha = open;
             ctx.pose().pushPose();
             ctx.pose().translate(0.0F, 0.0F, 200.0F);
             ctx.pose().scale(s, s, 1.0F);
@@ -433,7 +377,7 @@ public class ClickGuiScreen extends VScreen {
         String name = mc.getUser().getName();
         SpotifyManager spotify = SkysongClient.getSpotifyManager();
         String role = spotify != null && spotify.isPlaying() && !spotify.getCurrentTrackName().isEmpty() ? spotify.getCurrentTrackName() : "Skysong";
-        role = trim(role, 90.0F, 5.0F);
+        role = trim(role);
         float nameW = Ui.width(name, 6.5F);
         float roleW = Ui.width(role, 5.0F);
         float right = ax - 5.0F;
@@ -445,7 +389,7 @@ public class ClickGuiScreen extends VScreen {
         this.search.render(c, left, y + (rowH - searchH) / 2.0F, searchW, searchH, a, this.mx, this.my, this.dt);
     }
 
-    private static String trim(String s, float max, float size) {
+    private static String trim(String s) {
         if (Ui.width(s, 5.0F) <= 90.0F) {
             return s;
         }
@@ -458,7 +402,6 @@ public class ClickGuiScreen extends VScreen {
     }
 
     private void drawAvatar(GuiGraphics c, float x, float y, float size, float a) {
-        Minecraft mc = Minecraft.getInstance();
         Identifier skin = Compat.ownSkin();
         int white = Math.round(255.0F * a) << 24 | 16777215;
         if (skin == null) {
@@ -787,7 +730,7 @@ public class ClickGuiScreen extends VScreen {
 
             return true;
         } else {
-            if (this.settings.keyPressed(key, mods)) {
+            if (this.settings.keyPressed(key)) {
                 return true;
             }
 

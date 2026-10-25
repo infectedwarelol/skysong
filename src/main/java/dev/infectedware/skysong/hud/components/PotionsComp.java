@@ -23,7 +23,7 @@ public final class PotionsComp extends ListHudComp {
     private int previewIndex;
 
     public PotionsComp() {
-        super("potions", "Potions", () -> ModSettings.potionsEnabled, 180.0F, 29.0F);
+        super("potions", "Potions", () -> ModSettings.potionsEnabled, 180.0F);
     }
 
     @Override

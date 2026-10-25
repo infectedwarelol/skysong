@@ -45,10 +45,6 @@ public final class HandFx {
         }
     }
 
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
-    }
-
     public static boolean capturing() {
         return capturing;
     }
@@ -94,7 +90,7 @@ public final class HandFx {
     private static ShapeFx.Look look() {
         if (ViewModel.editing()) {
             return !ModSettings.shaderHands
-                ? new ShapeFx.Look(0, 1.0F, true, 2.2F, 0.0F, 0.0F, 0.0F, 1.0F)
+                ? new ShapeFx.Look(0, 1.0F, true, 2.2F, 0.0F, 0.0F, 1.0F)
                 : new ShapeFx.Look(
                     ModSettings.shaderHandsFill,
                     ModSettings.shaderHandsOpacity,
@@ -102,12 +98,11 @@ public final class HandFx {
                     Math.max(2.2F, ModSettings.shaderHandsOutlineWidth),
                     ModSettings.shaderHandsGlowRadius,
                     ModSettings.shaderHandsGlow ? ModSettings.shaderHandsGlowStrength : 0.0F,
-                    0.0F,
                     1.0F
                 );
         } else {
             return !ModSettings.shaderHands
-                ? new ShapeFx.Look(0, 1.0F, true, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F)
+                ? new ShapeFx.Look(0, 1.0F, true, 0.0F, 0.0F, 0.0F, 0.0F)
                 : new ShapeFx.Look(
                     ModSettings.shaderHandsFill,
                     ModSettings.shaderHandsOpacity,
@@ -115,7 +110,6 @@ public final class HandFx {
                     ModSettings.shaderHandsOutline ? ModSettings.shaderHandsOutlineWidth : 0.0F,
                     ModSettings.shaderHandsGlowRadius,
                     ModSettings.shaderHandsGlow ? ModSettings.shaderHandsGlowStrength : 0.0F,
-                    0.0F,
                     0.25F
                 );
         }

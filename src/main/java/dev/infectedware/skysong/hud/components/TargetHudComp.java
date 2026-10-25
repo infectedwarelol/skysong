@@ -35,18 +35,6 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public final class TargetHudComp extends Draggable {
-    private static final float PAD = 6.0F;
-    private static final float HEAD = 22.0F;
-    private static final float GAP = 7.0F;
-    private static final float BAR_H = 3.0F;
-    private static final float NAME_SIZE = 8.0F;
-    private static final float INFO_SIZE = 6.0F;
-    private static final float MIN_CONTENT = 74.0F;
-    private static final float HEIGHT = 34.0F;
-    private static final float NEW_HEIGHT = 45.0F;
-    private static final long HOLD_MS = 1500L;
-    private static final int INFO_COLOR = -3618608;
-    private static final int BAR_BG = -14935006;
     private static final EquipmentSlot[] SLOTS = new EquipmentSlot[]{
         EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET, EquipmentSlot.MAINHAND, EquipmentSlot.OFFHAND
     };
@@ -146,7 +134,7 @@ public final class TargetHudComp extends Draggable {
         float pct = clamp01(hp / maxHp);
         this.health = this.health + (pct - this.health) * (1.0F - (float)Math.exp(-dt * 12.0F));
         String info = Math.round(pct * 100.0F) + "% - " + Math.round(distance(this.target)) + "m";
-        float nameW = coloredWidth(name, 8.0F);
+        float nameW = coloredWidth(name);
         float infoW = R2D.width(MsdfFont.Font.MEDIUM, info, 6.0F);
         float content = Math.max(74.0F, Math.max(nameW, infoW));
         this.width = 35.0F + content + 6.0F;
@@ -163,7 +151,7 @@ public final class TargetHudComp extends Draggable {
         float armorY = nameY + 8.0F + spacing * ae;
         float barY = armorY + armorRow + spacing;
         float infoY = barY + 3.0F + spacing;
-        drawName(c, name, mid - nameW / 2.0F, nameY, 8.0F, 0.85F * a);
+        drawName(c, name, mid - nameW / 2.0F, nameY, 0.85F * a);
         float r = barRadius(3.0F);
         R2D.rect(c, contentX, barY + 1.0F, content, 3.0F, r, Colors.multAlpha(-14935006, a * 0.5F));
         barFill(c, contentX, barY + 1.0F, content * this.health, 3.0F, r, this.health, a);
@@ -194,7 +182,7 @@ public final class TargetHudComp extends Draggable {
         float pct = clamp01(hp / maxHp);
         this.health = this.health + (pct - this.health) * (1.0F - (float)Math.exp(-dt * 12.0F));
         float slotsW = SLOTS.length * 8.0F + (SLOTS.length - 1) * 3.0F;
-        float nameW = coloredWidth(name, 8.0F);
+        float nameW = coloredWidth(name);
         float barY0 = this.y() + h - 5.0F - 8.0F;
         float headSize = barY0 - 3.0F - (this.y() + 3.0F);
         float armorReveal = easeOutCubic(clamp01(this.armor / 0.6F));
@@ -219,7 +207,7 @@ public final class TargetHudComp extends Draggable {
         float centeredNameY = hy + headSize / 2.0F - 4.0F;
         float topNameY = (hy + slotY - 8.0F) / 2.0F;
         float nameY = centeredNameY + (topNameY - centeredNameY) * ae - 1.5F * (1.0F - ae);
-        drawName(c, name, textX, nameY, 8.0F, 0.85F * a);
+        drawName(c, name, textX, nameY, 0.85F * a);
         float bx = x + 3.0F;
         float bw = this.width - 6.0F;
         float br = barRadius(8.0F);
@@ -335,7 +323,7 @@ public final class TargetHudComp extends Draggable {
                     break;
                 default:
                     int base = healthColor(health);
-                    int dark = alpha | darken(base, 0.45F);
+                    int dark = alpha | darken(base);
                     int light = alpha | base;
                     R2D.rect(c, x, y, w, h, r, dark, light, light, dark);
             }
@@ -348,7 +336,7 @@ public final class TargetHudComp extends Draggable {
             case 2 -> 0xFF000000 | ClientAccent.gradientColor(t, 255.0F) & 16777215;
             default -> {
                 int base = healthColor(health);
-                yield 0xFF000000 | Colors.mixRgb(darken(base, 0.45F), base, t);
+                yield 0xFF000000 | Colors.mixRgb(darken(base), base, t);
             }
         };
     }
@@ -365,7 +353,7 @@ public final class TargetHudComp extends Draggable {
         }
     }
 
-    private static int darken(int rgb, float amount) {
+    private static int darken(int rgb) {
         float k = 1.0F - 0.45F;
         return Math.round((rgb >> 16 & 0xFF) * k) << 16 | Math.round((rgb >> 8 & 0xFF) * k) << 8 | Math.round((rgb & 0xFF) * k);
     }
@@ -496,7 +484,7 @@ public final class TargetHudComp extends Draggable {
         return Component.literal(e.getName().getString());
     }
 
-    private static void drawName(GuiGraphics c, Component text, float x, float y, float size, float a) {
+    private static void drawName(GuiGraphics c, Component text, float x, float y, float a) {
         float[] cursor = new float[]{x};
         StringBuilder run = new StringBuilder();
         int[] color = new int[]{-1};
@@ -520,7 +508,7 @@ public final class TargetHudComp extends Draggable {
         }
     }
 
-    private static float coloredWidth(Component text, float size) {
+    private static float coloredWidth(Component text) {
         String plain = ChatFormatting.stripFormatting(text.getString());
         return R2D.width(MsdfFont.Font.SEMIBOLD, plain, 8.0F);
     }

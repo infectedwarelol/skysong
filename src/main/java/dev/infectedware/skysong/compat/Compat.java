@@ -151,7 +151,7 @@ public final class Compat {
         return out;
     }
 
-    public static void flush(GuiGraphics g) {
+    public static void flush() {
         Gpu.disableDepthTest();
     }
 
@@ -217,20 +217,12 @@ public final class Compat {
         return p.getInventory().getSelectedSlot();
     }
 
-    public static void selectSlot(Player p, int slot) {
-        p.getInventory().setSelectedSlot(slot);
-    }
-
     public static GuiGraphics gui(net.minecraft.client.gui.GuiGraphics g) {
         return new GuiGraphics(g);
     }
 
     public static net.minecraft.client.gui.GuiGraphics vanilla(GuiGraphics g) {
         return g.vanilla();
-    }
-
-    public static Matrix4f projection() {
-        return handProjection;
     }
 
     public static long window() {
@@ -243,27 +235,6 @@ public final class Compat {
 
     public static boolean controlDown() {
         return Minecraft.getInstance().hasControlDown();
-    }
-
-    public static boolean altDown() {
-        return Minecraft.getInstance().hasAltDown();
-    }
-
-    private static KeyEvent keyEvent(int key) {
-        int mods = (shiftDown() ? 1 : 0) | (controlDown() ? 10 : 0) | (altDown() ? 4 : 0);
-        return new KeyEvent(key, 0, mods);
-    }
-
-    public static boolean isSelectAll(int key) {
-        return keyEvent(key).isSelectAll();
-    }
-
-    public static boolean isCopy(int key) {
-        return keyEvent(key).isCopy();
-    }
-
-    public static boolean isPaste(int key) {
-        return keyEvent(key).isPaste();
     }
 
     public static KeyMapping registerKey(KeyMapping key) {

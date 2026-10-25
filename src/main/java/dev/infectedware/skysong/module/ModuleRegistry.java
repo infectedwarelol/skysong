@@ -29,8 +29,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 
 public final class ModuleRegistry {
-    public static final String CLICK_GUI = "Click GUI";
-    public static final String INTERFACE = "Interface";
     public static final String[] CATEGORY_NAMES = new String[]{"Visuals", "Display", "Utils"};
     public static final List<ClientModule> ALL = List.of(
         new ClientModule(

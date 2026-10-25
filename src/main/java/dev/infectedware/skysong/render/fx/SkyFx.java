@@ -18,11 +18,6 @@ import net.minecraft.world.level.material.FogType;
 import org.joml.Matrix4f;
 
 public final class SkyFx {
-    public static final int AURORA = 0;
-    public static final int BLACK_HOLE = 1;
-    public static final int STARFALL = 2;
-    public static final int STORM = 3;
-    private static final int BLOOM_LEVELS = 6;
     private static final TextureTarget[] sky = new TextureTarget[2];
     private static final TextureTarget[] bloom = new TextureTarget[6];
     private static DynamicTexture noise;
@@ -33,7 +28,6 @@ public final class SkyFx {
     private static int lastType = -1;
     private static float taaSequence;
     private static boolean historyValid;
-    private static long drawnFrame = -1L;
 
     private SkyFx() {
     }
@@ -51,10 +45,6 @@ public final class SkyFx {
     static void forget() {
         historyValid = false;
         lastType = -1;
-    }
-
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
     }
 
     public static boolean render(Matrix4f view, Matrix4f projection, Camera camera, boolean thickFog) {
@@ -125,7 +115,6 @@ public final class SkyFx {
                     historyValid = true;
                     frame = frame + 1 & 1073741823;
                     taaSequence = (taaSequence + 0.618034F) % 1.0F;
-                    drawnFrame = System.currentTimeMillis();
                     return true;
                 } else {
                     return false;

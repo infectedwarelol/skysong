@@ -12,10 +12,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class ThemesGrid {
-    private static final float CARD_H = 35.0F;
-    private static final float GAP = 3.0F;
-    private static final float INSET = 4.0F;
-    private static final float RADIUS = 4.0F;
     private final Map<ClientTheme, Anim> selected = new EnumMap<>(ClientTheme.class);
     private final Map<ClientTheme, Float> hover = new EnumMap<>(ClientTheme.class);
     private final Map<Integer, Anim> rowAppear = new HashMap<>();
@@ -36,10 +32,6 @@ public final class ThemesGrid {
 
     private float cardW(float areaW) {
         return (areaW - 3.0F - 8.0F - 6.0F) * 0.5F;
-    }
-
-    public float scrollTargetForTest() {
-        return this.scrollTarget;
     }
 
     public boolean scrollbarGrab(float mx, float my) {
@@ -189,7 +181,7 @@ public final class ThemesGrid {
         float max = Math.max(0.0F, this.contentH - areaH + 8.0F);
         this.scrollTarget = Mth.clamp(this.scrollTarget, 0.0F, max);
         this.scroll = Mth.clamp(this.scroll, 0.0F, max);
-        float edgeInset = Math.max(0.0F, ModuleCards.cornerEdgeInset(panelRadius, 1.0F) + 1.5F - 3.0F);
+        float edgeInset = Math.max(0.0F, ModuleCards.cornerEdgeInset(panelRadius) + 1.5F - 3.0F);
         float s = this.scrollBar.render(c, panelRight - 7.5F, areaY + 3.0F, areaH - 6.0F - edgeInset, areaH, this.contentH + 8.0F, this.scroll, alpha, mx, my);
         if (this.scrollBar.isDragging()) {
             this.scroll = this.scrollTarget = s;

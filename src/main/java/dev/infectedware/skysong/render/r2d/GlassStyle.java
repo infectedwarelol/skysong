@@ -5,10 +5,6 @@ import dev.infectedware.skysong.theme.ClientAccent;
 import dev.infectedware.skysong.theme.Colors;
 
 final class GlassStyle {
-    private static final int STOPS = 6;
-    private static final long PHASE_PERIOD_MS = 24000L;
-    private static final long OFFSET_PERIOD_MS = 2400L;
-    private static final long SWEEP_MS = 900L;
     private static final int[] palette = new int[6];
     private static long lastUpdateNanos = -1L;
     private static long lastMs;

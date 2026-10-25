@@ -16,7 +16,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.joml.Matrix4f;
 
 public final class StormFx {
-    private static final int BLOOM_LEVELS = 6;
     private static TextureTarget graded;
     private static TextureTarget mirror;
     private static boolean mirrorReady;
@@ -25,8 +24,6 @@ public final class StormFx {
     private static final TextureTarget[] bloom = new TextureTarget[6];
     private static final Matrix4f invProj = new Matrix4f();
     private static boolean rainForced;
-    private static long drawnFrame = -1L;
-    private static float rainBefore;
 
     private StormFx() {
     }
@@ -35,14 +32,7 @@ public final class StormFx {
         return Fx.allowed()
             && ModSettings.worldShader
             && ModSettings.worldShaderType == 0
-            && Fx.storm != null
-            && Fx.bloomDown != null
-            && Fx.skyComposite != null
             && Minecraft.getInstance().level != null;
-    }
-
-    public static boolean drewThisFrame() {
-        return Fx.recent(drawnFrame);
     }
 
     public static void beforeLyrics() {
@@ -138,7 +128,6 @@ public final class StormFx {
 
                 Fx.set(Fx.skyComposite, "SkyCol2", 0.0F, 0.0F, 0.0F, 0.0F);
                 Fx.draw(Fx.skyComposite);
-                drawnFrame = System.currentTimeMillis();
             } catch (Throwable t) {
                 Fx.fail("world shader", t);
             } finally {
@@ -153,10 +142,6 @@ public final class StormFx {
         } else {
             boolean want = active() && ModSettings.stormRain;
             if (want) {
-                if (!rainForced) {
-                    rainBefore = mc.level.getRainLevel(1.0F);
-                }
-
                 mc.level.setRainLevel(1.0F);
                 rainForced = true;
             } else if (rainForced) {

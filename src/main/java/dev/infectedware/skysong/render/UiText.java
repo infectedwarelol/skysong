@@ -16,8 +16,6 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public final class UiText {
-    private static final float BASELINE = 7.0F;
-    private static final float CAP_HEIGHT = 0.7F;
 
     private UiText() {
     }
@@ -40,29 +38,8 @@ public final class UiText {
         draw(ctx, s, x, topFor(cy, size), color, size, bold);
     }
 
-    public static void draw(GuiGraphics ctx, FormattedCharSequence t, float x, float y, int color) {
-        drawSnapped(ctx, t, x, y, color);
-    }
-
     public static float width(String s, int size, boolean bold) {
         return renderer().width(styled(s, size, bold));
-    }
-
-    public static String trim(String s, float maxWidth, int size, boolean bold) {
-        if (width(s, size, bold) <= maxWidth) {
-            return s;
-        }
-
-        while (!s.isEmpty() && width(s + "…", size, bold) > maxWidth) {
-            s = s.substring(0, s.length() - 1);
-        }
-
-        return s.stripTrailing() + "…";
-    }
-
-    public static List<FormattedCharSequence> wrap(String s, float maxWidth, int size, boolean bold) {
-        FormattedText text = styled(s, size, bold);
-        return renderer().split(text, (int)maxWidth);
     }
 
     public static float topFor(float cy, int size) {

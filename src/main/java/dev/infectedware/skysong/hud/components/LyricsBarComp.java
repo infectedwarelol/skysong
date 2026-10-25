@@ -21,19 +21,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 
 public final class LyricsBarComp extends Draggable {
-    static final int BG = -351597809;
-    static final int BORDER = 486539263;
-    static final int WHITE = -1;
-    static final int DIM = -8553080;
-    private static final float H = 22.0F;
-    private static final float ICON = 22.0F;
-    private static final float GAP = 4.0F;
-    private static final float ART = 16.0F;
-    private static final float TEXT = 8.2F;
-    private static final float WAVE_W = 9.0F;
-    private static final float MAX_TEXT_W = 250.0F;
-    private static final float COORD_H = 14.0F;
-    private static final float LINE_ANIM_MS = 280.0F;
     private final Smooth visibility = new Smooth(0.0F);
     private boolean lastVisible;
     private float pillW = 150.0F;

@@ -27,10 +27,6 @@ public final class GuiGraphics {
         return this.pose;
     }
 
-    public void flush() {
-        Compat.drawCollectedGui();
-    }
-
     public int guiWidth() {
         return this.g.guiWidth();
     }

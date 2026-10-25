@@ -18,7 +18,7 @@ public class CinematicTextRenderer implements HudLayer {
     }
 
     @Override
-    public void render(GuiGraphics ctx, float tickCounter) {
+    public void render(GuiGraphics ctx) {
         if (ModSettings.enableHudLyrics && ModSettings.hudLyricsStyle == 1 && this.currentLyric != null && !this.currentLyric.isEmpty()) {
             float t = ModSettings.cinematicFades ? (float)(System.currentTimeMillis() - this.lyricStartTime) / 400.0F : 1.0F;
             float alpha = Theme.easeOutCubic(t);

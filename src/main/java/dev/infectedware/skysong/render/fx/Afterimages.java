@@ -16,16 +16,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public final class Afterimages {
-    public static final int TARGET_SELF = 0;
-    public static final int TARGET_EVERYONE = 1;
-    private static final int MAX_GHOSTS = 48;
-    private static final double MAX_DISTANCE_SQ = 4096.0;
     private static final List<Afterimages.Ghost> ghosts = new ArrayList<>();
     private static final Map<UUID, Long> lastSpawn = new HashMap<>();
     private static final ModelSnapshot.Composite composite = new ModelSnapshot.Composite();
     private static TextureTarget capture;
-    private static long drawnFrame = -1L;
-    private static int drawnCount;
 
     private Afterimages() {
     }
@@ -36,10 +30,6 @@ public final class Afterimages {
 
     public static boolean recording() {
         return ModelSnapshot.recording();
-    }
-
-    public static int lastCount() {
-        return Fx.recent(drawnFrame) ? drawnCount : 0;
     }
 
     public static void render(WorldCtx ctx) {
@@ -60,12 +50,10 @@ public final class Afterimages {
                     ghosts.removeIf(g -> now - g.born() > life);
                     if (!ghosts.isEmpty()) {
                         draw(mc, main, Compat.camPos(ctx.camera()), now, life, tickDelta);
-                        return;
                     }
                 } catch (Throwable t) {
                     Fx.fail("afterimages", t);
                     ghosts.clear();
-                    return;
                 } finally {
                     Fx.restore(main);
                 }
@@ -86,7 +74,7 @@ public final class Afterimages {
                 Long last = lastSpawn.get(p.getUUID());
                 if (last == null || now - last >= every) {
                     lastSpawn.put(p.getUUID(), now);
-                    List<ModelSnapshot.Part> parts = ModelSnapshot.record(mc, p, tickDelta);
+                    List<ModelSnapshot.Part> parts = ModelSnapshot.record(p, tickDelta);
                     if (!parts.isEmpty()) {
                         Vec3 at = p.getPosition(tickDelta);
                         if (ghosts.size() >= 48) {
@@ -145,7 +133,6 @@ public final class Afterimages {
             }
         }
 
-        drawnCount = drawn;
         if (drawn != 0) {
             boolean glow = ModSettings.afterimagesGlow && ModSettings.afterimagesGlowStrength > 0.0F;
             composite.apply(
@@ -156,13 +143,7 @@ public final class Afterimages {
                 glow ? ModSettings.afterimagesGlowStrength : 0.0F,
                 Fx.echoTints(ModSettings.afterimagesColor, ModSettings.afterimagesCustomColor, ModSettings.afterimagesCustomColor2)
             );
-            drawnFrame = System.currentTimeMillis();
         }
-    }
-
-    public static void clearForTest() {
-        ghosts.clear();
-        lastSpawn.clear();
     }
 
     private record Ghost(UUID owner, double x, double y, double z, long born, List<ModelSnapshot.Part> parts) {

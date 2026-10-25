@@ -22,10 +22,6 @@ public final class DockedSettings {
     private float scrollTarget;
     private long lastNs = System.nanoTime();
 
-    public ClientModule module() {
-        return this.module;
-    }
-
     public void show(ClientModule m) {
         if (m == this.module) {
             return;
@@ -271,9 +267,9 @@ public final class DockedSettings {
         }
     }
 
-    public boolean keyPressed(int key, int mods) {
+    public boolean keyPressed(int key) {
         for (Widget w : this.widgets) {
-            if (w.focused() && w.keyPressed(key, mods)) {
+            if (w.focused() && w.keyPressed(key)) {
                 return true;
             }
         }

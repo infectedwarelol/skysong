@@ -15,13 +15,6 @@ import java.util.Locale;
 import net.minecraft.resources.Identifier;
 
 public final class NowPlayingComp extends Draggable {
-    private static final float H = 36.0F;
-    private static final float PAD = 7.0F;
-    private static final float ART = 22.0F;
-    private static final float CONTROLS_W = 30.0F;
-    private static final float ISLAND_W = 172.0F;
-    private static final float ISLAND_H = 54.0F;
-    private static final float ISLAND_ART = 42.0F;
     private float barPct;
     private final Smooth visibility = new Smooth(0.0F);
     private boolean lastVisible;

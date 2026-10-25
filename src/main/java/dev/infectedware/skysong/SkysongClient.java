@@ -46,7 +46,6 @@ import org.slf4j.LoggerFactory;
 
 @Environment(EnvType.CLIENT)
 public class SkysongClient implements ClientModInitializer {
-    public static final String MOD_ID = "skysong";
     public static final Logger LOGGER = LoggerFactory.getLogger("skysong");
     private static final int UNBOUND = -1;
     private static SpotifyManager spotifyManager;
@@ -85,15 +84,9 @@ public class SkysongClient implements ClientModInitializer {
                         this.tickCounter = 0;
                         spotifyManager.updatePlaybackState();
                         if (spotifyManager.isPlaying() && !spotifyManager.getCurrentTrackName().isEmpty()) {
-                            discordManager.updatePresence(
-                                spotifyManager.getCurrentTrackName(),
-                                spotifyManager.getCurrentArtist(),
-                                spotifyManager.getDurationMs(),
-                                spotifyManager.getProgressMs(),
-                                true
-                            );
+                            discordManager.updatePresence(spotifyManager.getCurrentTrackName(), spotifyManager.getCurrentArtist(), true);
                         } else {
-                            discordManager.updatePresence("", "", 0L, 0L, false);
+                            discordManager.updatePresence("", "", false);
                         }
                     }
 
@@ -112,7 +105,6 @@ public class SkysongClient implements ClientModInitializer {
                     }
                 }
             );
-        R2D.registerShaders();
         Hooks.hud(NameTags.get());
         DragSystem.get().init();
         Hooks.hud(textRenderer);
@@ -128,7 +120,6 @@ public class SkysongClient implements ClientModInitializer {
         SongTags.init();
         Hooks.afterEntities(SongTags::render);
         Hooks.last(ctx -> NameTags.get().afterWorld(ctx));
-        Fx.registerShaders();
         ClientTickEvents.START_CLIENT_TICK.register(client -> {
             if (client.level != lastWorld) {
                 lastWorld = client.level;
@@ -143,7 +134,6 @@ public class SkysongClient implements ClientModInitializer {
         KillFx.init();
         DeathFx.init();
         ClientTickEvents.END_CLIENT_TICK.register(StormFx::tick);
-        Hooks.trackWorldCamera();
         Hooks.afterEntities(EntityFx::capture);
         Hooks.last(ctx -> {
             Afterimages.render(ctx);

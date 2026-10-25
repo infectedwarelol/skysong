@@ -13,10 +13,8 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
 
 public final class Mesh {
-    private static final int FLOATS = 12;
     private static int vao = -1;
     private static int vbo;
-    private static int ibo;
     private static int indexedQuads;
     private static FloatBuffer data = MemoryUtil.memAllocFloat(49152);
     private final Mode mode;
@@ -33,7 +31,7 @@ public final class Mesh {
         data.clear();
     }
 
-    public static Mesh begin(Mode mode, VertexFormat format) {
+    public static Mesh begin(Mode mode) {
         return new Mesh(mode);
     }
 
@@ -95,14 +93,6 @@ public final class Mesh {
     public Mesh setUv(float u, float t) {
         this.v[7] = u;
         this.v[8] = t;
-        return this;
-    }
-
-    public Mesh setOverlay(int overlay) {
-        return this;
-    }
-
-    public Mesh setLight(int light) {
         return this;
     }
 

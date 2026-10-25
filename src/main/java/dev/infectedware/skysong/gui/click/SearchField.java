@@ -13,8 +13,6 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 
 public final class SearchField {
-    private static final float SIZE = 7.0F;
-    private static final float PAD_X = 5.0F;
     private String text = "";
     private boolean typing;
     private boolean dragging;

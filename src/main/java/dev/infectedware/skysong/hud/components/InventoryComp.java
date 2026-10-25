@@ -17,15 +17,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.world.item.ItemStack;
 
 public final class InventoryComp extends Draggable {
-    private static final String TITLE = "Inventory";
-    private static final float TITLE_SIZE = 8.2F;
-    private static final float PAD_X = 9.0F;
-    private static final float HEADER_H = 22.0F;
-    private static final float CELL = 11.0F;
-    private static final float ITEM = 8.0F;
-    private static final float ORIGIN_X = 4.0F;
-    private static final float ORIGIN_Y = 28.0F;
-    private static final float PANEL_W = 107.0F;
     private final Smooth visibility = new Smooth(0.0F);
     private final Smooth widthAnim = new Smooth(107.0F);
     private final Smooth divider = new Smooth(0.0F);

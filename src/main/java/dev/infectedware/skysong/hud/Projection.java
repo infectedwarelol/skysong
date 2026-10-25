@@ -29,10 +29,6 @@ public final class Projection {
         return tickDelta;
     }
 
-    public static Vec3 camera() {
-        return camera;
-    }
-
     public static float[] project(double x, double y, double z) {
         if (!valid) {
             return null;

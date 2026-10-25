@@ -4,8 +4,6 @@ import dev.infectedware.skysong.ModSettings;
 import java.awt.Color;
 
 public final class ClientAccent {
-    private static final long SWITCH_MS = 500L;
-    private static final long RAINBOW_CYCLE_MS = 6000L;
     private static ClientAccent.Mode mode = ClientAccent.Mode.THEMES;
     private static float[] fromShades = ThemeManager.unpack(ClientTheme.SKYSONG.shades());
     private static int[] fromPalette = ClientTheme.SKYSONG.palette();
@@ -37,10 +35,6 @@ public final class ClientAccent {
         }
     }
 
-    public static float rainbowBaseHue() {
-        return (float)huePhase;
-    }
-
     public static int accent(float alpha) {
         return shade(0, alpha);
     }
@@ -51,14 +45,6 @@ public final class ClientAccent {
 
     public static int accentSoft(float alpha) {
         return shade(2, alpha);
-    }
-
-    public static int accentFill(float alpha) {
-        return shade(3, alpha);
-    }
-
-    public static int toggleOn(float alpha) {
-        return shade(4, alpha);
     }
 
     public static int gradientA(float alpha) {

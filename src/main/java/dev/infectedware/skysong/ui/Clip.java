@@ -10,7 +10,7 @@ public final class Clip {
     }
 
     public static void push(GuiGraphics ctx, float x1, float y1, float x2, float y2) {
-        Compat.flush(ctx);
+        Compat.flush();
         Matrix4f m = ctx.pose().last().pose();
         Vector3f a = m.transformPosition(x1, y1, 0.0F, new Vector3f());
         Vector3f b = m.transformPosition(x2, y2, 0.0F, new Vector3f());
@@ -21,7 +21,7 @@ public final class Clip {
     }
 
     public static void pop(GuiGraphics ctx) {
-        Compat.flush(ctx);
+        Compat.flush();
         ctx.disableScissor();
     }
 }

@@ -12,7 +12,6 @@ import org.joml.Matrix4f;
 public final class Hooks {
     private static final List<Consumer<WorldCtx>> AFTER_ENTITIES = new ArrayList<>();
     private static final List<Consumer<WorldCtx>> LAST = new ArrayList<>();
-    private static final List<Runnable> START = new ArrayList<>();
     private static Camera camera;
     private static Frustum frustum;
     private static final Matrix4f view = new Matrix4f();
@@ -32,13 +31,6 @@ public final class Hooks {
         LAST.add(withMatrices(pass));
     }
 
-    public static void start(Runnable r) {
-        START.add(r);
-    }
-
-    public static void trackWorldCamera() {
-    }
-
     public static void beginWorld(Camera cam, Matrix4f viewMatrix, Matrix4f projectionMatrix, Matrix4f cullProjection, float tick) {
         camera = cam;
         view.set(viewMatrix);
@@ -48,10 +40,6 @@ public final class Hooks {
         frustum = new Frustum(view, cullProjection);
         frustum.prepare(pos.x, pos.y, pos.z);
         Gpu.setWorldCamera(projection, view);
-
-        for (Runnable r : START) {
-            r.run();
-        }
     }
 
     public static void entitiesQueued(PoseStack pose) {
@@ -83,11 +71,11 @@ public final class Hooks {
         HUD.add(layer);
     }
 
-    public static void drawHud(net.minecraft.client.gui.GuiGraphics g, float partialTick) {
+    public static void drawHud(net.minecraft.client.gui.GuiGraphics g) {
         GuiGraphics ours = Compat.gui(g);
 
         for (HudLayer layer : HUD) {
-            layer.render(ours, partialTick);
+            layer.render(ours);
         }
     }
 

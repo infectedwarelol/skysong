@@ -18,10 +18,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 
 public final class ViewModelEditScreen extends VScreen {
-    private static final float RING = 30.0F;
-    private static final float SQUASH = 0.34F;
-    private static final float HIT = 5.0F;
-    private static final float HANDLE = 8.0F;
     private InteractionHand selected = InteractionHand.MAIN_HAND;
     private InteractionHand hoverHand;
     private ViewModelEditScreen.Mode mode = ViewModelEditScreen.Mode.NONE;
@@ -140,7 +136,6 @@ public final class ViewModelEditScreen extends VScreen {
 
     private static void arrow(GuiGraphics c, float x, float y, float dx, float dy, int col) {
         float px = -dy;
-        float py = dx;
         GlassRenderer.fillPolygon(
             c,
             new float[][]{
@@ -312,7 +307,7 @@ public final class ViewModelEditScreen extends VScreen {
 
         float mx = (float)mouseX;
         float my = (float)mouseY;
-        InteractionHand hand = nearestHandWithin(mx, my, 90.0F);
+        InteractionHand hand = nearestHandWithin(mx, my);
         if (hand == null) {
             hand = this.selected;
         }
@@ -370,7 +365,7 @@ public final class ViewModelEditScreen extends VScreen {
         return best;
     }
 
-    private static InteractionHand nearestHandWithin(float mx, float my, float max) {
+    private static InteractionHand nearestHandWithin(float mx, float my) {
         InteractionHand h = nearestHand(mx, my);
         if (h == null) {
             return null;

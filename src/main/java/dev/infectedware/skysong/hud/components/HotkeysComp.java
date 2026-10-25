@@ -14,7 +14,7 @@ import java.util.List;
 
 public final class HotkeysComp extends ListHudComp {
     public HotkeysComp() {
-        super("hotkeys", "Hotkeys", () -> ModSettings.hotkeysEnabled, 615.0F, 29.0F);
+        super("hotkeys", "Hotkeys", () -> ModSettings.hotkeysEnabled, 615.0F);
     }
 
     @Override

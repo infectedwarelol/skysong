@@ -15,17 +15,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.ChatScreen;
 
 public final class Notifications implements HudLayer {
-    private static final float SIZE = 7.0F;
-    private static final float PAD_X = 7.0F;
-    private static final float EDGE = 6.0F;
-    private static final float GAP = 4.0F;
-    private static final float H = 15.0F;
-    private static final int MAX = 6;
-    private static final int GREEN = -11141291;
-    private static final int RED = -43691;
-    private static final long IN_MS = 250L;
-    private static final long OUT_MS = 250L;
-    private static final long TOGGLE_HOLD = 1500L;
     private static final ConcurrentLinkedQueue<Notifications.Toast> PENDING = new ConcurrentLinkedQueue<>();
     private final List<Notifications.Toast> toasts = new ArrayList<>();
     private Notifications.Toast example;
@@ -51,7 +40,7 @@ public final class Notifications implements HudLayer {
     }
 
     @Override
-    public void render(GuiGraphics c, float tick) {
+    public void render(GuiGraphics c) {
         Minecraft mc = Minecraft.getInstance();
         long now = System.currentTimeMillis();
 

@@ -48,8 +48,6 @@ public final class DragSystem implements HudLayer {
     private boolean wasDragMode;
     private String lastClickId;
     private long lastClickMs;
-    private static final long DOUBLE_CLICK_MS = 350L;
-    private static final float OUTLINE_PAD = 3.0F;
 
     private DragSystem() {
     }
@@ -80,10 +78,6 @@ public final class DragSystem implements HudLayer {
         });
     }
 
-    public List<Draggable> all() {
-        return this.elements;
-    }
-
     public Draggable byId(String id) {
         for (Draggable d : this.elements) {
             if (d.id().equals(id)) {
@@ -103,7 +97,7 @@ public final class DragSystem implements HudLayer {
     }
 
     @Override
-    public void render(GuiGraphics c, float tick) {
+    public void render(GuiGraphics c) {
         Minecraft mc = Minecraft.getInstance();
         if (!mc.options.hideGui && mc.player != null && R2D.available()) {
             this.loadPositions();
@@ -132,7 +126,7 @@ public final class DragSystem implements HudLayer {
             }
 
             if (anyVisible) {
-                Backdrop.captureForHud(c, tick);
+                Backdrop.captureForHud();
             }
 
             float s = HudSpace.scale();
@@ -301,28 +295,6 @@ public final class DragSystem implements HudLayer {
 
             m.popPose();
         }
-    }
-
-    public Draggable outlineDragged() {
-        for (Draggable d : this.elements) {
-            if (d.drag().outlineDragging()) {
-                return d;
-            }
-        }
-
-        return null;
-    }
-
-    public void doubleClickForTest(String id) {
-        Draggable d = this.byId(id);
-        if (d != null) {
-            d.slideHome();
-            this.savePositions();
-        }
-    }
-
-    public float[] originOf(String id) {
-        return this.origins.get(id);
     }
 
     private static void drawWaves(GuiGraphics c, Draggable d) {

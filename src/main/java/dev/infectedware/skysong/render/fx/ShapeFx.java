@@ -6,11 +6,6 @@ import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Gpu;
 
 final class ShapeFx {
-    public static final int FILL_NORMAL = 0;
-    public static final int FILL_GRADIENT = 1;
-    public static final int FILL_GLASS = 2;
-    public static final int FILL_DARK = 3;
-    public static final int FILL_AURA = 4;
     private static TextureTarget maskFb;
     private static TextureTarget blurA;
     private static TextureTarget blurB;
@@ -77,16 +72,6 @@ final class ShapeFx {
         Fx.draw(Fx.shape);
     }
 
-    static RenderTarget copyScene(RenderTarget main) {
-        scene = Fx.ensure(scene, main.width, main.height, false, true);
-        Fx.blitColor(main, scene);
-        return scene;
-    }
-
-    static boolean ready() {
-        return Fx.mask != null && Fx.blur != null && Fx.shape != null;
-    }
-
-    record Look(int fill, float opacity, boolean drawCaptured, float outlineWidth, float glowRadius, float glowStrength, float hiddenFill, float outlineWhiten) {
+    record Look(int fill, float opacity, boolean drawCaptured, float outlineWidth, float glowRadius, float glowStrength, float outlineWhiten) {
     }
 }

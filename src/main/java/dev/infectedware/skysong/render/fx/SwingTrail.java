@@ -13,8 +13,6 @@ public final class SwingTrail {
     private static TextureTarget blurB;
     private static long lastFrame = -1L;
     private static float swing;
-    private static long drawnFrame = -1L;
-    private static float lastSwing;
 
     private SwingTrail() {
     }
@@ -40,7 +38,6 @@ public final class SwingTrail {
         lastFrame = now;
         boolean swinging = !ModSettings.swingTrailOnHit || mc.player != null && (mc.player.swinging || mc.player.getAttackAnim(1.0F) > 0.0F);
         swing = swinging ? 1.0F : Math.max(0.0F, swing - dt / 0.12F);
-        lastSwing = swing;
         float tau = 0.02F + (Math.max(0.03F, ModSettings.swingTrailLength) - 0.02F) * swing;
         float keep = dt <= 0.0F ? 0.0F : (float)Math.exp(-dt / tau);
         float[] tint = Fx.echoTints(ModSettings.swingTrailColor, ModSettings.swingTrailCustomColor, ModSettings.swingTrailCustomColor2);
@@ -79,6 +76,5 @@ public final class SwingTrail {
         Fx.set(Fx.echo, "Look", ModSettings.swingTrailStrength, glow ? ModSettings.swingTrailGlowStrength : 0.0F, 1.0F, 0.2F);
         Fx.setTints(Fx.echo, tint);
         Fx.draw(Fx.echo);
-        drawnFrame = now;
     }
 }

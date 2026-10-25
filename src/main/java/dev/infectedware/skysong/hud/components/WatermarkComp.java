@@ -14,12 +14,6 @@ import java.util.Locale;
 import net.minecraft.client.Minecraft;
 
 public final class WatermarkComp extends Draggable {
-    private static final float PAD_X = 9.0F;
-    private static final float PAD_Y = 6.0F;
-    private static final float INFO_SIZE = 8.0F;
-    private static final float BRAND_SIZE = 11.0F;
-    private static final float H = 20.0F;
-    private static final String BRAND = "Skysong";
     private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("h:mm a", Locale.ENGLISH);
     private final Smooth visibility = new Smooth(0.0F);
     private boolean lastVisible;
@@ -72,7 +66,6 @@ public final class WatermarkComp extends Draggable {
             int[] palette = palette();
             float phase = (float)(System.currentTimeMillis() % 1200L) / 1200.0F * 360.0F;
             float tx = x + 9.0F;
-            float ty = y + 6.0F - 1.0F;
             float[] bb = R2D.bounds(MsdfFont.Font.PIXEL, "Skysong", 11.0F);
             float brandY = y + 10.0F - (bb[1] + bb[3]) / 2.0F;
             int index = 1;

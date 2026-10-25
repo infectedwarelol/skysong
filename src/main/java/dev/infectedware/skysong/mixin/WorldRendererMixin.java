@@ -21,38 +21,38 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 abstract class WorldRendererMixin {
     @Inject(method = "renderLevel", at = @At("HEAD"))
     private void skysong$frame(
-        GraphicsResourceAllocator allocator,
-        DeltaTracker delta,
-        boolean outline,
+        GraphicsResourceAllocator graphicsResourceAllocator,
+        DeltaTracker deltaTracker,
+        boolean bl,
         Camera camera,
-        Matrix4f view,
-        Matrix4f projection,
-        Matrix4f cullProjection,
-        GpuBufferSlice fog,
-        Vector4f fogColor,
-        boolean sky,
+        Matrix4f matrix4f,
+        Matrix4f matrix4f2,
+        Matrix4f matrix4f3,
+        GpuBufferSlice gpuBufferSlice,
+        Vector4f vector4f,
+        boolean bl2,
         CallbackInfo ci
     ) {
-        Hooks.beginWorld(camera, view, projection, cullProjection, delta.getGameTimeDeltaPartialTick(false));
+        Hooks.beginWorld(camera, matrix4f, matrix4f2, matrix4f3, deltaTracker.getGameTimeDeltaPartialTick(false));
     }
 
     @Inject(method = "submitEntities", at = @At("HEAD"))
-    private void skysong$entities(PoseStack pose, LevelRenderState state, SubmitNodeCollector collector, CallbackInfo ci) {
-        Hooks.entitiesQueued(pose);
+    private void skysong$entities(PoseStack poseStack, LevelRenderState levelRenderState, SubmitNodeCollector submitNodeCollector, CallbackInfo ci) {
+        Hooks.entitiesQueued(poseStack);
     }
 
     @Inject(method = "renderLevel", at = @At("TAIL"))
     private void skysong$last(
-        GraphicsResourceAllocator allocator,
-        DeltaTracker delta,
-        boolean outline,
+        GraphicsResourceAllocator graphicsResourceAllocator,
+        DeltaTracker deltaTracker,
+        boolean bl,
         Camera camera,
-        Matrix4f view,
-        Matrix4f projection,
-        Matrix4f cullProjection,
-        GpuBufferSlice fog,
-        Vector4f fogColor,
-        boolean sky,
+        Matrix4f matrix4f,
+        Matrix4f matrix4f2,
+        Matrix4f matrix4f3,
+        GpuBufferSlice gpuBufferSlice,
+        Vector4f vector4f,
+        boolean bl2,
         CallbackInfo ci
     ) {
         Hooks.lastNow();

@@ -15,9 +15,6 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 final class SpotifyAuthServer {
-    static final int PORT = 43821;
-    static final String REDIRECT_URI = "http://127.0.0.1:43821/callback";
-    private static final long TIMEOUT_MS = 300000L;
     private final String expectedState;
     private final Consumer<String> onCode;
     private final Consumer<String> onError;

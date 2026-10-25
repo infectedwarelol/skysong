@@ -8,11 +8,6 @@ import dev.infectedware.skysong.theme.ClientAccent;
 import dev.infectedware.skysong.theme.Colors;
 
 public final class BindPopup {
-    private static final float W = 96.0F;
-    private static final float H = 43.0F;
-    private static final float PAD = 6.0F;
-    private static final float ROW = 13.0F;
-    private static final float GAP = 5.0F;
     private final Anim anim = new Anim(220);
     private ClientModule module;
     private boolean open;
@@ -31,10 +26,6 @@ public final class BindPopup {
 
     public boolean isVisible() {
         return this.module != null && this.anim.linear() > 0.01F;
-    }
-
-    public boolean listening() {
-        return this.open && this.listening;
     }
 
     public void open(ClientModule m, float mx, float my) {

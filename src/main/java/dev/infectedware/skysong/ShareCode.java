@@ -23,13 +23,6 @@ import java.util.zip.Deflater;
 import java.util.zip.Inflater;
 
 public final class ShareCode {
-    public static final String PREFIX = "VF2";
-    private static final String B62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    private static final int FALSE = 0;
-    private static final int TRUE = 1;
-    private static final int NUMBER = 2;
-    private static final int TEXT = 3;
-    private static final int MAX_BYTES = 65536;
     private static final byte[] DICT = "SKYSONG BLUE_PINK BLUE_GREEN DARK_BLUE BLACK_WHITE Click GUI=344:0;watermark=5.0,5.0;targethud=arraylist=armor=inventory=hpfocus=keystrokes=lyricsbar=nowplaying=potions=hotkeys=cooldowns=.0,.5,;0000000000000000000000000000000000000000000000000000000000000"
         .getBytes(StandardCharsets.US_ASCII);
     private static List<String> table;

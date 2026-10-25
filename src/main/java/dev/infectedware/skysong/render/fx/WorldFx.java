@@ -8,7 +8,6 @@ import net.minecraft.client.Minecraft;
 
 public final class WorldFx {
     private static TextureTarget graded;
-    private static long drawnFrame = -1L;
 
     private WorldFx() {
     }
@@ -39,7 +38,6 @@ public final class WorldFx {
                 Fx.palette(Fx.grade, SkyFx.active() ? 1.0F : 0.0F);
                 Fx.draw(Fx.grade);
                 Fx.blitColor(graded, main);
-                drawnFrame = System.currentTimeMillis();
             } catch (Throwable t) {
                 Fx.fail("blocks", t);
             } finally {

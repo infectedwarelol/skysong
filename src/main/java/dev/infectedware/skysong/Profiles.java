@@ -26,10 +26,6 @@ public final class Profiles {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("skysong_profiles.json");
     private static final Path LEGACY_FILE = FabricLoader.getInstance().getConfigDir().resolve("spotify_mod_profiles.json");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    public static final String CODE_PREFIX = "VF2";
-    public static final String V1_PREFIX = "VF1-";
-    private static final int MAX_NAME = 24;
-    private static final int MAX_CODE_BYTES = 262144;
     private static List<Profiles.Profile> profiles;
     private static String status = "";
     private static String active;

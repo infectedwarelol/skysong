@@ -11,14 +11,6 @@ import dev.infectedware.skysong.ui.Clip;
 import java.util.List;
 
 public final class SettingsPopup {
-    private static final float MIN_W = 110.0F;
-    private static final float MAX_W = 180.0F;
-    private static final float RADIUS = 8.0F;
-    private static final float SIDE = 5.0F;
-    private static final float TOP = 7.0F;
-    private static final float BOTTOM = 7.0F;
-    private static final float GAP = 4.0F;
-    private static final float EDGE = 4.0F;
     private final Anim anim = new Anim(220);
     private final ScrollBar scrollBar = new ScrollBar();
     private ClientModule module;
@@ -115,14 +107,6 @@ public final class SettingsPopup {
 
             this.renderX = this.x;
             this.renderY = this.y;
-        }
-    }
-
-    public void moveForTest(float nx, float ny) {
-        this.x = nx;
-        this.y = ny;
-        if (this.module != null) {
-            savePosition(this.module.name(), this.x, this.y);
         }
     }
 
@@ -404,9 +388,9 @@ public final class SettingsPopup {
         }
     }
 
-    public boolean keyPressed(int key, int mods) {
+    public boolean keyPressed(int key) {
         for (Widget w : this.widgets()) {
-            if (w.focused() && w.keyPressed(key, mods)) {
+            if (w.focused() && w.keyPressed(key)) {
                 return true;
             }
         }
@@ -431,34 +415,6 @@ public final class SettingsPopup {
     public boolean charTyped(char chr) {
         for (Widget w : this.widgets()) {
             if (w.focused() && w.charTyped(chr)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean clickFirst(Class<? extends Widget> kind) {
-        float wy = this.renderY + 7.0F - this.scroll;
-
-        for (Widget w : this.widgets) {
-            if (w.visible()) {
-                if (kind.isInstance(w)) {
-                    float x0 = this.renderX + 5.0F;
-                    float ww = this.width - 10.0F;
-                    return w.click(x0, wy, ww, x0 + ww - 8.0F, wy + 8.0F);
-                }
-
-                wy += w.height() + 4.0F;
-            }
-        }
-
-        return false;
-    }
-
-    public boolean typing() {
-        for (Widget w : this.widgets()) {
-            if (w.focused()) {
                 return true;
             }
         }

@@ -43,10 +43,6 @@ public final class NameTags implements HudLayer {
         return INSTANCE;
     }
 
-    public static boolean anyVisible() {
-        return false;
-    }
-
     private static boolean tagged(Player p) {
         Minecraft mc = Minecraft.getInstance();
         return p == mc.player
@@ -159,7 +155,6 @@ public final class NameTags implements HudLayer {
             float gap = Math.round(2.0F * k);
             float healthGap = Math.round(3.0F * k);
             float radius = Math.round(4.0F * k);
-            float nudge = Math.max(1, Math.round(k));
 
             for (Player p : mc.level.players()) {
                 if (tagged(p) && !(mc.player.distanceToSqr(p) > 4096.0)) {
@@ -279,7 +274,7 @@ public final class NameTags implements HudLayer {
     }
 
     @Override
-    public void render(GuiGraphics c, float tick) {
+    public void render(GuiGraphics c) {
         Minecraft mc = Minecraft.getInstance();
         if (ModSettings.nameTagsEnabled && !this.tags.isEmpty() && !mc.options.hideGui && R2D.available()) {
             float s = HudSpace.scale();
@@ -291,7 +286,6 @@ public final class NameTags implements HudLayer {
                 float midY = t.y() + t.h() / 2.0F;
                 if (scaling) {
                     float cx = t.x() + t.w() / 2.0F;
-                    float cy = t.y() + t.h() / 2.0F;
                     c.pose().pushPose();
                     c.pose().translate(cx, midY, 0.0F);
                     c.pose().scale(t.scale(), t.scale(), 1.0F);
@@ -300,7 +294,6 @@ public final class NameTags implements HudLayer {
 
                 R2D.rect(c, t.x(), t.y(), t.w(), t.h(), t.radius(), Colors.multAlpha(-1778384896, t.alpha()));
                 float tx = t.x() + t.padX();
-                float ty = t.y() + t.padY() - 1.0F;
                 float[] nb = R2D.bounds(MsdfFont.Font.SEMIBOLD, "H", t.nameSize());
                 float nameY = midY - (nb[1] + nb[3]) / 2.0F;
 

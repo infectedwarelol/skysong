@@ -19,43 +19,34 @@ import net.minecraft.client.Minecraft;
 import org.joml.Matrix4f;
 
 public final class Fx {
-    static final Shader skyAurora = Shader.of("fx_sky_aurora", DefaultVertexFormat.POSITION);
-    static final Shader skyStarfall = Shader.of("fx_sky_starfall", DefaultVertexFormat.POSITION);
-    static final Shader skyBlackHole = Shader.of("fx_sky_blackhole", DefaultVertexFormat.POSITION);
-    static final Shader skyStorm = Shader.of("fx_sky_storm", DefaultVertexFormat.POSITION);
-    static final Shader storm = Shader.of("fx_storm", DefaultVertexFormat.POSITION);
-    static final Shader bloomDown = Shader.of("fx_bloom_down", DefaultVertexFormat.POSITION);
-    static final Shader skyComposite = Shader.of("fx_sky_composite", DefaultVertexFormat.POSITION);
-    static final Shader mask = Shader.of("fx_mask", DefaultVertexFormat.POSITION);
-    static final Shader blur = Shader.of("fx_blur", DefaultVertexFormat.POSITION);
-    static final Shader boxBlur = Shader.of("fx_boxblur", DefaultVertexFormat.POSITION);
-    static final Shader shape = Shader.of("fx_shape", DefaultVertexFormat.POSITION);
-    static final Shader grade = Shader.of("fx_grade", DefaultVertexFormat.POSITION);
-    static final Shader echo = Shader.of("fx_echo", DefaultVertexFormat.POSITION);
-    static final Shader trailAcc = Shader.of("fx_trail_acc", DefaultVertexFormat.POSITION);
-    static final Shader motion = Shader.of("fx_motion", DefaultVertexFormat.POSITION);
-    static final Shader death = Shader.of("fx_death", DefaultVertexFormat.POSITION);
-    static final Shader ghostGeo = Shader.of("fx_ghost_geo", DefaultVertexFormat.NEW_ENTITY);
+    static final Shader skyAurora = Shader.of("fx_sky_aurora");
+    static final Shader skyStarfall = Shader.of("fx_sky_starfall");
+    static final Shader skyBlackHole = Shader.of("fx_sky_blackhole");
+    static final Shader skyStorm = Shader.of("fx_sky_storm");
+    static final Shader storm = Shader.of("fx_storm");
+    static final Shader bloomDown = Shader.of("fx_bloom_down");
+    static final Shader skyComposite = Shader.of("fx_sky_composite");
+    static final Shader mask = Shader.of("fx_mask");
+    static final Shader blur = Shader.of("fx_blur");
+    static final Shader boxBlur = Shader.of("fx_boxblur");
+    static final Shader shape = Shader.of("fx_shape");
+    static final Shader grade = Shader.of("fx_grade");
+    static final Shader echo = Shader.of("fx_echo");
+    static final Shader trailAcc = Shader.of("fx_trail_acc");
+    static final Shader motion = Shader.of("fx_motion");
+    static final Shader death = Shader.of("fx_death");
+    static final Shader ghostGeo = Shader.of("fx_ghost_geo");
     private static String failure;
     private static long failedAt;
     private static long loggedFailures;
-    private static final long RETRY_MS = 5000L;
     private static int generation;
     private static final Map<TextureTarget, Integer> builtIn = new WeakHashMap<>();
     private static long irisCheckedAt;
     private static boolean irisShaders;
     private static TextureTarget boxA;
     private static TextureTarget boxB;
-    public static final int TINT_WHITE = 0;
-    public static final int TINT_CLIENT = 1;
-    public static final int TINT_CUSTOM = 2;
-    public static final int TINT_TWO = 3;
 
     private Fx() {
-    }
-
-    public static void registerShaders() {
-        Shader.registerAll();
     }
 
     static boolean allowed() {
@@ -75,10 +66,6 @@ public final class Fx {
         KillFx.forget();
         DeathFx.forget();
         SkysongClient.LOGGER.info("[Skysong] Shaders reset ({})", why);
-    }
-
-    public static int resets() {
-        return generation;
     }
 
     public static String failure() {
@@ -107,8 +94,6 @@ public final class Fx {
             Class<?> api = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
             Object instance = api.getMethod("getInstance").invoke(null);
             irisShaders = (Boolean)api.getMethod("isShaderPackInUse").invoke(instance);
-        } catch (ClassNotFoundException e) {
-            irisShaders = false;
         } catch (Throwable t) {
             irisShaders = false;
         }
@@ -121,7 +106,7 @@ public final class Fx {
         Gpu.disableDepthTest();
         Gpu.depthMask(false);
         Gpu.disableCull();
-        Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION);
+        Mesh b = Mesh.begin(Mode.QUADS);
         b.addVertex(-1.0F, -1.0F, 0.0F);
         b.addVertex(1.0F, -1.0F, 0.0F);
         b.addVertex(1.0F, 1.0F, 0.0F);

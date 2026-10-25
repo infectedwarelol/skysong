@@ -295,10 +295,6 @@ public class LyricsManager {
         return line == null ? "" : line.text;
     }
 
-    public boolean hasLyrics() {
-        return !this.currentLyrics.isEmpty();
-    }
-
     public static class LyricLine {
         public final long timeMs;
         public final long endMs;

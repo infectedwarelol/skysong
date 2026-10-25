@@ -22,7 +22,7 @@ public final class CustomHotbar {
     public static boolean render(GuiGraphics c, float tick) {
         Minecraft mc = Minecraft.getInstance();
         if (ModSettings.customHotbarEnabled && R2D.available() && mc.getCameraEntity() instanceof Player player) {
-            Backdrop.captureForHud(c, tick);
+            Backdrop.captureForHud();
             int var19 = Compat.selectedSlot(player);
             if (lastSlot < 0) {
                 selection.set(var19);
@@ -34,7 +34,6 @@ public final class CustomHotbar {
             float center = c.guiWidth() / 2.0F - 1.0F;
             float y = c.guiHeight() - 22.0F;
             float x = center - 90.0F;
-            float r = Math.min(ModSettings.rectCornerRadius, 11.0F);
             R2D.clientRect(c, x - 1.0F, y, 182.0F, 22.0F, 1.0F);
             float sx = center - 90.0F + selection.get() * 20.0F;
             float sy = y + 1.0F;
@@ -73,7 +72,6 @@ public final class CustomHotbar {
                 );
             }
 
-            float partial = tick;
             int seed = 1;
 
             for (int i = 0; i < 9; i++) {

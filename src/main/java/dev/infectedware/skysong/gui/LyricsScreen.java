@@ -29,7 +29,6 @@ public class LyricsScreen extends VScreen {
     private static final float SCROLL_STEP = 30.0F;
     private float scroll;
     private long lastManualScroll;
-    private float panelX;
     private float listTop;
     private float listBottom;
 

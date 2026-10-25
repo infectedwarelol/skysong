@@ -16,7 +16,6 @@ import dev.infectedware.skysong.render.r2d.R2D;
 import net.minecraft.client.Minecraft;
 
 public final class HpFocusComp extends Draggable {
-    private static final float BASE_H = 46.0F;
     private static TextureTarget capture;
     private static boolean captured;
     private static boolean wanted;

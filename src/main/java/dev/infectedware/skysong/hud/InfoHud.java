@@ -15,36 +15,12 @@ import net.minecraft.world.entity.player.Player;
 
 public final class InfoHud implements HudLayer {
     public static final String[] STYLES = new String[]{"Clean", "Glass", "Classic"};
-    private static final int CLEAN = 0;
-    private static final int GLASS = 1;
-    private static final int CLASSIC = 2;
-    private static final float MARGIN = 5.0F;
-    private static final int WHITE = -1;
-    private static final int DIM = -6644568;
-    private static final int GOOD = -11870592;
-    private static final int OK = -340971;
-    private static final int BAD = -495247;
     private static final String[] FACING = new String[]{"South", "South-West", "West", "North-West", "North", "North-East", "East", "South-East"};
     private static final String[] FACING_AXIS = new String[]{"+Z", "+Z -X", "-X", "-X -Z", "-Z", "-Z +X", "+X", "+X +Z"};
-    private static final float PAD_X = 7.0F;
-    private static final float ROW1 = 8.0F;
-    private static final float ROW2 = 6.0F;
-    private static final float ROW_GAP = 3.5F;
-    private static final float PAD_Y = 5.5F;
-    private static final float PILL_H = 17.0F;
-    private static final float SIZE = 7.0F;
-    private static final float LINE = 10.0F;
-    private static final int LABEL = -3618608;
-    private static final int LEFT_VALUE = -11665561;
-    private static final int RIGHT_VALUE = -45747;
     private static final float[][] OUTLINE = new float[][]{
         {-1.0F, -1.0F}, {0.0F, -1.0F}, {1.0F, -1.0F}, {-1.0F, 0.0F}, {1.0F, 0.0F}, {-1.0F, 1.0F}, {0.0F, 1.0F}, {1.0F, 1.0F}
     };
     private float fpsShown = -1.0F;
-    private static final float CLEAN_ROW = 10.5F;
-    private static final float CLEAN_VALUE = 8.5F;
-    private static final float CLEAN_LABEL = 6.0F;
-    private static final float CLEAN_TINY = 5.2F;
     private static final String[] COMPASS = new String[]{"S", "SW", "W", "NW", "N", "NE", "E", "SE"};
 
     public static float reservedRight() {
@@ -60,7 +36,7 @@ public final class InfoHud implements HudLayer {
     }
 
     @Override
-    public void render(GuiGraphics c, float tick) {
+    public void render(GuiGraphics c) {
         Minecraft mc = Minecraft.getInstance();
         if (ModSettings.infoEnabled && mc.player != null && mc.level != null && !mc.options.hideGui && R2D.available()) {
             float s = HudSpace.scale();

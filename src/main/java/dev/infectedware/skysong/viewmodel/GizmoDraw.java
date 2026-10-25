@@ -9,7 +9,6 @@ import dev.infectedware.skysong.compat.Shader;
 import org.joml.Matrix4f;
 
 final class GizmoDraw {
-    private static final int SEGMENTS = 96;
 
     private GizmoDraw() {
     }
@@ -26,7 +25,7 @@ final class GizmoDraw {
         float[][] bands = new float[][]{{-half - feather, -half}, {-half, half}, {half, half + feather}};
 
         for (float[] band : bands) {
-            Mesh b = Mesh.begin(Mode.TRIANGLE_STRIP, DefaultVertexFormat.POSITION_COLOR);
+            Mesh b = Mesh.begin(Mode.TRIANGLE_STRIP);
             boolean innerFade = band[0] < -half;
             boolean outerFade = band[1] > half;
 

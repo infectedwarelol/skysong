@@ -18,16 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 public final class ArrayListComp extends Draggable {
-    private static final float SIZE = 7.2F;
-    private static final float ROW_H = 8.7F;
-    private static final float PAD_X = 1.5F;
-    private static final float RADIUS = 3.0F;
     private final Map<ClientModule, Smooth> rows = new HashMap<>();
     private final Map<ClientModule, Boolean> targets = new HashMap<>();
     private final Smooth visibility = new Smooth(0.0F);
     private boolean lastVisible;
-    private boolean leftAligned = true;
-    private boolean bottom;
     private float width = 1.0F;
     private float height = 9.7F;
     private float lastPinnedHeight = Float.NaN;

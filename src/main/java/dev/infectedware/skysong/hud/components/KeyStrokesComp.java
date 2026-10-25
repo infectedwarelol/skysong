@@ -13,15 +13,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
 public final class KeyStrokesComp extends Draggable {
-    private static final float KEY = 22.0F;
-    private static final float GAP = 2.5F;
-    private static final float MOUSE_H = 16.0F;
-    private static final float SPACE_H = 14.5F;
-    private static final float WIDTH = 71.0F;
-    private static final float SINK = 1.1F;
-    private static final int LABEL_IDLE = -4604215;
-    private static final int TOP_IDLE = -233038042;
-    private static final int BOTTOM_IDLE = -233498851;
     private final Smooth visibility = new Smooth(0.0F);
     private final Smooth[] press = new Smooth[7];
     private boolean lastVisible;
@@ -151,7 +142,6 @@ public final class KeyStrokesComp extends Draggable {
             }
 
             int edge = Colors.rgba(255, 255, 255, 26.0F * a);
-            float t = (float)(System.currentTimeMillis() % 24000L) / 24000.0F;
             int e0 = Colors.lerp(edge, ClientAccent.gradientColor(0.0F, 150.0F * a), p);
             int e1 = Colors.lerp(edge, ClientAccent.gradientColor(0.33F, 150.0F * a), p);
             int e2 = Colors.lerp(edge, ClientAccent.gradientColor(1.0F, 150.0F * a), p);

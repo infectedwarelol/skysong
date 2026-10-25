@@ -76,9 +76,6 @@ public sealed interface Setting
     }
 
     record Slide(String label, float min, float max, float step, double resetTo, DoubleSupplier get, DoubleConsumer set) implements Setting {
-        public Slide(String label, float min, float max, float step, DoubleSupplier get, DoubleConsumer set) {
-            this(label, min, max, step, get.getAsDouble(), get, set);
-        }
 
         public float fraction() {
             return (float)Math.clamp((this.get.getAsDouble() - this.min) / (this.max - this.min), 0.0, 1.0);

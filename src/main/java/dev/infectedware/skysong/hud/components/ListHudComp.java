@@ -32,7 +32,7 @@ public abstract class ListHudComp extends Draggable {
     private float currentW = 60.0F;
     private float currentH = 22.0F;
 
-    protected ListHudComp(String id, String title, BooleanSupplier enabled, float x, float y) {
+    protected ListHudComp(String id, String title, BooleanSupplier enabled, float x) {
         super(id, x, ROW_TOP);
         this.title = title;
         this.enabled = enabled;
@@ -201,7 +201,7 @@ public abstract class ListHudComp extends Draggable {
                 if (!(p <= 0.001F)) {
                     float pulse = st.pulse != null ? Math.clamp(st.pulse.alpha(), 0.0F, 1.0F) : 1.0F;
                     float ra = a * pulse;
-                    float valueP = delayed(p, 0.12F);
+                    float valueP = delayed(p);
                     float iconW = st.icon != null ? this.iconSlot() + 4.0F : 0.0F;
                     float vw = R2D.width(MsdfFont.Font.MEDIUM, st.value, 6.5F);
                     float nameX = x + 9.0F + iconW - 7.0F * (1.0F - p);
@@ -275,7 +275,7 @@ public abstract class ListHudComp extends Draggable {
         return t * t * (3.0F - 2.0F * t);
     }
 
-    private static float delayed(float p, float delay) {
+    private static float delayed(float p) {
         return p <= 0.12F ? 0.0F : Math.min(1.0F, (p - 0.12F) / (1.0F - 0.12F));
     }
 

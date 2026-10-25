@@ -3,7 +3,6 @@ package dev.infectedware.skysong.hud.components;
 public final class Smooth {
     private float from;
     private float to;
-    private float value;
     private long start;
     private double seconds;
 

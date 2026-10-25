@@ -17,19 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class ModuleCards {
-    static final float PAD = 5.0F;
-    static final float GAP = 5.0F;
-    static final float RADIUS = 6.0F;
-    private static final float NAME_SIZE = 7.5F;
-    private static final float DESC_SIZE = 6.0F;
-    private static final float DESC_LINE = 7.0F;
-    private static final float DESC_TOP = 19.0F;
-    private static final float NO_DESC_H = 22.0F;
-    private static final float CHECK = 8.5F;
-    private static final float GEAR = 7.0F;
-    private static final float GEAR_GAP = 7.0F;
-    private static final float TITLE_CY = 10.75F;
-    private static final String GEAR_GLYPH = "f";
     private final Map<String, Anim> enabled = new HashMap<>();
     private final Map<String, Float> hover = new HashMap<>();
     private final Map<String, Float> gearHover = new HashMap<>();
@@ -210,7 +197,7 @@ public final class ModuleCards {
             this.focusName = null;
         }
 
-        float edgeInset = Math.max(0.0F, cornerEdgeInset(panelRadius, 1.0F) + 1.5F - 3.0F);
+        float edgeInset = Math.max(0.0F, cornerEdgeInset(panelRadius) + 1.5F - 3.0F);
         float s = this.scrollBar.render(c, panelRight - 7.5F, areaY + 3.0F, areaH - 6.0F - edgeInset, areaH, this.contentH, this.scroll, alpha, mx, my);
         if (this.scrollBar.isDragging()) {
             this.scroll = this.scrollTarget = s;
@@ -343,12 +330,6 @@ public final class ModuleCards {
         }
     }
 
-    public boolean hitCheck(float mx, float my, float cardX, float cardY, float cardW) {
-        float checkX = cardX + cardW - 8.5F - 8.0F;
-        float checkY = cardY + 10.75F - 4.25F;
-        return Ui.inside(mx, my, checkX - 2.0F, checkY - 2.0F, 12.5F, 12.5F);
-    }
-
     public boolean scrollbarGrab(float mx, float my) {
         return this.scrollBar.tryGrab(mx, my);
     }
@@ -357,7 +338,7 @@ public final class ModuleCards {
         this.scrollBar.release();
     }
 
-    static float cornerEdgeInset(float r, float t) {
+    static float cornerEdgeInset(float r) {
         if (r <= 1.0F) {
             return 0.0F;
         }
@@ -366,7 +347,4 @@ public final class ModuleCards {
         return r - (float)Math.sqrt(Math.max(0.0F, r * r - d * d));
     }
 
-    public static String categoryIcon(Category c) {
-        return c.icon;
-    }
 }

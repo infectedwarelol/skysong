@@ -10,7 +10,7 @@ public class DiscordManager {
         }
     }
 
-    public void updatePresence(String trackName, String artist, long durationMs, long progressMs, boolean isPlaying) {
+    public void updatePresence(String trackName, String artist, boolean isPlaying) {
         if (this.isInitialized) {
             if (isPlaying && !trackName.isEmpty()) {
                 SkysongClient.LOGGER.info("Discord RPC Update: Listening to {} by {}", trackName, artist);

@@ -17,17 +17,13 @@ import net.minecraft.resources.Identifier;
 import org.joml.Matrix4f;
 
 public final class R2D {
-    private static final Shader shape = Shader.of("r2d_shape", DefaultVertexFormat.POSITION_TEX_COLOR);
-    private static final Shader msdf = Shader.of("r2d_msdf", DefaultVertexFormat.POSITION_TEX_COLOR);
-    private static final Shader glass = Shader.of("r2d_glass", DefaultVertexFormat.POSITION_TEX_COLOR);
+    private static final Shader shape = Shader.of("r2d_shape");
+    private static final Shader msdf = Shader.of("r2d_msdf");
+    private static final Shader glass = Shader.of("r2d_glass");
     private static int[] paletteOverride;
     public static boolean squareCorners;
 
     private R2D() {
-    }
-
-    public static void registerShaders() {
-        Shader.registerAll();
     }
 
     public static boolean available() {
@@ -104,7 +100,7 @@ public final class R2D {
             rTL = rTR = rBR = rBL = 0.0F;
         }
 
-        Compat.flush(c);
+        Compat.flush();
         Matrix4f m = c.pose().last().pose();
         float pad = pixel(m) * 2.0F;
         setShader(shape);
@@ -118,7 +114,7 @@ public final class R2D {
         }
 
         begin();
-        Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Mesh b = Mesh.begin(Mode.QUADS);
         b.addVertex(m, x - pad, y - pad, 0.0F).setUv(-pad, -pad).setColor(tl);
         b.addVertex(m, x - pad, y + h + pad, 0.0F).setUv(-pad, h + pad).setColor(bl);
         b.addVertex(m, x + w + pad, y + h + pad, 0.0F).setUv(w + pad, h + pad).setColor(br);
@@ -150,11 +146,6 @@ public final class R2D {
     public static float[] bounds(MsdfFont.Font font, String s, float size) {
         MsdfFont f = font.get();
         return f == null ? new float[]{0.0F, 0.0F, 0.0F, size} : f.bounds(s, size);
-    }
-
-    public static float ascent(MsdfFont.Font font, float size) {
-        MsdfFont f = font.get();
-        return f == null ? size : f.ascender * size;
     }
 
     public static void text(GuiGraphics c, MsdfFont.Font font, String s, float x, float y, float size, int color) {
@@ -234,17 +225,16 @@ public final class R2D {
     }
 
     private static void drawRun(GuiGraphics c, MsdfFont f, String s, float x, float y, float size, int tl, int tr, int br, int bl) {
-        Compat.flush(c);
+        Compat.flush();
         Matrix4f m = c.pose().last().pose();
         setShader(msdf);
         msdf.set("DistanceRange", f.distanceRange);
         Gpu.texture(0, Gpu.textureId(f.atlas, true));
         begin();
-        Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Mesh b = Mesh.begin(Mode.QUADS);
         float cursor = x;
         float baseline = y + f.ascender * size;
         int prev = -1;
-        boolean any = false;
         int i = 0;
 
         while (i < s.length()) {
@@ -269,7 +259,6 @@ public final class R2D {
                     b.addVertex(m, x0, y1, 0.0F).setUv(g.u0(), g.v1()).setColor(bl);
                     b.addVertex(m, x1, y1, 0.0F).setUv(g.u1(), g.v1()).setColor(br);
                     b.addVertex(m, x1, y0, 0.0F).setUv(g.u1(), g.v0()).setColor(tr);
-                    any = true;
                 }
 
                 cursor += g.advance() * size;
@@ -344,7 +333,7 @@ public final class R2D {
             rTL = rTR = rBR = rBL = 0.0F;
         }
 
-        Compat.flush(c);
+        Compat.flush();
         Matrix4f m = c.pose().last().pose();
         float pad = pixel(m) * 2.0F + expand;
         setShader(glass);
@@ -363,7 +352,7 @@ public final class R2D {
 
         Gpu.texture(0, Backdrop.ready() ? Backdrop.texture() : 0);
         begin();
-        Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        Mesh b = Mesh.begin(Mode.QUADS);
         int white = -1;
         b.addVertex(m, x - pad, y - pad, 0.0F).setUv(-pad, -pad).setColor(white);
         b.addVertex(m, x - pad, y + h + pad, 0.0F).setUv(-pad, h + pad).setColor(white);
@@ -414,7 +403,4 @@ public final class R2D {
         return (float)(1.0 / Math.max(1.0E-4, scale * gui));
     }
 
-    public static int alpha(int argb, float f) {
-        return Colors.multAlpha(argb, f);
-    }
 }

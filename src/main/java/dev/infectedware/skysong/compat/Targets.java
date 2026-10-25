@@ -31,7 +31,4 @@ public final class Targets {
         Gpu.setSampling(Gpu.color(t), linear, false);
     }
 
-    public static void clear(RenderTarget t) {
-        Gpu.clear(t, 0.0F, 0.0F, 0.0F, 0.0F);
-    }
 }

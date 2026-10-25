@@ -38,8 +38,7 @@ final class ModelSnapshot {
         return recording;
     }
 
-    static List<ModelSnapshot.Part> record(Minecraft mc, Entity e, float tickDelta) {
-        EntityRenderDispatcher dispatcher = mc.getEntityRenderDispatcher();
+    static List<ModelSnapshot.Part> record(Entity e, float tickDelta) {
         Map<RenderType, ModelSnapshot.Part> parts = new IdentityHashMap<>();
         MultiBufferSource recorder = layer -> layer.format() == DefaultVertexFormat.NEW_ENTITY && layer.mode() == Mode.QUADS
             ? new ModelSnapshot.Recorder(parts.computeIfAbsent(layer, ModelSnapshot.Part::new))
@@ -72,7 +71,7 @@ final class ModelSnapshot {
     }
 
     static void draw(ModelSnapshot.Part part, RenderTarget capture, ModelSnapshot.Transform transform, int alpha) {
-        Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.NEW_ENTITY);
+        Mesh b = Mesh.begin(Mode.QUADS);
         float[] d = part.data;
         float[] pos = new float[3];
         float[] normal = new float[3];
@@ -89,8 +88,6 @@ final class ModelSnapshot {
             b.addVertex(pos[0], pos[1], pos[2])
                 .setColor(255, 255, 255, alpha)
                 .setUv(d[i + 3], d[i + 4])
-                .setOverlay(OverlayTexture.NO_OVERLAY)
-                .setLight(15728880)
                 .setNormal(normal[0], normal[1], normal[2]);
         }
 
@@ -145,13 +142,11 @@ final class ModelSnapshot {
     }
 
     static final class Part {
-        final RenderType layer;
         float[] data = new float[512];
         int vertices;
         final int texture;
 
         Part(RenderType layer) {
-            this.layer = layer;
             Identifier location = Compat.layerTexture(layer);
             this.texture = location == null ? 0 : Gpu.textureId(location, false);
         }

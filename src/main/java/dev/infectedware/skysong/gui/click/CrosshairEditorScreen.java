@@ -14,14 +14,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 
 public final class CrosshairEditorScreen extends VScreen {
-    private static final float PANEL_W = 300.0F;
-    private static final float PANEL_H = 190.0F;
-    private static final float PAD = 12.0F;
-    private static final float GRID = 150.0F;
-    private static final float GRID_X = 12.0F;
-    private static final float GRID_Y = 32.0F;
-    private static final float SIDE_X = 176.0F;
-    private static final float SIDE_W = 112.0F;
     private final boolean[] cells = new boolean[225];
     private final Anim appear = new Anim(260);
     private int painting = -1;
@@ -332,10 +324,4 @@ public final class CrosshairEditorScreen extends VScreen {
         return false;
     }
 
-    public void paintForTest(int x, int y, boolean draw) {
-        this.painting = draw ? 1 : 0;
-        this.paint(x, y);
-        this.painting = -1;
-        this.save();
-    }
 }

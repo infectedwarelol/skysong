@@ -4,7 +4,6 @@ import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.ModSettings;
 
 public final class ThemeManager {
-    private static final long SWITCH_MS = 500L;
     private static ClientTheme current = ClientTheme.byName(ModSettings.theme);
     private static float[] fromShades = unpack(current.shades());
     private static int[] fromPalette = current.palette();
@@ -35,34 +34,6 @@ public final class ThemeManager {
             switchStart = System.currentTimeMillis();
             ModConfig.save();
         }
-    }
-
-    public static int accent(float alpha) {
-        return shade(0, alpha);
-    }
-
-    public static int accentBright(float alpha) {
-        return shade(1, alpha);
-    }
-
-    public static int accentSoft(float alpha) {
-        return shade(2, alpha);
-    }
-
-    public static int accentFill(float alpha) {
-        return shade(3, alpha);
-    }
-
-    public static int toggleOn(float alpha) {
-        return shade(4, alpha);
-    }
-
-    public static int gradientA(float alpha) {
-        return shade(5, alpha);
-    }
-
-    public static int gradientB(float alpha) {
-        return shade(6, alpha);
     }
 
     static int shade(int i, float alpha) {

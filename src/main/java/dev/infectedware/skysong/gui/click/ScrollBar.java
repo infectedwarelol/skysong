@@ -5,7 +5,6 @@ import dev.infectedware.skysong.compat.GuiGraphics;
 import dev.infectedware.skysong.render.r2d.R2D;
 
 public final class ScrollBar {
-    private static final float BAR_W = 1.5F;
     private boolean dragging;
     private boolean visible;
     private float grabOffset;

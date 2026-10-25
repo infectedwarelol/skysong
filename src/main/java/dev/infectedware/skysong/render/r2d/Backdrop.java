@@ -27,18 +27,18 @@ public final class Backdrop {
         return blurred == null ? 0 : Gpu.color(blurred);
     }
 
-    public static void captureForHud(GuiGraphics ctx, float delta) {
+    public static void captureForHud() {
         Minecraft mc = Minecraft.getInstance();
         long frame = mc.getFrameTimeNs();
         if (frame != hudFrame || !ready) {
             hudFrame = frame;
-            capture(ctx, delta);
+            capture();
         }
     }
 
-    public static void capture(GuiGraphics ctx, float delta) {
+    public static void capture() {
         Minecraft mc = Minecraft.getInstance();
-        Compat.flush(ctx);
+        Compat.flush();
         Compat.drawCollectedGui();
         RenderTarget main = mc.getMainRenderTarget();
         int w = main.width;
@@ -67,9 +67,5 @@ public final class Backdrop {
 
     private static TextureTarget ensure(TextureTarget fb, int w, int h) {
         return Targets.ensure(fb, w, h, false);
-    }
-
-    private static void blit(RenderTarget from, RenderTarget to, int w, int h) {
-        Gpu.blit(from, to);
     }
 }

@@ -22,19 +22,9 @@ public final class Anim {
         return this;
     }
 
-    public boolean isForwards() {
-        return this.forwards;
-    }
-
     public void restart() {
         this.linear = 0.0F;
         this.forwards = true;
-        this.last = System.nanoTime();
-    }
-
-    public void snap(boolean done) {
-        this.forwards = done;
-        this.linear = done ? 1.0F : 0.0F;
         this.last = System.nanoTime();
     }
 
@@ -78,13 +68,4 @@ public final class Anim {
         return 1.0F + c3 * u * u * u + c1 * u * u;
     }
 
-    public static float smoothstep(float t) {
-        t = clamp01(t);
-        return t * t * (3.0F - 2.0F * t);
-    }
-
-    public static float easeOutCubic(float t) {
-        float u = 1.0F - clamp01(t);
-        return 1.0F - u * u * u;
-    }
 }

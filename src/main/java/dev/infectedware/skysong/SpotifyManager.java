@@ -42,10 +42,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.Util;
 
 public class SpotifyManager {
-    private static final String DEFAULT_CLIENT_ID = "e719b5b5423244d989964a16df70f95c";
-    private static final String PREFIX = "§b[Skysong] ";
-    private static final String GOOGLE_REDIRECT_URI = "https://google.com/";
-    private static final String DASHBOARD_URL = "https://developer.spotify.com/dashboard";
     private static final File TOKEN_FILE = new File(Minecraft.getInstance().gameDirectory, "spotify_token.txt");
     private String accessToken = null;
     private String refreshToken = null;
@@ -54,11 +50,9 @@ public class SpotifyManager {
     private volatile String status = "Not connected";
     private String lastProblemShown = null;
     private final LocalMediaSource local = new LocalMediaSource();
-    private long lastApiSuccess = 0L;
     private long apiPausedUntil = 0L;
     private boolean usingLocal = false;
     private long localRawPosition = -1L;
-    private static final long RESYNC_THRESHOLD_MS = 400L;
     private String currentTrackName = "";
     private String currentArtist = "";
     private long progressMs = 0L;
@@ -78,8 +72,6 @@ public class SpotifyManager {
     private String albumImageUrl = "";
     private Identifier albumArtId = null;
     private long lastUpdateTime = 0L;
-    private static final String EXPIRED_MESSAGE = "§eYour Spotify login expired. Press §lRight Shift§r§e → Spotify → §lConnect Spotify§r§e.";
-    private static final int ALBUM_ART_SIZE = 128;
     private static final String SCOPES = "user-read-playback-state user-read-currently-playing user-modify-playback-state user-library-read user-library-modify";
     private static final String API = "https://api.spotify.com/v1";
     private static final int VOLUME_STEP = 10;
@@ -169,10 +161,6 @@ public class SpotifyManager {
         if (this.accessToken == null) {
             this.status = "Not connected";
         }
-    }
-
-    public boolean isUsingLocal() {
-        return this.usingLocal;
     }
 
     private void fetchArtworkByName(String title, String artist) {
@@ -560,7 +548,6 @@ public class SpotifyManager {
                     .thenAccept(
                         response -> {
                             if (response.statusCode() == 200) {
-                                this.lastApiSuccess = System.currentTimeMillis();
 
                                 try {
                                     JsonObject json = JsonParser.parseString(response.body()).getAsJsonObject();
@@ -588,7 +575,6 @@ public class SpotifyManager {
                                     SkysongClient.LOGGER.error("Failed to parse playback state", e);
                                 }
                             } else if (response.statusCode() == 204 || response.statusCode() == 202) {
-                                this.lastApiSuccess = System.currentTimeMillis();
                                 this.isPlaying = false;
                                 this.currentTrackName = "";
                                 this.currentArtist = "";
@@ -642,7 +628,7 @@ public class SpotifyManager {
                             return;
                         }
 
-                        buffered = downscale(buffered, 128);
+                        buffered = downscale(buffered);
                         int[] palette = AlbumPalette.extract(buffered);
                         this.primaryColor = palette[0];
                         this.secondaryColor = palette[1];
@@ -676,7 +662,7 @@ public class SpotifyManager {
         });
     }
 
-    private static BufferedImage downscale(BufferedImage src, int size) {
+    private static BufferedImage downscale(BufferedImage src) {
         if (src.getWidth() <= 128 && src.getHeight() <= 128) {
             return src;
         }
@@ -860,10 +846,6 @@ public class SpotifyManager {
         return this.albumArtId;
     }
 
-    public boolean isConnected() {
-        return this.accessToken != null && !this.accessToken.isEmpty();
-    }
-
     public String getCurrentTrackName() {
         return this.currentTrackName;
     }
@@ -872,20 +854,12 @@ public class SpotifyManager {
         return this.currentArtist;
     }
 
-    public long getProgressMs() {
-        return this.progressMs;
-    }
-
     public long getDurationMs() {
         return this.durationMs;
     }
 
     public boolean isPlaying() {
         return this.isPlaying;
-    }
-
-    public int getPrimaryColor() {
-        return ModSettings.dynamicColors ? this.primaryColor : -14829228;
     }
 
     public int getSongColor() {

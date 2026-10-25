@@ -17,7 +17,7 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.resources.Identifier;
 
 public final class LyricLayers {
-    private static final Shader TEXT = Shader.of("fx_text", null);
+    private static final Shader TEXT = Shader.of("fx_text");
     private static final VertexConsumer IGNORE = new VertexSink() {
         @Override
         protected void onVertex(float x, float y, float z) {
@@ -131,7 +131,7 @@ public final class LyricLayers {
                 Gpu.texture(0, tex);
                 LyricLayers.TEXT.set("TextMode", this.intensity ? 1.0F : 0.0F);
                 LyricLayers.TEXT.bind();
-                Mesh m = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR_TEX_LIGHTMAP);
+                Mesh m = Mesh.begin(Mode.QUADS);
 
                 for (float[] v : this.vertices) {
                     m.addVertex(v[0], v[1], v[2]).setColor((int)v[3], (int)v[4], (int)v[5], (int)v[6]).setUv(v[7], v[8]);

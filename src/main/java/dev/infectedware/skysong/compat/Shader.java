@@ -31,8 +31,7 @@ public final class Shader {
     static final String[] ATTRIBUTES = new String[]{"Position", "Color", "UV0", "Normal"};
     private static final List<Shader> ALL = new ArrayList<>();
     private static Shader current;
-    public static final Shader POSITION_COLOR = of("position_color", null);
-    public static final Shader POSITION_TEX = of("position_tex", null);
+    public static final Shader POSITION_COLOR = of("position_color");
     private final String name;
     private int program = -1;
     private boolean failed;
@@ -45,13 +44,10 @@ public final class Shader {
         this.name = name;
     }
 
-    public static Shader of(String name, VertexFormat format) {
+    public static Shader of(String name) {
         Shader s = new Shader(name);
         ALL.add(s);
         return s;
-    }
-
-    public static void registerAll() {
     }
 
     public static void reloadAll() {

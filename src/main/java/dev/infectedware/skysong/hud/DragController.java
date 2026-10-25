@@ -4,7 +4,6 @@ import dev.infectedware.skysong.ModSettings;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class DragController {
-    public static final long PULSE_MS = 500L;
     private float x;
     private float y;
     private float preX;
@@ -13,7 +12,6 @@ public final class DragController {
     private float grabY;
     private boolean dragging;
     private boolean cancelled;
-    private boolean direct;
     private final DragController.Follow animX;
     private final DragController.Follow animY;
     private float tilt;
@@ -137,7 +135,6 @@ public final class DragController {
     }
 
     void tick(float mx, float my, float w, float h, boolean direct) {
-        this.direct = direct;
         if (this.dragging) {
             float nx = HudSpace.clampX(mx - this.grabX, w);
             float ny = HudSpace.clampY(my - this.grabY, h);

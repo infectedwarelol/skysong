@@ -28,7 +28,6 @@ public final class Gpu {
     private static final Matrix4f modelView = new Matrix4f();
     private static final Matrix4f worldProjection = new Matrix4f();
     private static final Matrix4f worldView = new Matrix4f();
-    private static final int UNITS = 8;
     private static final int[] textures = new int[8];
     private static final Map<Integer, GlTexture> glTextures = new HashMap<>();
     private static final Map<Integer, Integer> sampling = new HashMap<>();
@@ -81,10 +80,6 @@ public final class Gpu {
         GlStateManager._disableCull();
     }
 
-    public static void colorMask(boolean r, boolean g, boolean b, boolean a) {
-        colorMaskRaw(r, g, b, a);
-    }
-
     public static void setColor(float r, float g, float b, float a) {
         color[0] = r;
         color[1] = g;
@@ -134,7 +129,7 @@ public final class Gpu {
         return modelView;
     }
 
-    private static void colorMaskRaw(boolean r, boolean g, boolean b, boolean a) {
+    private static void colorMaskRaw(boolean r, boolean g, boolean b) {
         GlStateManager._colorMask(r, g, b, true);
     }
 
@@ -335,7 +330,7 @@ public final class Gpu {
         float[] keepColor = new float[4];
         GL11.glGetFloatv(3106, keepColor);
         double keepDepth = GL11.glGetDouble(2931);
-        colorMaskRaw(true, true, true, true);
+        colorMaskRaw(true, true, true);
         GlStateManager._depthMask(true);
         GlStateManager._disableScissorTest();
         GL11.glClearColor(r, g, b, a);
@@ -349,16 +344,16 @@ public final class Gpu {
         bind(t);
         float[] keep = new float[4];
         GL11.glGetFloatv(3106, keep);
-        colorMaskRaw(false, false, false, true);
+        colorMaskRaw(false, false, false);
         GlStateManager._disableScissorTest();
         GL11.glClearColor(0.0F, 0.0F, 0.0F, a);
         GL11.glClear(16384);
-        colorMaskRaw(true, true, true, true);
+        colorMaskRaw(true, true, true);
         GL11.glClearColor(keep[0], keep[1], keep[2], keep[3]);
     }
 
     static void beforeDraw() {
-        colorMaskRaw(true, true, true, true);
+        colorMaskRaw(true, true, true);
         GlStateManager._disableColorLogicOp();
         GlStateManager._disablePolygonOffset();
         GlStateManager._polygonMode(1032, 6914);

@@ -198,10 +198,6 @@ public class LiveEditorScreen extends VScreen {
         return this.vh() - this.bodyY() - GAP - FOOT_H - MARGIN;
     }
 
-    private float listX() {
-        return MARGIN;
-    }
-
     private float inspectorX() {
         return this.vw() - MARGIN - INSPECTOR_W;
     }
@@ -412,7 +408,7 @@ public class LiveEditorScreen extends VScreen {
                 if (row[0].equals("header")) {
                     R2D.text(c, MsdfFont.Font.SEMIBOLD, row[1], x + 8.0F, ry + 5.0F, 5.5F, Ui.white(130.0F * a));
                 } else {
-                    this.drawModuleRow(c, row[1], x + 3.0F, ry, LIST_W - 6.0F, a);
+                    this.drawModuleRow(c, row[1], x + 3.0F, ry, a);
                 }
             }
 
@@ -428,7 +424,7 @@ public class LiveEditorScreen extends VScreen {
         }
     }
 
-    private void drawModuleRow(GuiGraphics c, String name, float x, float y, float w, float a) {
+    private void drawModuleRow(GuiGraphics c, String name, float x, float y, float a) {
         boolean active = name.equals(this.selected);
         boolean hover = Ui.inside(this.mx, this.my, x, y, (LIST_W - 6.0F), ROW_H);
         if (active) {
@@ -447,7 +443,7 @@ public class LiveEditorScreen extends VScreen {
             R2D.outline(c, boxX, boxY, ICON_BOX, ICON_BOX, 0.0F, 0.5F, Ui.white(30.0F * a));
         }
 
-        drawItem(c, name, boxX + (ICON_BOX - ICON_SIZE) / 2.0F, boxY + (ICON_BOX - ICON_SIZE) / 2.0F, ICON_SIZE);
+        drawItem(c, name, boxX + (ICON_BOX - ICON_SIZE) / 2.0F, boxY + (ICON_BOX - ICON_SIZE) / 2.0F);
         Ui.text(c, trim(name, (LIST_W - 6.0F) - 48.0F, 6.5F), boxX + ICON_BOX + 6.0F, y + ROW_H / 2.0F - 4.0F, 6.5F, Ui.white((active ? 255.0F : 215.0F) * a));
         ClientModule m = ModuleRegistry.byName(name);
         float tx = x + (LIST_W - 6.0F) - TOGGLE_W - 5.0F;
@@ -470,7 +466,7 @@ public class LiveEditorScreen extends VScreen {
         }
     }
 
-    private static void drawItem(GuiGraphics c, String name, float x, float y, float size) {
+    private static void drawItem(GuiGraphics c, String name, float x, float y) {
         Item item = ICONS.getOrDefault(name, Items.PAPER);
         ItemStack stack = STACKS.computeIfAbsent(name, key -> new ItemStack(item));
         c.pose().pushPose();
@@ -557,7 +553,7 @@ public class LiveEditorScreen extends VScreen {
 
         String description = THEMES_ROW.equals(this.selected) ? "Built-in client color themes." : (m == null ? "" : m.description());
         float descY = y + pad + 13.0F;
-        List<String> lines = wrap(description, INSPECTOR_W - pad * 2.0F, 5.5F, 2);
+        List<String> lines = wrap(description, INSPECTOR_W - pad * 2.0F);
 
         for (String line : lines) {
             Ui.text(c, line, x + pad, descY, 5.5F, Ui.white(140.0F * a));
@@ -605,7 +601,7 @@ public class LiveEditorScreen extends VScreen {
         Ui.text(c, right, MARGIN + w - 8.0F - Ui.width(right, 5.5F), y + 4.0F, 5.5F, Ui.white(130.0F * a));
     }
 
-    private static List<String> wrap(String text, float maxW, float size, int maxLines) {
+    private static List<String> wrap(String text, float maxW) {
         List<String> lines = new ArrayList<>();
         StringBuilder line = new StringBuilder();
 
@@ -646,7 +642,6 @@ public class LiveEditorScreen extends VScreen {
     }
 
     private String rowAt(float x, float y) {
-        float lx = this.listX();
         float ly = this.bodyY();
         if (!Ui.inside(x, y, MARGIN, ly, LIST_W, this.bodyH())) {
             return null;
@@ -889,7 +884,7 @@ public class LiveEditorScreen extends VScreen {
             return true;
         }
 
-        if (this.inspector.keyPressed(key, mods)) {
+        if (this.inspector.keyPressed(key)) {
             return true;
         }
 

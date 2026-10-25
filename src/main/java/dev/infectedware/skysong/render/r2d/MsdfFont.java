@@ -15,7 +15,6 @@ public final class MsdfFont {
     private static final MsdfFont.Glyph EMPTY = new MsdfFont.Glyph(false, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F, 0.0F);
     final Identifier atlas;
     final float ascender;
-    final float descender;
     final float lineHeight;
     final float distanceRange;
     private final Map<Integer, MsdfFont.Glyph> glyphs;
@@ -23,11 +22,10 @@ public final class MsdfFont {
     private final MsdfFont.Glyph fallback;
 
     private MsdfFont(
-        Identifier atlas, float ascender, float descender, float lineHeight, float distanceRange, Map<Integer, MsdfFont.Glyph> glyphs, Map<Long, Float> kerning
+        Identifier atlas, float ascender, float lineHeight, float distanceRange, Map<Integer, MsdfFont.Glyph> glyphs, Map<Long, Float> kerning
     ) {
         this.atlas = atlas;
         this.ascender = ascender;
-        this.descender = descender;
         this.lineHeight = lineHeight;
         this.distanceRange = distanceRange;
         this.glyphs = glyphs;
@@ -180,7 +178,6 @@ public final class MsdfFont {
             return new MsdfFont(
                 png,
                 metrics.get("ascender").getAsFloat(),
-                metrics.get("descender").getAsFloat(),
                 metrics.get("lineHeight").getAsFloat(),
                 range,
                 glyphs,

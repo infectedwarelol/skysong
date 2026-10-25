@@ -19,16 +19,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public final class EntityFx {
-    public static final int TARGET_PLAYERS = 1;
-    public static final int TARGET_MOBS = 2;
-    public static final int TARGET_SELF = 4;
-    private static final double MAX_DISTANCE_SQ = 9216.0;
     private static TextureTarget captured;
     private static BufferSource buffers;
     private static boolean capturing;
     private static boolean hasCapture;
-    private static int capturedCount;
-    private static long drawnFrame = -1L;
 
     private EntityFx() {
     }
@@ -39,10 +33,6 @@ public final class EntityFx {
 
     public static boolean capturing() {
         return capturing;
-    }
-
-    public static int lastCount() {
-        return Fx.recent(drawnFrame) ? capturedCount : 0;
     }
 
     public static void capture(WorldCtx ctx) {
@@ -82,7 +72,6 @@ public final class EntityFx {
                     }
 
                     hasCapture = count > 0;
-                    capturedCount = count;
                 } catch (Throwable t) {
                     Fx.fail("players", t);
                 } finally {
@@ -113,11 +102,9 @@ public final class EntityFx {
                         ModSettings.shaderEntitiesOutline ? ModSettings.shaderEntitiesOutlineWidth : 0.0F,
                         ModSettings.shaderEntitiesGlowRadius,
                         ModSettings.shaderEntitiesGlow ? ModSettings.shaderEntitiesGlowStrength : 0.0F,
-                        0.0F,
                         0.35F
                     );
                     ShapeFx.composite(captured, main, depth, null, look);
-                    drawnFrame = System.currentTimeMillis();
                 } catch (Throwable t) {
                     Fx.fail("players", t);
                 } finally {

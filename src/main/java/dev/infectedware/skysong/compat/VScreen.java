@@ -20,10 +20,6 @@ public abstract class VScreen extends Screen {
         return false;
     }
 
-    public final boolean scroll(double mouseX, double mouseY, double horizontal, double vertical) {
-        return this.scrolled(mouseX, mouseY, horizontal, vertical);
-    }
-
     protected final boolean scrolledVanilla(double mouseX, double mouseY, double horizontal, double vertical) {
         return super.mouseScrolled(mouseX, mouseY, horizontal, vertical);
     }

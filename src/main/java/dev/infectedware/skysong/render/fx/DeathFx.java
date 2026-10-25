@@ -17,15 +17,6 @@ import net.minecraft.sounds.SoundEvents;
 
 public final class DeathFx {
     public static final String[] EFFECTS = new String[]{"Shattered Glass", "Flatline", "Ascension", "Signal Lost", "Cinematic", "Swallowed", "Frozen", "Pixelated", "Random"};
-    public static final int SHATTERED = 0;
-    public static final int FLATLINE = 1;
-    public static final int ASCENSION = 2;
-    public static final int SIGNAL_LOST = 3;
-    public static final int CINEMATIC = 4;
-    public static final int SWALLOWED = 5;
-    public static final int FROZEN = 6;
-    public static final int PIXELATED = 7;
-    public static final int RANDOM = 8;
     private static final int KINDS = 8;
     private static final java.util.List<Integer> randomBag = new java.util.ArrayList<>();
     private static int lastRandom = -1;
@@ -81,7 +72,6 @@ public final class DeathFx {
     private static int mode;
     private static int cue;
     private static TextureTarget scene;
-    private static long drawnFrame = -1L;
     private static final Random RNG = new Random();
 
     private DeathFx() {
@@ -89,7 +79,7 @@ public final class DeathFx {
 
     public static void init() {
         ClientTickEvents.END_CLIENT_TICK.register(DeathFx::tick);
-        Hooks.hud((c, tick) -> heartMonitor(c));
+        Hooks.hud(DeathFx::heartMonitor);
     }
 
     static void forget() {
@@ -128,10 +118,6 @@ public final class DeathFx {
 
         lastRandom = randomBag.removeLast();
         return lastRandom;
-    }
-
-    public static int mode() {
-        return mode;
     }
 
     private static void tick(Minecraft mc) {
@@ -187,13 +173,12 @@ public final class DeathFx {
                 Fx.noBlend();
                 Gpu.texture(0, Gpu.color(scene));
                 float beat = mode != 0 && mode != 1 ? 0.0F : pulse(t, BEATS[0], 0.09F) + 0.8F * pulse(t, BEATS[1], 0.1F);
-                float drained = 0.9F * smooth(0.0F, 1.4F, t);
+                float drained = 0.9F * smooth(1.4F, t);
                 Fx.set(Fx.death, "Death", t, ModSettings.deathEffectCracks ? 1.0F : 0.0F, drained, beat);
                 Fx.set(Fx.death, "Mode", mode, 0.0F, 0.0F, 0.0F);
                 Fx.setTints(Fx.death, tints());
                 Fx.setOutSize(Fx.death, main.width, main.height);
                 Fx.draw(Fx.death);
-                drawnFrame = System.currentTimeMillis();
             } catch (Throwable e) {
                 Fx.fail("death effect", e);
             } finally {
@@ -213,7 +198,7 @@ public final class DeathFx {
             float midY = h * 0.5F;
             float amp = Math.min(h * 0.16F, 46.0F);
             float[] tint = tints();
-            float fadeIn = smooth(0.0F, 0.08F, t);
+            float fadeIn = smooth(0.08F, t);
             float prevX = 0.0F;
             float prevY = midY;
 
@@ -266,7 +251,7 @@ public final class DeathFx {
         return (float)Math.exp(-x * x);
     }
 
-    private static float smooth(float a, float b, float x) {
+    private static float smooth(float b, float x) {
         float t = Math.clamp((x - 0.0F) / (b - 0.0F), 0.0F, 1.0F);
         return t * t * (3.0F - 2.0F * t);
     }

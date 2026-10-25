@@ -41,16 +41,13 @@ public final class KillFx {
     public static final String[] COLORS = new String[]{"Theme", "White", "Custom", "Two colors"};
     public static final int SHATTER = 0;
     public static final int SOUL = 1;
-    public static final int THUNDER = 2;
     public static final int VOID = 3;
     public static final int DUST = 4;
-    public static final int SWORD = 5;
     public static final int FIREWORK = 6;
     public static final int FROST = 7;
     public static final int INFERNO = 8;
     public static final int BLOSSOM = 9;
     public static final int WARP = 10;
-    public static final int RANDOM = 11;
     private static final int KINDS = 11;
     private static final float[] LIFE = new float[]{1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F, 1.9F, 2.0F, 2.2F, 2.6F, 1.2F};
     private static final float FIREWORK_RISE = 0.35F;
@@ -63,12 +60,7 @@ public final class KillFx {
     private static final float[] ENDER6 = new float[]{0.78F, 0.38F, 1.0F, 0.3F, 0.92F, 0.86F};
     private static final List<Integer> randomBag = new ArrayList<>();
     private static int lastRandom = -1;
-    private static final int SHARD = 10;
-    private static final float VOID_PULL = 0.78F;
-    private static final float SWORD_DROP = 0.22F;
-    private static final float SWORD_SIZE = 0.62F;
     private static final List<KillFx.Effect> effects = new ArrayList<>();
-    private static long frozenAt = -1L;
     private static final Map<Integer, Long> lastHits = new HashMap<>();
     private static final Map<Integer, Long> finished = new HashMap<>();
     private static final List<Integer> pendingKills = new ArrayList<>();
@@ -78,8 +70,6 @@ public final class KillFx {
     private static TextureTarget capture;
     private static int previewType = -1;
     private static long flashAt = -1L;
-    private static long drawnFrame = -1L;
-    private static int lastSpawnedType = -1;
     private static int spawnedCount;
     private static float swordSize = 1.0F;
     private static final float[] WHITE = new float[]{1.0F, 1.0F, 1.0F};
@@ -107,7 +97,7 @@ public final class KillFx {
                 }
             );
         ClientTickEvents.END_CLIENT_TICK.register(KillFx::tick);
-        Hooks.hud((c, tick) -> hudFlash(c));
+        Hooks.hud(KillFx::hudFlash);
     }
 
     public static boolean active() {
@@ -120,18 +110,6 @@ public final class KillFx {
 
     public static void preview(int type) {
         previewType = type >= 0 && type < KINDS ? type : nextRandom();
-    }
-
-    public static int lastCount() {
-        return Fx.recent(drawnFrame) ? effects.size() : 0;
-    }
-
-    public static int lastSpawnedType() {
-        return lastSpawnedType;
-    }
-
-    public static int spawnedCount() {
-        return spawnedCount;
     }
 
     private static int pick() {
@@ -290,13 +268,10 @@ public final class KillFx {
                         }
 
                         ambientParticles(mc, now);
-                        drawnFrame = System.currentTimeMillis();
-                        return;
                     }
                 } catch (Throwable t) {
                     Fx.fail("kill effects", t);
                     effects.clear();
-                    return;
                 } finally {
                     Fx.restore(main);
                 }
@@ -327,7 +302,7 @@ public final class KillFx {
         e.windX = Mth.cos(windAngle);
         e.windZ = Mth.sin(windAngle);
         if (usesModel(type)) {
-            e.parts = ModelSnapshot.record(mc, victim, tickDelta);
+            e.parts = ModelSnapshot.record(victim, tickDelta);
             if (usesShards(type)) {
                 buildShards(e);
             }
@@ -342,7 +317,6 @@ public final class KillFx {
         }
 
         effects.add(e);
-        lastSpawnedType = type;
         spawnedCount++;
         burst(mc, e);
     }
@@ -828,7 +802,7 @@ public final class KillFx {
             Gpu.disableCull();
             Vec3 c = new Vec3(e.x, e.y + e.height * 0.5, e.z).subtract(cam);
             Vec3[] basis = facing(c);
-            Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            Mesh b = Mesh.begin(Mode.QUADS);
             int segs = 40;
 
             for (int i = 0; i < segs; i++) {
@@ -902,11 +876,11 @@ public final class KillFx {
         Vec3 side = new Vec3(0.0, 1.0, 0.0).cross(toCam).normalize();
         Vec3 at = tip.add(side.scale(shake));
         if (env > 0.01F) {
-            sword(at, side, 1.35F, 0.62F, tint, 0.2F * env);
-            sword(at, side, 1.8F, 0.62F, tint, 0.1F * env);
+            sword(at, side, 1.35F, tint, 0.2F * env);
+            sword(at, side, 1.8F, tint, 0.1F * env);
             Gpu.defaultBlendFunc();
-            sword(at, side, 1.0F, 0.62F, whiter(tint, 0.5F), 0.92F * env);
-            sword(at, side, 0.45F, 0.62F, WHITE6, 0.9F * env);
+            sword(at, side, 1.0F, whiter(tint, 0.5F), 0.92F * env);
+            sword(at, side, 0.45F, WHITE6, 0.9F * env);
             Gpu.blendFunc(770, 1);
             if (t < 0.22F) {
                 beam(at.add(0.0, 2.852000021934509, 0.0), 8.0F, 0.3F, tint, 0.45F * env);
@@ -932,7 +906,7 @@ public final class KillFx {
                     crack.add(feet.add(Math.cos(wob) * len * f, 0.01, Math.sin(wob) * len * f));
                 }
 
-                groundLine(crack, 0.07F, tint, 0.9F * (1.0F - smooth(0.35F, 1.0F, q)));
+                groundLine(crack, tint, 0.9F * (1.0F - smooth(0.35F, 1.0F, q)));
             }
 
             if (q < 0.25F) {
@@ -941,8 +915,8 @@ public final class KillFx {
         }
     }
 
-    private static void sword(Vec3 tip, Vec3 side, float width, float size, float[] tint, float a) {
-        Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+    private static void sword(Vec3 tip, Vec3 side, float width, float[] tint, float a) {
+        Mesh b = Mesh.begin(Mode.QUADS);
         float g = (width - 1.0F) * 0.14F;
         swordSize = 0.62F;
         quad2d(b, tip, side, tint, a, 0.0F, -g, 0.26F * width, 0.55F, 0.0F, 0.55F, -0.26F * width, 0.55F);
@@ -974,7 +948,7 @@ public final class KillFx {
 
     private static void ribbon(List<Vec3> pts, float width, float[] tint, float a, Vec3 flatUp) {
         if (pts.size() >= 2 && !(a <= 0.004F)) {
-            Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            Mesh b = Mesh.begin(Mode.QUADS);
 
             for (int i = 0; i < pts.size() - 1; i++) {
                 Vec3 p = pts.get(i);
@@ -997,7 +971,7 @@ public final class KillFx {
         }
     }
 
-    private static void groundLine(List<Vec3> pts, float width, float[] tint, float a) {
+    private static void groundLine(List<Vec3> pts, float[] tint, float a) {
         ribbon(pts, 0.07F, tint, a, new Vec3(0.0, 1.0, 0.0));
     }
 
@@ -1009,7 +983,7 @@ public final class KillFx {
             }
 
             Vec3 side = new Vec3(0.0, 1.0, 0.0).cross(toCam).normalize();
-            Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            Mesh b = Mesh.begin(Mode.QUADS);
             int segs = 14;
 
             for (int i = 0; i < segs; i++) {
@@ -1048,7 +1022,7 @@ public final class KillFx {
     private static void ringIn(Vec3 center, Vec3[] basis, float radius, float thickness, float[] tint, float a) {
         if (!(a <= 0.004F) && !(radius <= 0.0F)) {
             Vec3[] axes = basis != null ? basis : new Vec3[]{new Vec3(1.0, 0.0, 0.0), new Vec3(0.0, 0.0, 1.0)};
-            Mesh b = Mesh.begin(Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+            Mesh b = Mesh.begin(Mode.QUADS);
             int segs = 48;
             float in = Math.max(0.0F, radius - thickness);
             float out = radius + thickness;

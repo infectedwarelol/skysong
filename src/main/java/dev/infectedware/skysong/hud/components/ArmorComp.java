@@ -15,10 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
 public final class ArmorComp extends Draggable {
-    private static final float ITEM = 16.0F;
-    private static final float PAD = 2.0F;
-    private static final float ENTER = 16.0F;
-    private static final float EXIT = 26.0F;
     private static final EquipmentSlot[] ARMOR = new EquipmentSlot[]{EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
     private final Smooth visibility = new Smooth(0.0F);
     private int side;

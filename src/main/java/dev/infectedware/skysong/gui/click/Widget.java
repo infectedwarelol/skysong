@@ -17,8 +17,6 @@ import net.minecraft.client.Minecraft;
 
 public abstract class Widget {
     protected final Setting setting;
-    public static final float PILL_W = 19.1F;
-    public static final float PILL_H = 10.4F;
 
     protected Widget(Setting setting) {
         this.setting = setting;
@@ -69,7 +67,7 @@ public abstract class Widget {
     public void closeOverlay() {
     }
 
-    public boolean keyPressed(int key, int mods) {
+    public boolean keyPressed(int key) {
         return false;
     }
 
@@ -219,12 +217,6 @@ public abstract class Widget {
     }
 
     public static final class ColorPicker extends Widget {
-        private static final float SV_W = 70.0F;
-        private static final float SV_H = 50.0F;
-        private static final float BAR_H = 4.0F;
-        private static final float GAP = 4.0F;
-        private static final float POP_W = 82.0F;
-        private static final float POP_H = 78.0F;
         private final Setting.ColorPick cp;
         private final Anim anim = new Anim(220);
         private boolean open;
@@ -361,12 +353,6 @@ public abstract class Widget {
                     int c0 = Color.HSBtoRGB(i / 6.0F, 1.0F, 1.0F) & 16777215;
                     int c1 = Color.HSBtoRGB((i + 1) / 6.0F, 1.0F, 1.0F) & 16777215;
                     float segW = 11.666667F;
-                    if (i != 0 && i != 5) {
-                        float r = 0.0F;
-                    } else {
-                        float r = 2.0F;
-                    }
-
                     R2D.rect(
                         c,
                         sx + i * segW - (i > 0 ? 0.3F : 0.0F),
@@ -554,7 +540,7 @@ public abstract class Widget {
         }
 
         @Override
-        public boolean keyPressed(int key, int mods) {
+        public boolean keyPressed(int key) {
             if (!this.focus) {
                 return false;
             }
@@ -666,7 +652,7 @@ public abstract class Widget {
         }
 
         @Override
-        public boolean keyPressed(int key, int mods) {
+        public boolean keyPressed(int key) {
             if (!this.listening) {
                 return false;
             }
@@ -926,9 +912,6 @@ public abstract class Widget {
     }
 
     public static final class Select extends Widget {
-        private static final int MAX_VISIBLE = 7;
-        private static final float ITEM_H = 12.0F;
-        private static final float PAD = 3.0F;
         private final Setting.Choice ch;
         private boolean open;
         private final Anim drop = new Anim(200);

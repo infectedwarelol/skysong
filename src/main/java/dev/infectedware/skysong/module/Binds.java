@@ -11,8 +11,6 @@ import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 public final class Binds {
-    public static final int NONE = -1;
-    public static final int MOUSE_BASE = -100;
     private static final Map<String, Binds.Bind> BINDS = new LinkedHashMap<>();
     private static String parsedFrom;
     public static Runnable openClickGui = () -> {};
@@ -176,11 +174,6 @@ public final class Binds {
         ModSettings.moduleBinds = sb.toString();
         parsedFrom = ModSettings.moduleBinds;
         ModConfig.save();
-    }
-
-    public static boolean inGame() {
-        Minecraft mc = Minecraft.getInstance();
-        return mc.screen == null && mc.player != null;
     }
 
     public record Bind(int key, boolean hold) {

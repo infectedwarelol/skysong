@@ -1,5 +1,6 @@
 package dev.infectedware.skysong.hud;
 
+import net.minecraft.client.player.LocalPlayer;
 import com.mojang.blaze3d.platform.Window;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.compat.Compat;
@@ -12,11 +13,8 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.HitResult.Type;
 
 public final class Crosshair {
-    public static final int SIZE = 15;
-    public static final int MID = 7;
     public static final String[] STYLES = new String[]{"Custom", "Cross", "Dot", "Circle", "X"};
     public static final String[] COLORS = new String[]{"White", "Theme", "Custom", "Two colors"};
-    private static final int TARGET_RED = -46261;
     private static String parsedFrom;
     private static final boolean[] custom = new boolean[225];
     private static float react;
@@ -174,7 +172,7 @@ public final class Crosshair {
         c.pose().translate(-fbW / 2.0F, -fbH / 2.0F, 0.0F);
         drawCells(c, shape(ModSettings.crosshairStyle), x0, y0, cell, col, ModSettings.crosshairOutline);
         c.pose().popPose();
-        attackIndicator(c, mc, fbW, fbH, gui, y0 + 15 * cell);
+        attackIndicator(c, mc, fbW, gui, y0 + 15 * cell);
         return true;
     }
 
@@ -202,7 +200,12 @@ public final class Crosshair {
         }
     }
 
-    private static void attackIndicator(GuiGraphics c, Minecraft mc, int fbW, int fbH, float gui, int belowY) {
+    private static void attackIndicator(GuiGraphics c, Minecraft mc, int fbW, float gui, int belowY) {
+        LocalPlayer player = mc.player;
+        if (player == null) {
+            return;
+        }
+
         if (mc.options.attackIndicator().get() == AttackIndicatorStatus.CROSSHAIR) {
             float progress = mc.player.getAttackStrengthScale(0.0F);
             if (!(progress >= 1.0F)) {

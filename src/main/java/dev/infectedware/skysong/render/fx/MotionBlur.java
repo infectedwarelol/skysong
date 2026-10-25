@@ -19,9 +19,6 @@ public final class MotionBlur {
     private static Matrix4f prevViewProj;
     private static Vec3 prevCam;
     private static long prevNanos = -1L;
-    private static long drawnFrame = -1L;
-    private static float lastScale;
-    private static float lastShift;
 
     private MotionBlur() {
     }
@@ -55,14 +52,11 @@ public final class MotionBlur {
                     scene = Fx.ensure(scene, main.width, main.height, false, true);
                     Fx.blitColor(main, scene);
                     float scale = ModSettings.motionBlurStrength * Math.min(4.0F, 0.016666668F / dt);
-                    lastScale = scale;
                     Matrix4f inv = new Matrix4f(viewProj).invert();
                     Vec3 delta = cam.subtract(before);
                     Vector4f p = new Vector4f(0.0F, 0.0F, 0.99F, 1.0F).mul(inv);
                     p.div(p.w);
                     p.w = 1.0F;
-                    Vector4f back = new Vector4f(p).mul(prev);
-                    lastShift = (float)Math.hypot(back.x / back.w * 0.5F * main.width, back.y / back.w * 0.5F * main.height);
                     Gpu.bind(main);
                     Fx.noBlend();
                     Gpu.texture(0, Gpu.color(scene));
@@ -74,7 +68,6 @@ public final class MotionBlur {
                     Fx.set(Fx.motion, "Params", scale, ModSettings.motionBlurMax / 100.0F, SAMPLES[q], ModSettings.motionBlurSharpCenter ? 1.0F : 0.0F);
                     Fx.setOutSize(Fx.motion, main.width, main.height);
                     Fx.draw(Fx.motion);
-                    drawnFrame = System.currentTimeMillis();
                 } catch (Throwable t) {
                     Fx.fail("motion blur", t);
                 } finally {

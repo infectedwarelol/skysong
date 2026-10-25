@@ -57,34 +57,14 @@ public class WorldTextRenderer {
     private static final Identifier RUNIC_FONT = Ids.mc("illageralt");
     private static final double RAINBOW_CYCLE_MS = 6000.0;
     private static final float HIGHLIGHT_FADE_MS = 600.0F;
-    private static final int FULL_BRIGHT = 15728880;
-    private static final int APPEAR_MS = 280;
-    private static final int FADE_MS = 550;
-    private static final int KARAOKE_MS = 250;
-    private static final double MAX_SYLLABLE_MS = 260.0;
     private static final long WORD_LEAD_MS = 80L;
-    private static final int OUTLINE_COLOR = 461332;
-    private static final int GLITCH_BUCKET_MS = 70;
     private final LyricLayers.Batch glowBuffers = new LyricLayers.Batch();
     private final LyricLayers.Batch outlineBuffers = new LyricLayers.Batch();
     private final LyricLayers.Batch mainBuffers = new LyricLayers.Batch();
-    private static final int MAX_PIECES = 32;
-    private static final float WIDE_STRETCH = 1.3F;
-    private static final float SCALE_PER_SIZE = 0.28F;
-    private static final int WORDS_ON_SCREEN = 4;
-    private static final int MIN_WORD_LIFETIME_MS = 1200;
-    private static final int MAX_WORD_LIFETIME_MS = 2400;
-    private static final double MIN_GAP_DEGREES = 4.0;
-    private static final int TEXT_COLOR = 16777215;
-    private static final int KARAOKE_IDLE_COLOR = 14080742;
-    private static final int GLOW_COLOR = 14543103;
     private static final float[][] GLOW_OFFSETS = buildGlowOffsets();
-    private static final float[][] RING = ring(8, 1.0F);
+    private static final float[][] RING = ring();
     private final List<WorldTextRenderer.Piece> pieces = new ArrayList<>();
     private final List<WorldTextRenderer.Pending> pending = new ArrayList<>();
-    public static volatile double lastPlacedDistance = -1.0;
-    public static volatile double lastPlacedAngle = -1.0;
-    public static volatile long lastPlacedAt;
     private static Vec3 followPos = Vec3.ZERO;
     private static long lastFollowNanos;
     private long currentLineKey = Long.MIN_VALUE;
@@ -416,7 +396,7 @@ public class WorldTextRenderer {
         return piece;
     }
 
-    private void placePending(Minecraft mc, WorldCtx context, long now) {
+    private void placePending(WorldCtx context, long now) {
         if (!this.pending.isEmpty()) {
             Camera camera = context.camera();
             Vec3 eye = Compat.camPos(camera);
@@ -438,10 +418,6 @@ public class WorldTextRenderer {
                         );
                         p.fadeAt = w.fadeAt();
                         p.emphasized = new boolean[]{w.emphasized()};
-                        Vec3 look = Vec3.directionFromRotation(Compat.camPitch(camera), Compat.camYaw(camera));
-                        lastPlacedDistance = placed.distanceTo(eye);
-                        lastPlacedAngle = Math.toDegrees(Math.acos(Mth.clamp(placed.subtract(eye).normalize().dot(look), -1.0, 1.0)));
-                        lastPlacedAt = now;
                     }
                 }
             }
@@ -654,7 +630,7 @@ public class WorldTextRenderer {
             Vec3 eye = mc.player.getEyePosition();
             synchronized (this.pieces) {
                 updateFollow(mc, context.partialTick());
-                this.placePending(mc, context, now);
+                this.placePending(context, now);
                 this.pieces.removeIf(px -> now - px.fadeAt > fadeDuration(px) || worldPos(px).distanceToSqr(eye) > 4096.0);
                 if (!ModSettings.enable3DLyrics || this.pieces.isEmpty()) {
                     return;
@@ -1196,7 +1172,7 @@ public class WorldTextRenderer {
         return ModSettings.lyricSize * 0.28F * fontFactor;
     }
 
-    private static float[][] ring(int count, float radius) {
+    private static float[][] ring() {
         float[][] ring = new float[8][];
 
         for (int i = 0; i < 8; i++) {

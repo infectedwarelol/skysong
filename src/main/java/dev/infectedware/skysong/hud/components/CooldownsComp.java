@@ -21,7 +21,7 @@ public final class CooldownsComp extends ListHudComp {
     private int previewIndex;
 
     public CooldownsComp() {
-        super("cooldowns", "Cooldowns", () -> ModSettings.cooldownsEnabled, 295.0F, 29.0F);
+        super("cooldowns", "Cooldowns", () -> ModSettings.cooldownsEnabled, 295.0F);
     }
 
     @Override
