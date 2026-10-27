@@ -25,6 +25,7 @@ import dev.infectedware.skysong.render.CinematicTextRenderer;
 import dev.infectedware.skysong.render.StarGlyphs;
 import dev.infectedware.skysong.render.WorldTextRenderer;
 import dev.infectedware.skysong.render.fx.Afterimages;
+import dev.infectedware.skysong.render.fx.CardFx;
 import dev.infectedware.skysong.render.fx.DeathFx;
 import dev.infectedware.skysong.render.fx.EntityFx;
 import dev.infectedware.skysong.render.fx.Fx;
@@ -136,6 +137,7 @@ public class SkysongClient implements ClientModInitializer {
             Fx.reset("resources reloaded");
         });
         KillFx.init();
+        CardFx.init();
         Explosions.init();
         Cosmetics.init();
         DeathFx.init();

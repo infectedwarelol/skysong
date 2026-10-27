@@ -20,6 +20,7 @@ import dev.infectedware.skysong.party.PartyCommands;
 import dev.infectedware.skysong.pvp.Explosions;
 import dev.infectedware.skysong.render.AspectRatio;
 import dev.infectedware.skysong.render.CustomFonts;
+import dev.infectedware.skysong.render.fx.CardFx;
 import dev.infectedware.skysong.render.fx.DeathFx;
 import dev.infectedware.skysong.render.fx.Fx;
 import dev.infectedware.skysong.render.fx.KillFx;
@@ -300,6 +301,15 @@ public final class ModuleRegistry {
                     new Setting.ColorPick("Color 2", () -> ModSettings.deathEffectCustomColor2, v -> ModSettings.deathEffectCustomColor2 = v)
                 )
             )
+        ),
+        new ClientModule(
+            "Target Cards",
+            "Playing cards swirl around whoever you hit, with a glow on the ground.",
+            Category.VISUALS,
+            () -> ModSettings.targetCards,
+            v -> ModSettings.targetCards = v,
+            null,
+            ModuleRegistry::targetCardsSettings
         ),
         new ClientModule(
             "Swing Trail",
@@ -912,6 +922,35 @@ public final class ModuleRegistry {
             )
         );
         shaderError(s);
+        return s;
+    }
+
+    private static List<Setting> targetCardsSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Cards"));
+        s.add(new Setting.Slide("Cards", 3.0F, 24.0F, 1.0F, 12.0, () -> ModSettings.targetCardsCount, v -> ModSettings.targetCardsCount = (int)Math.round(v)));
+        s.add(new Setting.Slide("Card size", 0.4F, 1.6F, 0.05F, 0.85, () -> ModSettings.targetCardsSize, v -> ModSettings.targetCardsSize = (float)v));
+        s.add(new Setting.Slide("Radius", 0.3F, 1.8F, 0.05F, 0.75, () -> ModSettings.targetCardsRadius, v -> ModSettings.targetCardsRadius = (float)v));
+        s.add(new Setting.Slide("Speed", 0.1F, 3.0F, 0.05F, 1.0, () -> ModSettings.targetCardsSpeed, v -> ModSettings.targetCardsSpeed = (float)v));
+        s.add(new Setting.Header("Timing"));
+        s.add(new Setting.Slide("Hold time (s)", 0.5F, 5.0F, 0.1F, 1.5, () -> ModSettings.targetCardsHold, v -> ModSettings.targetCardsHold = (float)v));
+        s.add(new Setting.Slide("Repeat every (s)", 0.2F, 3.0F, 0.1F, 1.0, () -> ModSettings.targetCardsRepeat, v -> ModSettings.targetCardsRepeat = (float)v));
+        s.add(new Setting.Toggle("Ground glow", () -> ModSettings.targetCardsGroundGlow, v -> ModSettings.targetCardsGroundGlow = v));
+        s.add(new Setting.Toggle("Players only", () -> ModSettings.targetCardsPlayersOnly, v -> ModSettings.targetCardsPlayersOnly = v));
+        s.add(new Setting.Header("Color"));
+        s.add(new Setting.Choice("Card backs", CardFx.COLORS, () -> ModSettings.targetCardsColorMode, v -> ModSettings.targetCardsColorMode = v));
+        s.add(
+            new Setting.Shown(
+                () -> ModSettings.targetCardsColorMode >= 2,
+                new Setting.ColorPick("Color 1", () -> ModSettings.targetCardsColor, v -> ModSettings.targetCardsColor = v)
+            )
+        );
+        s.add(
+            new Setting.Shown(
+                () -> ModSettings.targetCardsColorMode == 3,
+                new Setting.ColorPick("Color 2", () -> ModSettings.targetCardsColor2, v -> ModSettings.targetCardsColor2 = v)
+            )
+        );
         return s;
     }
 
