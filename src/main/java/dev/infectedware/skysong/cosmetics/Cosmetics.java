@@ -34,8 +34,9 @@ public final class Cosmetics {
     public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon", "Neon"};
     public static final int NEON_WINGS = 5;
     public static final String[] AURAS = new String[]{"Energy", "Sparkles", "Energy + sparkles"};
-    public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst", "Jellyfish"};
+    public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst", "Jellyfish", "Orrery"};
     public static final int JELLYFISH_PET = 8;
+    public static final int ORRERY_PET = 9;
     public static final String[] TRAILS = new String[]{"Flames", "Hearts", "Notes", "Sparkles", "Souls", "Cherry petals", "Snow", "Enchant", "Glow", "Color dust"};
     public static final String[] SIDES = new String[]{"Right", "Left"};
     private static final RandomSource RANDOM = RandomSource.create();
@@ -66,7 +67,7 @@ public final class Cosmetics {
     }
 
     public static boolean shapedPet(int type) {
-        return type == JELLYFISH_PET;
+        return type >= JELLYFISH_PET && type <= ORRERY_PET;
     }
 
     public static boolean petUsesColors(int type) {

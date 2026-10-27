@@ -479,6 +479,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         pose.scale(size, size, size);
         if (type == Cosmetics.JELLYFISH_PET) {
             jellyfish(pose, collector, age);
+        } else if (type == Cosmetics.ORRERY_PET) {
+            orrery(pose, collector, light, age);
         } else if (type <= 0 || type >= PET_ITEMS.length) {
             wisp(pose, collector, age);
         } else {
@@ -548,6 +550,41 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                     prevZ = z;
                 }
             }
+        });
+        pose.popPose();
+    }
+
+    private static void orrery(PoseStack pose, SubmitNodeCollector collector, int light, float age) {
+        int c1 = petColor(0.0F);
+        int c2 = petColor(1.0F);
+        int ringColor = Colors.darken(c1, 0.75F);
+        int moonColor = Colors.mixWhite(c1, 0.55F);
+        RenderType type = RenderTypes.entityCutoutNoCull(CosmeticTextures.white());
+        pose.pushPose();
+        pose.translate(0.0F, Mth.sin(age * 0.04F) * 0.015F, 0.0F);
+        pose.mulPose(Axis.YP.rotationDegrees(age * 0.6F));
+        collector.submitCustomGeometry(pose, type, (p, out) -> {
+            Geo geo = new Geo(p, out, light);
+            geo.ball(0.0F, 0.0F, 0.0F, 0.07F, c2);
+            geo.frustum(0.012F, 0.012F, -0.07F, -0.11F, 6, ringColor, false, true);
+        });
+        orbit(pose, collector, type, light, 25.0F, 0.0F, 0.15F, age * 0.08F, 0.026F, ringColor, c1);
+        orbit(pose, collector, type, light, -12.0F, -38.0F, 0.21F, -age * 0.045F, 0.02F, ringColor, moonColor);
+        pose.popPose();
+    }
+
+    private static void orbit(
+        PoseStack pose, SubmitNodeCollector collector, RenderType type, int light, float tiltX, float tiltZ, float radius, float angle, float planetRadius, int ringColor, int planetColor
+    ) {
+        pose.pushPose();
+        pose.mulPose(Axis.XP.rotationDegrees(tiltX));
+        pose.mulPose(Axis.ZP.rotationDegrees(tiltZ));
+        float px = Mth.cos(angle) * radius;
+        float pz = Mth.sin(angle) * radius;
+        collector.submitCustomGeometry(pose, type, (p, out) -> {
+            Geo geo = new Geo(p, out, light);
+            geo.torus(radius, 0.006F, 20, 4, i -> ringColor);
+            geo.ball(px, 0.0F, pz, planetRadius, planetColor);
         });
         pose.popPose();
     }
