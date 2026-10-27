@@ -38,6 +38,7 @@ public final class Cosmetics {
     public static final int JELLYFISH_PET = 8;
     public static final int ORRERY_PET = 9;
     public static final int CRANE_PET = 10;
+    public static final int MAX_PETS = 3;
     public static final String[] TRAILS = new String[]{"Flames", "Hearts", "Notes", "Sparkles", "Souls", "Cherry petals", "Snow", "Enchant", "Glow", "Color dust"};
     public static final String[] SIDES = new String[]{"Right", "Left"};
     private static final RandomSource RANDOM = RandomSource.create();
@@ -169,7 +170,7 @@ public final class Cosmetics {
     private static void firstPersonPet(PoseStack pose, SubmitNodeCollector collector) {
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
-        if (!ModSettings.cosmeticPet || !ModSettings.cosmeticPetFirstPerson || player == null || mc.level == null || player.isSpectator()) {
+        if (!ModSettings.cosmeticPet || !ModSettings.cosmeticPetFirstPerson || player == null || mc.level == null || player.isSpectator() || player.isDeadOrDying()) {
             return;
         }
 
@@ -187,7 +188,7 @@ public final class Cosmetics {
         pose.scale(-0.9375F, -0.9375F, 0.9375F);
         pose.translate(0.0F, -1.501F, 0.0F);
         int light = LevelRenderer.getLightColor(mc.level, BlockPos.containing(player.getEyePosition(pt)));
-        CosmeticsLayer.pet(pose, collector, light, player.tickCount + pt, true);
+        CosmeticsLayer.pets(pose, collector, light, player.tickCount + pt, true);
         pose.popPose();
     }
 }

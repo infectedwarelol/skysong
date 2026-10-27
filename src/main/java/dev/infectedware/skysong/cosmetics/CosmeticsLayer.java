@@ -40,7 +40,11 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         new ItemStack(Items.AMETHYST_CLUSTER)
     };
     private static final float[] HAT_HEIGHTS = new float[]{0.42F, 0.27F, 0.62F, 0.46F, 0.21F, 0.5F, 0.3F, 0.34F};
-    private static final ItemStackRenderState PET_STATE = new ItemStackRenderState();
+    private static final ItemStackRenderState[] PET_STATES = new ItemStackRenderState[]{
+        new ItemStackRenderState(), new ItemStackRenderState(), new ItemStackRenderState()
+    };
+    private static final float[][] PET_SLOTS = new float[][]{{0.68F, -0.42F, 0.18F}, {-0.68F, -0.42F, 0.18F}, {0.32F, -0.8F, 0.48F}};
+    private static final float[][] PET_SLOTS_FIRST_PERSON = new float[][]{{0.95F, -0.1F, -1.45F}, {-0.95F, -0.1F, -1.45F}, {1.55F, -0.3F, -1.9F}};
     private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
@@ -103,10 +107,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             pose.popPose();
         }
 
-        if (ModSettings.cosmeticPet) {
+        if (ModSettings.cosmeticPet && state.deathTime <= 0.0F) {
             pose.pushPose();
             this.getParentModel().root().translateAndRotate(pose);
-            pet(pose, collector, light, age, false);
+            pets(pose, collector, light, age, false);
             pose.popPose();
         }
     }
@@ -459,18 +463,28 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         geo.vertex(cx - halfWidth, cy, cz, argb, 0.0F, 0.5F, 0.0F, 0.0F, 1.0F);
     }
 
-    static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson) {
-        int type = ModSettings.cosmeticPetType;
+    static void pets(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson) {
+        int primary = ModSettings.cosmeticPetType;
+        int limit = Math.clamp(ModSettings.cosmeticPetLimit, 1, Cosmetics.MAX_PETS);
+        pet(pose, collector, light, age, firstPerson, primary, 0);
+        int extras = ModSettings.cosmeticPetExtras;
+        int slot = 1;
+        for (int type = 0; type < Cosmetics.PETS.length && slot < limit; type++) {
+            if ((extras & 1 << type) != 0 && type != primary) {
+                pet(pose, collector, light, age, firstPerson, type, slot);
+                slot++;
+            }
+        }
+    }
+
+    private static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson, int type, int slot) {
         boolean shaped = Cosmetics.shapedPet(type);
         float side = ModSettings.cosmeticPetSide == 1 ? 1.0F : -1.0F;
-        float size = ModSettings.cosmeticPetSize;
-        float bob = shaped ? 0.0F : Mth.sin(age * 0.11F) * 0.06F;
+        float size = Math.clamp(ModSettings.cosmeticPetSize, 0.5F, 2.0F);
+        float bob = shaped ? 0.0F : Mth.sin(age * 0.11F + slot * 2.0F) * 0.06F;
+        float[] anchor = firstPerson ? PET_SLOTS_FIRST_PERSON[slot] : PET_SLOTS[slot];
         pose.pushPose();
-        if (firstPerson) {
-            pose.translate(side * 0.95F, -0.1F + bob, -1.45F);
-        } else {
-            pose.translate(side * 0.68F, -0.42F + bob, 0.18F);
-        }
+        pose.translate(side * anchor[0], anchor[1] + bob, anchor[2]);
 
         if (!shaped) {
             pose.mulPose(Axis.YP.rotationDegrees(Mth.sin(age * 0.03F) * 25.0F));
@@ -489,8 +503,9 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             pose.mulPose(Axis.ZP.rotationDegrees(180.0F));
             pose.scale(0.42F, 0.42F, 0.42F);
             Minecraft mc = Minecraft.getInstance();
-            mc.getItemModelResolver().updateForTopItem(PET_STATE, PET_ITEMS[type], ItemDisplayContext.FIXED, mc.level, null, 0);
-            PET_STATE.submit(pose, collector, light, OverlayTexture.NO_OVERLAY, 0);
+            ItemStackRenderState itemState = PET_STATES[slot];
+            mc.getItemModelResolver().updateForTopItem(itemState, PET_ITEMS[type], ItemDisplayContext.FIXED, mc.level, null, 0);
+            itemState.submit(pose, collector, light, OverlayTexture.NO_OVERLAY, 0);
         }
 
         pose.popPose();
