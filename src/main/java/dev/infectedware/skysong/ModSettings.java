@@ -59,7 +59,6 @@ public final class ModSettings {
     public static boolean lyricRealTiming = true;
     public static boolean classicMenu = false;
     public static boolean liveEditorMenu = false;
-    public static boolean menu3d = false;
     public static boolean pvpSmallTotem = false;
     public static float pvpTotemScale = 0.5F;
     public static boolean pvpTotemIgnorePack = true;

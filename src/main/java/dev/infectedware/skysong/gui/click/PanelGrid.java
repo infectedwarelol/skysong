@@ -10,7 +10,6 @@ import dev.infectedware.skysong.ui.Clip;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.util.Mth;
-import org.joml.Matrix4f;
 
 public final class PanelGrid {
     private static final float GAP = 5.0F;
@@ -22,8 +21,6 @@ public final class PanelGrid {
     private static final float BAR_ROOM = 5.0F;
     private static final float SCROLL_STEP = 16.0F;
     private final ScrollBar scrollBar = new ScrollBar();
-    private static final float[] AWAY = new float[]{-100000.0F, -100000.0F};
-    public boolean holo;
     private ClientModule module;
     private List<Group> groups = List.of();
     private float x;
@@ -177,11 +174,6 @@ public final class PanelGrid {
             }
 
             layout = this.layout();
-            if (this.holo) {
-                this.renderHolo(c, layout, a, mx, my);
-                return;
-            }
-
             Clip.push(c, x, y, x + w, y + h);
 
             for (Box b : layout.boxes()) {
@@ -215,80 +207,10 @@ public final class PanelGrid {
         }
     }
 
-    private Matrix4f transform(Layout layout, int box) {
-        Box b = layout.boxes().get(box);
-        return Holo.place(b.x(), b.y(), b.w(), b.h(), box + 3, 8.0F);
-    }
-
-    private float[] mouse(Layout layout, int box, float mx, float my) {
-        if (!this.holo) {
-            return new float[]{mx, my};
-        }
-
-        float[] p = Holo.unproject(this.transform(layout, box), mx, my);
-        return p == null ? AWAY : p;
-    }
-
-    private boolean visibleIn(Box b, float[] p) {
-        if (this.holo && Holo.behind(b.x(), b.w())) {
-            return false;
-        }
-
+    private boolean visibleIn(Box b, float mx, float my) {
         float top = Math.max(this.y, b.y());
         float bottom = Math.min(this.y + this.height, b.y() + b.h());
-        return Ui.inside(p[0], p[1], b.x(), top, b.w(), bottom - top);
-    }
-
-    private boolean hitsBox(Layout layout, float mx, float my) {
-        List<Box> boxes = layout.boxes();
-        for (int i = 0; i < boxes.size(); i++) {
-            if (this.visibleIn(boxes.get(i), this.mouse(layout, i, mx, my))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void renderHolo(GuiGraphics c, Layout layout, float a, float mx, float my) {
-        List<Box> boxes = layout.boxes();
-        for (int i = 0; i < boxes.size(); i++) {
-            Box b = boxes.get(i);
-            float top = Math.max(this.y, b.y());
-            float bottom = Math.min(this.y + this.height, b.y() + b.h());
-            if (bottom <= top || Holo.behind(b.x(), b.w())) {
-                continue;
-            }
-
-            float[] m = this.mouse(layout, i, mx, my);
-            Holo.begin(this.transform(layout, i));
-            try {
-                Clip.push(c, b.x() - 2.0F, top - 2.0F, b.x() + b.w() + 2.0F, bottom + 2.0F);
-                Holo.backing(c, b.x(), b.y(), b.w(), b.h(), a, i + 3);
-                R2D.text(c, MsdfFont.Font.SEMIBOLD, b.group().title(), b.x() + 5.0F, b.y() + 4.5F, 6.5F, Holo.accent(250.0F * a));
-                for (Slot s : layout.slots()) {
-                    if (s.box() == i) {
-                        s.widget().render(c, s.x(), s.y(), s.w(), a, m[0], m[1]);
-                    }
-                }
-
-                Clip.pop(c);
-            } finally {
-                Holo.end();
-            }
-        }
-
-        for (Slot s : layout.slots()) {
-            if (s.widget().hasOverlay()) {
-                float[] m = this.mouse(layout, s.box(), mx, my);
-                Holo.begin(this.transform(layout, s.box()));
-                try {
-                    s.widget().renderOverlay(c, s.x(), s.y(), s.w(), a, m[0], m[1]);
-                } finally {
-                    Holo.end();
-                }
-            }
-        }
+        return Ui.inside(mx, my, b.x(), top, b.w(), bottom - top);
     }
 
     private static void drawBox(GuiGraphics c, Box b, float a) {
@@ -299,7 +221,7 @@ public final class PanelGrid {
     }
 
     public boolean contains(float mx, float my) {
-        return this.holo ? this.hitsBox(this.layout(), mx, my) : Ui.inside(mx, my, this.x, this.y, this.width, this.height);
+        return Ui.inside(mx, my, this.x, this.y, this.width, this.height);
     }
 
     public boolean click(float mx, float my) {
@@ -314,8 +236,7 @@ public final class PanelGrid {
             for (Slot s : slots) {
                 if (s.widget().overlayOpen()) {
                     overlayOpen = true;
-                    float[] m = this.mouse(layout, s.box(), mx, my);
-                    if (s.widget().clickOverlay(s.x(), s.y(), s.w(), m[0], m[1])) {
+                    if (s.widget().clickOverlay(s.x(), s.y(), s.w(), mx, my)) {
                         return true;
                     }
                 }
@@ -331,15 +252,14 @@ public final class PanelGrid {
                 return false;
             }
 
-            if (!this.holo && this.scrollBar.tryGrab(mx, my)) {
+            if (this.scrollBar.tryGrab(mx, my)) {
                 return true;
             }
 
             for (Slot s : slots) {
                 Widget w = s.widget();
-                float[] m = this.mouse(layout, s.box(), mx, my);
-                if (Ui.inside(m[0], m[1], s.x(), s.y(), s.w(), w.height()) && this.visibleIn(layout.boxes().get(s.box()), m)) {
-                    boolean hit = w.click(s.x(), s.y(), s.w(), m[0], m[1]);
+                if (Ui.inside(mx, my, s.x(), s.y(), s.w(), w.height()) && this.visibleIn(layout.boxes().get(s.box()), mx, my)) {
+                    boolean hit = w.click(s.x(), s.y(), s.w(), mx, my);
                     if (hit && w.overlayOpen()) {
                         for (Slot other : slots) {
                             if (other.widget() != w) {
@@ -375,9 +295,8 @@ public final class PanelGrid {
         try {
             Layout layout = this.layout();
             for (Slot s : layout.slots()) {
-                float[] m = this.mouse(layout, s.box(), mx, my);
-                if (Ui.inside(m[0], m[1], s.x(), s.y(), s.w(), s.widget().height())) {
-                    if (s.widget().middleClick(s.x(), s.y(), s.w(), m[0], m[1])) {
+                if (Ui.inside(mx, my, s.x(), s.y(), s.w(), s.widget().height())) {
+                    if (s.widget().middleClick(s.x(), s.y(), s.w(), mx, my)) {
                         ModConfig.save();
                     }
 
@@ -398,8 +317,7 @@ public final class PanelGrid {
         try {
             Layout layout = this.layout();
             for (Slot s : layout.slots()) {
-                float[] m = this.mouse(layout, s.box(), mx, my);
-                if (s.widget().overlayOpen() && s.widget().scrollOverlay(s.x(), s.y(), s.w(), m[0], m[1], amount)) {
+                if (s.widget().overlayOpen() && s.widget().scrollOverlay(s.x(), s.y(), s.w(), mx, my, amount)) {
                     return true;
                 }
             }
