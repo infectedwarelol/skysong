@@ -45,6 +45,7 @@ public final class Cosmetics {
     public static final int CLOUD_PET = 13;
     public static final int MAX_PETS = 3;
     public static final String[] TRAILS = new String[]{"Flames", "Hearts", "Notes", "Sparkles", "Souls", "Cherry petals", "Snow", "Enchant", "Glow", "Color dust"};
+    public static final String[] QUALITIES = new String[]{"Low", "Medium", "High"};
     public static final String[] SIDES = new String[]{"Right", "Left"};
     private static final RandomSource RANDOM = RandomSource.create();
     private static Vec3 lastTrailPos;
@@ -86,6 +87,22 @@ public final class Cosmetics {
         return ModSettings.cosmeticReduceMotion;
     }
 
+    static int capePhysicsQuality() {
+        return Math.clamp(ModSettings.cosmeticCapePhysicsQuality, 0, 2);
+    }
+
+    static float capeStiffness() {
+        return clamped(ModSettings.cosmeticCapeStiffness, 0.1F, 1.0F, 0.5F);
+    }
+
+    static float capeWind() {
+        return clamped(ModSettings.cosmeticCapeWind, 0.0F, 2.0F, 1.0F);
+    }
+
+    static float clamped(float value, float min, float max, float fallback) {
+        return Float.isNaN(value) ? fallback : Math.clamp(value, min, max);
+    }
+
     public static int color(int mode, int custom, int custom2, float t) {
         return switch (mode) {
             case 0 -> ClientAccent.gradientColor(t, 255.0F);
@@ -108,6 +125,7 @@ public final class Cosmetics {
     private static void tick(Minecraft mc) {
         tickCount++;
         Emotes.tick(mc);
+        CosmeticPhysics.tick(mc);
         LocalPlayer player = mc.player;
         if (player == null || mc.level == null || player.isSpectator() || player.isInvisible()) {
             lastTrailPos = null;

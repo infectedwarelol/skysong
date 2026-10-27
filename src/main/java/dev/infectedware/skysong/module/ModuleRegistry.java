@@ -1368,6 +1368,11 @@ public final class ModuleRegistry {
         s.add(new Setting.Header("Cape"));
         s.add(new Setting.Choice("Style", Cosmetics.CAPES, () -> ModSettings.cosmeticCapeStyle, v -> ModSettings.cosmeticCapeStyle = v));
         s.add(new Setting.Shown(Cosmetics::shapedCape, new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v)));
+        s.add(new Setting.Shown(Cosmetics::shapedCape, new Setting.Toggle("Cloth physics", () -> ModSettings.cosmeticCapePhysics, v -> ModSettings.cosmeticCapePhysics = v)));
+        BooleanSupplier cloth = () -> Cosmetics.shapedCape() && ModSettings.cosmeticCapePhysics;
+        s.add(new Setting.Shown(cloth, new Setting.Choice("Physics quality", Cosmetics.QUALITIES, () -> ModSettings.cosmeticCapePhysicsQuality, v -> ModSettings.cosmeticCapePhysicsQuality = v)));
+        s.add(new Setting.Shown(cloth, new Setting.Slide("Stiffness", 0.1F, 1.0F, 0.05F, 0.5, () -> ModSettings.cosmeticCapeStiffness, v -> ModSettings.cosmeticCapeStiffness = (float)v)));
+        s.add(new Setting.Shown(cloth, new Setting.Slide("Wind", 0.0F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticCapeWind, v -> ModSettings.cosmeticCapeWind = (float)v)));
         s.add(new Setting.Shown(() -> !Cosmetics.shapedCape(), new Setting.Toggle("Also on elytra", () -> ModSettings.cosmeticCapeElytra, v -> ModSettings.cosmeticCapeElytra = v)));
         s.add(new Setting.Shown(image, capeImageSetting()));
         s.add(new Setting.Shown(image, new Setting.Info(() -> "Put 64x32 PNG capes in config/skysong/capes")));

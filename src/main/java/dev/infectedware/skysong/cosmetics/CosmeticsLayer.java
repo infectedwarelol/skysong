@@ -3,6 +3,7 @@ package dev.infectedware.skysong.cosmetics;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.infectedware.skysong.ModSettings;
+import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.theme.Colors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
@@ -49,8 +50,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final int BANNER_ROWS = 10;
     private static final float[] BANNER_HEM = new float[]{0.0F, 0.09F, 0.02F, 0.13F, 0.04F, 0.11F, 0.0F, 0.08F, 0.03F};
     private static final float[] BANNER_PLEAT = pleats();
-    private static final float[] BANNER_PREVIOUS = new float[(BANNER_COLUMNS + 1) * 3];
-    private static final float[] BANNER_CURRENT = new float[(BANNER_COLUMNS + 1) * 3];
+    private static final float[] BANNER_PREVIOUS = new float[(BANNER_COLUMNS + 1) * 6];
+    private static final float[] BANNER_CURRENT = new float[(BANNER_COLUMNS + 1) * 6];
+    private static final float[] CLOTH_SAMPLE = new float[9];
+    private static final float[] CAPELET_CORNERS = new float[12];
     private static final int CAPELET_COLUMNS = 10;
     private static final int CAPELET_ROWS = 4;
     private static final float[] CAPELET_DROP = capeletDrops();
@@ -81,9 +84,9 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final int CLOUD_TOP = 0xFFF4F7FB;
     private static final int CLOUD_BOTTOM = 0xFFC9D3E0;
     private static final int RAIN = 0xFF8EC9FF;
-    private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
+    static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
-    private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
+    static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
     private static final int RIBBON_SEGMENTS = 12;
     private static final int SHARD_ROWS = 6;
     private static final int SHARD_COLUMNS = 5;
@@ -412,7 +415,9 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         int c1 = Cosmetics.color(mode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 0.0F);
         int c2 = Cosmetics.color(mode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 1.0F);
         boolean armored = !state.chestEquipment.isEmpty();
-        pose.translate(0.0F, armored ? -0.053F : 0.0F, armored ? 0.19F : 0.135F);
+        CosmeticPhysics.capeOffsetY = armored ? -0.053F : 0.0F;
+        CosmeticPhysics.capeOffsetZ = armored ? 0.19F : 0.135F;
+        pose.translate(0.0F, CosmeticPhysics.capeOffsetY, CosmeticPhysics.capeOffsetZ);
         int style = ModSettings.cosmeticCapeStyle;
         if (style == Cosmetics.CAPELET_CAPE) {
             pose.pushPose();
@@ -421,26 +426,35 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             pose.popPose();
         }
 
-        float swing = 6.0F + state.capeLean / 2.0F + state.capeFlap;
-        pose.mulPose(Axis.XP.rotationDegrees(style == Cosmetics.CAPELET_CAPE ? swing * 0.5F : swing));
-        pose.mulPose(Axis.ZP.rotationDegrees(state.capeLean2 / 2.0F));
+        boolean physics = CosmeticPhysics.clothShown(Compat.partialTick());
+        if (!physics) {
+            float swing = 6.0F + state.capeLean / 2.0F + state.capeFlap;
+            pose.mulPose(Axis.XP.rotationDegrees(style == Cosmetics.CAPELET_CAPE ? swing * 0.5F : swing));
+            pose.mulPose(Axis.ZP.rotationDegrees(state.capeLean2 / 2.0F));
+        }
+
         if (style == Cosmetics.SHARD_CAPE) {
-            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> shards(new Geo(p, out, FULL_BRIGHT), age, c1, c2));
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> shards(new Geo(p, out, FULL_BRIGHT), age, c1, c2, physics));
         } else if (style == Cosmetics.BANNER_CAPE) {
-            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> banner(new Geo(p, out, light), age, c1, c2));
+            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> banner(new Geo(p, out, light), age, c1, c2, physics));
         } else if (style == Cosmetics.CAPELET_CAPE) {
-            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> capelet(new Geo(p, out, light), c1, c2));
+            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> capelet(new Geo(p, out, light), c1, c2, physics));
         } else {
             collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
                 Geo geo = new Geo(p, out, light);
                 for (int i = 0; i < RIBBON_X.length; i++) {
-                    ribbon(geo, age, RIBBON_X[i], RIBBON_HALF_WIDTH[i], RIBBON_LENGTH[i], i * 2.1F, i == 1 ? 0.012F : 0.0F, c1, c2);
+                    ribbon(geo, age, i, physics, c1, c2);
                 }
             });
         }
     }
 
-    private static void ribbon(Geo geo, float age, float rootX, float rootHalf, float length, float phase, float depth, int c1, int c2) {
+    private static void ribbon(Geo geo, float age, int index, boolean physics, int c1, int c2) {
+        float rootX = RIBBON_X[index];
+        float rootHalf = RIBBON_HALF_WIDTH[index];
+        float length = RIBBON_LENGTH[index];
+        float phase = index * 2.1F;
+        float depth = index == 1 ? 0.012F : 0.0F;
         float prevX = rootX;
         float prevY = 0.0F;
         float prevZ = depth;
@@ -448,14 +462,25 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         int prevColor = c1;
         for (int s = 1; s <= RIBBON_SEGMENTS; s++) {
             float t = (float)s / RIBBON_SEGMENTS;
-            float x = rootX + Mth.sin(age * 0.07F + t * 3.0F + phase) * 0.035F * t;
-            float y = t * length;
-            float z = depth + Mth.sin(age * 0.16F - t * 5.5F + phase) * 0.05F * t;
+            float x;
+            float y;
+            float z;
+            if (physics) {
+                CosmeticPhysics.ribbonPoint(index, t, CLOTH_SAMPLE);
+                x = CLOTH_SAMPLE[0];
+                y = CLOTH_SAMPLE[1];
+                z = CLOTH_SAMPLE[2];
+            } else {
+                x = rootX + Mth.sin(age * 0.07F + t * 3.0F + phase) * 0.035F * t;
+                y = t * length;
+                z = depth + Mth.sin(age * 0.16F - t * 5.5F + phase) * 0.05F * t;
+            }
+
             float half = rootHalf * (1.0F - 0.35F * t);
             int color = Cosmetics.withAlpha(Colors.lerp(c1, c2, t), 1.0F - 0.2F * t);
             float dy = y - prevY;
             float dz = z - prevZ;
-            float inv = Mth.invSqrt(dy * dy + dz * dz);
+            float inv = Mth.invSqrt(Math.max(1.0E-8F, dy * dy + dz * dz));
             float ny = dz * inv;
             float nz = -dy * inv;
             if (s < RIBBON_SEGMENTS) {
@@ -484,7 +509,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
     }
 
-    private static void shards(Geo geo, float age, int c1, int c2) {
+    private static void shards(Geo geo, float age, int c1, int c2, boolean physics) {
+        float[] sample = CLOTH_SAMPLE;
         for (int row = 0; row < SHARD_ROWS; row++) {
             float v = (float)row / (SHARD_ROWS - 1);
             boolean staggered = (row & 1) == 1;
@@ -499,10 +525,51 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                 float cz = Mth.sin(age * 0.12F - row * 0.7F + offset * 0.4F) * 0.03F * (0.3F + v);
                 float twinkle = Cosmetics.reduceMotion() ? 0.5F : 0.5F + 0.5F * Mth.sin(age * 0.09F + row * 2.7F + column * 1.9F);
                 int body = Colors.lerp(c1, c2, v);
-                diamond(geo, cx, cy, cz, halfWidth, halfHeight, Cosmetics.withAlpha(body, 0.55F + 0.2F * twinkle));
-                diamond(geo, cx, cy, cz - 0.004F, halfWidth * 0.45F, halfHeight * 0.45F, Cosmetics.withAlpha(Colors.mixWhite(body, 0.45F + 0.4F * twinkle), 0.9F));
+                int outer = Cosmetics.withAlpha(body, 0.55F + 0.2F * twinkle);
+                int inner = Cosmetics.withAlpha(Colors.mixWhite(body, 0.45F + 0.4F * twinkle), 0.9F);
+                if (physics) {
+                    float sheetV = cy / 0.95F;
+                    CosmeticPhysics.sample(cx / (0.25F + 0.05F * sheetV) * 0.5F + 0.5F, sheetV, sample);
+                    orientedDiamond(geo, halfWidth, halfHeight, 0.0F, outer);
+                    orientedDiamond(geo, halfWidth * 0.45F, halfHeight * 0.45F, -0.004F, inner);
+                } else {
+                    diamond(geo, cx, cy, cz, halfWidth, halfHeight, outer);
+                    diamond(geo, cx, cy, cz - 0.004F, halfWidth * 0.45F, halfHeight * 0.45F, inner);
+                }
             }
         }
+    }
+
+    private static void orientedDiamond(Geo geo, float halfWidth, float halfHeight, float lift, int argb) {
+        float[] s = CLOTH_SAMPLE;
+        float ux = s[3];
+        float uy = s[4];
+        float uz = s[5];
+        float vx = s[6];
+        float vy = s[7];
+        float vz = s[8];
+        float nx = uy * vz - uz * vy;
+        float ny = uz * vx - ux * vz;
+        float nz = ux * vy - uy * vx;
+        float inverseU = Mth.invSqrt(Math.max(1.0E-8F, ux * ux + uy * uy + uz * uz)) * halfWidth;
+        float inverseV = Mth.invSqrt(Math.max(1.0E-8F, vx * vx + vy * vy + vz * vz)) * halfHeight;
+        float inverseN = Mth.invSqrt(Math.max(1.0E-8F, nx * nx + ny * ny + nz * nz));
+        nx *= inverseN;
+        ny *= inverseN;
+        nz *= inverseN;
+        float cx = s[0] + nx * lift;
+        float cy = s[1] + ny * lift;
+        float cz = s[2] + nz * lift;
+        ux *= inverseU;
+        uy *= inverseU;
+        uz *= inverseU;
+        vx *= inverseV;
+        vy *= inverseV;
+        vz *= inverseV;
+        geo.vertex(cx - vx, cy - vy, cz - vz, argb, 0.5F, 0.0F, nx, ny, nz);
+        geo.vertex(cx + ux, cy + uy, cz + uz, argb, 1.0F, 0.5F, nx, ny, nz);
+        geo.vertex(cx + vx, cy + vy, cz + vz, argb, 0.5F, 1.0F, nx, ny, nz);
+        geo.vertex(cx - ux, cy - uy, cz - uz, argb, 0.0F, 0.5F, nx, ny, nz);
     }
 
     private static void diamond(Geo geo, float cx, float cy, float cz, float halfWidth, float halfHeight, int argb) {
@@ -619,9 +686,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         return index + 3;
     }
 
-    private static void banner(Geo geo, float age, int c1, int c2) {
+    private static void banner(Geo geo, float age, int c1, int c2, boolean physics) {
         float[] previous = BANNER_PREVIOUS;
         float[] current = BANNER_CURRENT;
+        float[] sample = CLOTH_SAMPLE;
         int liningBase = Colors.darken(c2, 0.55F);
         int previousColor = c1;
         for (int row = 0; row <= BANNER_ROWS; row++) {
@@ -629,10 +697,22 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             float half = 0.25F + 0.06F * v;
             for (int k = 0; k <= BANNER_COLUMNS; k++) {
                 float u = (float)k / BANNER_COLUMNS;
-                int i = k * 3;
-                current[i] = (u * 2.0F - 1.0F) * half;
-                current[i + 1] = v * (0.98F - BANNER_HEM[k]);
-                current[i + 2] = BANNER_PLEAT[k] * (0.4F + v) + Mth.sin(age * 0.07F - v * 3.0F + u * 1.5F) * 0.035F * v;
+                int i = k * 6;
+                if (physics) {
+                    CosmeticPhysics.sample(u, v * (0.98F - BANNER_HEM[k]) / 0.98F, sample);
+                    sheetNormal(sample, current, i + 3);
+                    float pleat = BANNER_PLEAT[k] * (0.4F + v);
+                    current[i] = sample[0] + current[i + 3] * pleat;
+                    current[i + 1] = sample[1] + current[i + 4] * pleat;
+                    current[i + 2] = sample[2] + current[i + 5] * pleat;
+                } else {
+                    current[i] = (u * 2.0F - 1.0F) * half;
+                    current[i + 1] = v * (0.98F - BANNER_HEM[k]);
+                    current[i + 2] = BANNER_PLEAT[k] * (0.4F + v) + Mth.sin(age * 0.07F - v * 3.0F + u * 1.5F) * 0.035F * v;
+                    current[i + 3] = 0.0F;
+                    current[i + 4] = 0.0F;
+                    current[i + 5] = 1.0F;
+                }
             }
 
             int rowColor = Colors.lerp(c1, Colors.darken(c1, 0.72F), v);
@@ -640,8 +720,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                 int fold = Colors.darken(previousColor, 0.88F);
                 int lining = Colors.lerp(liningBase, Colors.darken(liningBase, 0.8F), v);
                 for (int k = 0; k < BANNER_COLUMNS; k++) {
-                    int a = k * 3;
-                    int b = a + 3;
+                    int a = k * 6;
+                    int b = a + 6;
                     int color = (k & 1) == 0 ? previousColor : fold;
                     geo.quad(
                         previous[a], previous[a + 1], previous[a + 2],
@@ -651,10 +731,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                         color
                     );
                     geo.quad(
-                        previous[a], previous[a + 1], previous[a + 2] - 0.012F,
-                        previous[b], previous[b + 1], previous[b + 2] - 0.012F,
-                        current[b], current[b + 1], current[b + 2] - 0.012F,
-                        current[a], current[a + 1], current[a + 2] - 0.012F,
+                        previous[a] - previous[a + 3] * 0.012F, previous[a + 1] - previous[a + 4] * 0.012F, previous[a + 2] - previous[a + 5] * 0.012F,
+                        previous[b] - previous[b + 3] * 0.012F, previous[b + 1] - previous[b + 4] * 0.012F, previous[b + 2] - previous[b + 5] * 0.012F,
+                        current[b] - current[b + 3] * 0.012F, current[b + 1] - current[b + 4] * 0.012F, current[b + 2] - current[b + 5] * 0.012F,
+                        current[a] - current[a + 3] * 0.012F, current[a + 1] - current[a + 4] * 0.012F, current[a + 2] - current[a + 5] * 0.012F,
                         lining
                     );
                 }
@@ -665,9 +745,28 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
     }
 
-    private static void capelet(Geo geo, int c1, int c2) {
+    private static void sheetNormal(float[] sample, float[] out, int offset) {
+        float nx = sample[4] * sample[8] - sample[5] * sample[7];
+        float ny = sample[5] * sample[6] - sample[3] * sample[8];
+        float nz = sample[3] * sample[7] - sample[4] * sample[6];
+        float lengthSquared = nx * nx + ny * ny + nz * nz;
+        if (lengthSquared < 1.0E-10F) {
+            out[offset] = 0.0F;
+            out[offset + 1] = 0.0F;
+            out[offset + 2] = 1.0F;
+            return;
+        }
+
+        float inverse = Mth.invSqrt(lengthSquared);
+        out[offset] = nx * inverse;
+        out[offset + 1] = ny * inverse;
+        out[offset + 2] = nz * inverse;
+    }
+
+    private static void capelet(Geo geo, int c1, int c2, boolean physics) {
         int top = Colors.mixWhite(c1, 0.12F);
         int bottom = Colors.darken(c1, 0.78F);
+        float[] corners = CAPELET_CORNERS;
         for (int row = 0; row < CAPELET_ROWS; row++) {
             float v0 = (float)row / CAPELET_ROWS;
             float v1 = (float)(row + 1) / CAPELET_ROWS;
@@ -675,15 +774,36 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             for (int k = 0; k < CAPELET_COLUMNS; k++) {
                 float u0 = 2.0F * k / CAPELET_COLUMNS - 1.0F;
                 float u1 = 2.0F * (k + 1) / CAPELET_COLUMNS - 1.0F;
+                capeletPoint(corners, 0, u0, v0, CAPELET_DROP[k], physics);
+                capeletPoint(corners, 3, u1, v0, CAPELET_DROP[k + 1], physics);
+                capeletPoint(corners, 6, u1, v1, CAPELET_DROP[k + 1], physics);
+                capeletPoint(corners, 9, u0, v1, CAPELET_DROP[k], physics);
                 geo.quad(
-                    u0 * (0.28F + 0.05F * v0), v0 * CAPELET_DROP[k], capeletDepth(u0, v0),
-                    u1 * (0.28F + 0.05F * v0), v0 * CAPELET_DROP[k + 1], capeletDepth(u1, v0),
-                    u1 * (0.28F + 0.05F * v1), v1 * CAPELET_DROP[k + 1], capeletDepth(u1, v1),
-                    u0 * (0.28F + 0.05F * v1), v1 * CAPELET_DROP[k], capeletDepth(u0, v1),
+                    corners[0], corners[1], corners[2],
+                    corners[3], corners[4], corners[5],
+                    corners[6], corners[7], corners[8],
+                    corners[9], corners[10], corners[11],
                     color
                 );
             }
         }
+    }
+
+    private static void capeletPoint(float[] out, int offset, float centered, float v, float drop, boolean physics) {
+        float depth = capeletDepth(centered, v);
+        if (!physics) {
+            out[offset] = centered * (0.28F + 0.05F * v);
+            out[offset + 1] = v * drop;
+            out[offset + 2] = depth;
+            return;
+        }
+
+        float[] sample = CLOTH_SAMPLE;
+        CosmeticPhysics.sample(centered * 0.5F + 0.5F, v * drop / 0.36F, sample);
+        sheetNormal(sample, out, offset);
+        out[offset] = sample[0] + out[offset] * depth;
+        out[offset + 1] = sample[1] + out[offset + 1] * depth;
+        out[offset + 2] = sample[2] + out[offset + 2] * depth;
     }
 
     private static float capeletDepth(float centered, float v) {

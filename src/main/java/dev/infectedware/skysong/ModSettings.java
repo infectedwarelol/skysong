@@ -360,6 +360,10 @@ public final class ModSettings {
     public static int cosmeticCapeColor2 = -45149;
     public static String cosmeticCapeImage = "";
     public static boolean cosmeticCapeElytra = true;
+    public static boolean cosmeticCapePhysics = false;
+    public static int cosmeticCapePhysicsQuality = 1;
+    public static float cosmeticCapeStiffness = 0.5F;
+    public static float cosmeticCapeWind = 1.0F;
     public static boolean cosmeticWings = false;
     public static int cosmeticWingsStyle = 0;
     public static int cosmeticWingsColorMode = 2;
