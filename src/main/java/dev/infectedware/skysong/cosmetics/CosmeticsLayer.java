@@ -45,6 +45,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
     private static final int RIBBON_SEGMENTS = 12;
+    private static final int SHARD_ROWS = 6;
+    private static final int SHARD_COLUMNS = 5;
     private final PlayerModel auraWide;
     private final PlayerModel auraSlim;
 
@@ -371,12 +373,16 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         pose.translate(0.0F, armored ? -0.053F : 0.0F, armored ? 0.19F : 0.135F);
         pose.mulPose(Axis.XP.rotationDegrees(6.0F + state.capeLean / 2.0F + state.capeFlap));
         pose.mulPose(Axis.ZP.rotationDegrees(state.capeLean2 / 2.0F));
-        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
-            Geo geo = new Geo(p, out, light);
-            for (int i = 0; i < RIBBON_X.length; i++) {
-                ribbon(geo, age, RIBBON_X[i], RIBBON_HALF_WIDTH[i], RIBBON_LENGTH[i], i * 2.1F, i == 1 ? 0.012F : 0.0F, c1, c2);
-            }
-        });
+        if (ModSettings.cosmeticCapeStyle == Cosmetics.SHARD_CAPE) {
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> shards(new Geo(p, out, FULL_BRIGHT), age, c1, c2));
+        } else {
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
+                Geo geo = new Geo(p, out, light);
+                for (int i = 0; i < RIBBON_X.length; i++) {
+                    ribbon(geo, age, RIBBON_X[i], RIBBON_HALF_WIDTH[i], RIBBON_LENGTH[i], i * 2.1F, i == 1 ? 0.012F : 0.0F, c1, c2);
+                }
+            });
+        }
     }
 
     private static void ribbon(Geo geo, float age, float rootX, float rootHalf, float length, float phase, float depth, int c1, int c2) {
@@ -421,6 +427,34 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             prevHalf = half;
             prevColor = color;
         }
+    }
+
+    private static void shards(Geo geo, float age, int c1, int c2) {
+        for (int row = 0; row < SHARD_ROWS; row++) {
+            float v = (float)row / (SHARD_ROWS - 1);
+            boolean staggered = (row & 1) == 1;
+            int columns = staggered ? SHARD_COLUMNS - 1 : SHARD_COLUMNS;
+            float spacing = 0.1F * (1.0F + 0.22F * v);
+            float halfWidth = 0.042F * (1.0F + 0.15F * v);
+            float halfHeight = 0.075F * (1.0F - 0.25F * v);
+            for (int column = 0; column < columns; column++) {
+                float offset = column - (columns - 1) * 0.5F;
+                float cx = offset * spacing + Mth.sin(age * 0.05F + row * 1.3F + column) * 0.006F;
+                float cy = 0.06F + row * 0.155F;
+                float cz = Mth.sin(age * 0.12F - row * 0.7F + offset * 0.4F) * 0.03F * (0.3F + v);
+                float twinkle = 0.5F + 0.5F * Mth.sin(age * 0.09F + row * 2.7F + column * 1.9F);
+                int body = Colors.lerp(c1, c2, v);
+                diamond(geo, cx, cy, cz, halfWidth, halfHeight, Cosmetics.withAlpha(body, 0.55F + 0.2F * twinkle));
+                diamond(geo, cx, cy, cz - 0.004F, halfWidth * 0.45F, halfHeight * 0.45F, Cosmetics.withAlpha(Colors.mixWhite(body, 0.45F + 0.4F * twinkle), 0.9F));
+            }
+        }
+    }
+
+    private static void diamond(Geo geo, float cx, float cy, float cz, float halfWidth, float halfHeight, int argb) {
+        geo.vertex(cx, cy - halfHeight, cz, argb, 0.5F, 0.0F, 0.0F, 0.0F, 1.0F);
+        geo.vertex(cx + halfWidth, cy, cz, argb, 1.0F, 0.5F, 0.0F, 0.0F, 1.0F);
+        geo.vertex(cx, cy + halfHeight, cz, argb, 0.5F, 1.0F, 0.0F, 0.0F, 1.0F);
+        geo.vertex(cx - halfWidth, cy, cz, argb, 0.0F, 0.5F, 0.0F, 0.0F, 1.0F);
     }
 
     static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson) {
