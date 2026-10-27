@@ -27,8 +27,9 @@ public final class Cosmetics {
     public static final String[] COLOR_MODES = new String[]{"Theme", "Rainbow", "Custom", "Two colors"};
     public static final String[] HALOS = new String[]{"Ring", "Double ring", "Rays", "Tilted"};
     public static final String[] HATS = new String[]{"Top hat", "Crown", "Witch hat", "Party hat", "Cat ears", "Bunny ears", "Horns", "Conical hat"};
-    public static final String[] CAPES = new String[]{"Galaxy", "Gradient", "Flames", "Waves", "Stripes", "Checkers", "My image"};
+    public static final String[] CAPES = new String[]{"Galaxy", "Gradient", "Flames", "Waves", "Stripes", "Checkers", "My image", "Silk ribbons"};
     public static final int CAPE_IMAGE = 6;
+    public static final int RIBBON_CAPE = 7;
     public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon", "Neon"};
     public static final int NEON_WINGS = 5;
     public static final String[] AURAS = new String[]{"Energy", "Sparkles", "Energy + sparkles"};
@@ -56,6 +57,10 @@ public final class Cosmetics {
     public static boolean wears(int entityId) {
         LocalPlayer player = Minecraft.getInstance().player;
         return player != null && player.getId() == entityId;
+    }
+
+    public static boolean shapedCape() {
+        return ModSettings.cosmeticCapeStyle == RIBBON_CAPE;
     }
 
     public static int color(int mode, int custom, int custom2, float t) {

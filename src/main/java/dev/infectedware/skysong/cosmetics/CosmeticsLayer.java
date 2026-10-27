@@ -41,6 +41,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     };
     private static final float[] HAT_HEIGHTS = new float[]{0.42F, 0.27F, 0.62F, 0.46F, 0.21F, 0.5F, 0.3F, 0.34F};
     private static final ItemStackRenderState PET_STATE = new ItemStackRenderState();
+    private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
+    private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
+    private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
+    private static final int RIBBON_SEGMENTS = 12;
     private final PlayerModel auraWide;
     private final PlayerModel auraSlim;
 
@@ -67,6 +71,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             this.getParentModel().root().translateAndRotate(pose);
             this.getParentModel().body.translateAndRotate(pose);
             wings(pose, collector, light, age, state.isFallFlying, state.isCrouching);
+            pose.popPose();
+        }
+
+        if (ModSettings.cosmeticCape && Cosmetics.shapedCape() && !state.chestEquipment.has(DataComponents.GLIDER)) {
+            pose.pushPose();
+            this.getParentModel().root().translateAndRotate(pose);
+            this.getParentModel().body.translateAndRotate(pose);
+            shapedCape(pose, collector, light, state, age);
             pose.popPose();
         }
 
@@ -348,6 +360,66 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                 );
             });
             pose.popPose();
+        }
+    }
+
+    private static void shapedCape(PoseStack pose, SubmitNodeCollector collector, int light, AvatarRenderState state, float age) {
+        int mode = ModSettings.cosmeticCapeColorMode;
+        int c1 = Cosmetics.color(mode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 0.0F);
+        int c2 = Cosmetics.color(mode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 1.0F);
+        boolean armored = !state.chestEquipment.isEmpty();
+        pose.translate(0.0F, armored ? -0.053F : 0.0F, armored ? 0.19F : 0.135F);
+        pose.mulPose(Axis.XP.rotationDegrees(6.0F + state.capeLean / 2.0F + state.capeFlap));
+        pose.mulPose(Axis.ZP.rotationDegrees(state.capeLean2 / 2.0F));
+        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
+            Geo geo = new Geo(p, out, light);
+            for (int i = 0; i < RIBBON_X.length; i++) {
+                ribbon(geo, age, RIBBON_X[i], RIBBON_HALF_WIDTH[i], RIBBON_LENGTH[i], i * 2.1F, i == 1 ? 0.012F : 0.0F, c1, c2);
+            }
+        });
+    }
+
+    private static void ribbon(Geo geo, float age, float rootX, float rootHalf, float length, float phase, float depth, int c1, int c2) {
+        float prevX = rootX;
+        float prevY = 0.0F;
+        float prevZ = depth;
+        float prevHalf = rootHalf;
+        int prevColor = c1;
+        for (int s = 1; s <= RIBBON_SEGMENTS; s++) {
+            float t = (float)s / RIBBON_SEGMENTS;
+            float x = rootX + Mth.sin(age * 0.07F + t * 3.0F + phase) * 0.035F * t;
+            float y = t * length;
+            float z = depth + Mth.sin(age * 0.16F - t * 5.5F + phase) * 0.05F * t;
+            float half = rootHalf * (1.0F - 0.35F * t);
+            int color = Cosmetics.withAlpha(Colors.lerp(c1, c2, t), 1.0F - 0.2F * t);
+            float dy = y - prevY;
+            float dz = z - prevZ;
+            float inv = Mth.invSqrt(dy * dy + dz * dz);
+            float ny = dz * inv;
+            float nz = -dy * inv;
+            if (s < RIBBON_SEGMENTS) {
+                geo.vertex(prevX - prevHalf, prevY, prevZ, prevColor, 0.0F, 0.0F, 0.0F, ny, nz);
+                geo.vertex(prevX + prevHalf, prevY, prevZ, prevColor, 1.0F, 0.0F, 0.0F, ny, nz);
+                geo.vertex(x + half, y, z, color, 1.0F, 1.0F, 0.0F, ny, nz);
+                geo.vertex(x - half, y, z, color, 0.0F, 1.0F, 0.0F, ny, nz);
+            } else {
+                float notchY = y - dy * 0.8F;
+                float notchZ = z - dz * 0.8F;
+                geo.vertex(prevX - prevHalf, prevY, prevZ, prevColor, 0.0F, 0.0F, 0.0F, ny, nz);
+                geo.vertex(prevX, prevY, prevZ, prevColor, 0.5F, 0.0F, 0.0F, ny, nz);
+                geo.vertex(x, notchY, notchZ, color, 0.5F, 1.0F, 0.0F, ny, nz);
+                geo.vertex(x - half, y, z, color, 0.0F, 1.0F, 0.0F, ny, nz);
+                geo.vertex(prevX, prevY, prevZ, prevColor, 0.5F, 0.0F, 0.0F, ny, nz);
+                geo.vertex(prevX + prevHalf, prevY, prevZ, prevColor, 1.0F, 0.0F, 0.0F, ny, nz);
+                geo.vertex(x + half, y, z, color, 1.0F, 1.0F, 0.0F, ny, nz);
+                geo.vertex(x, notchY, notchZ, color, 0.5F, 1.0F, 0.0F, ny, nz);
+            }
+
+            prevX = x;
+            prevY = y;
+            prevZ = z;
+            prevHalf = half;
+            prevColor = color;
         }
     }
 

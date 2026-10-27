@@ -37,6 +37,11 @@ abstract class AvatarRendererMixin {
             return;
         }
 
+        if (Cosmetics.shapedCape()) {
+            state.showCape = false;
+            return;
+        }
+
         Identifier texture = CosmeticTextures.cape();
         if (texture != null) {
             PlayerSkin skin = state.skin;

@@ -1367,7 +1367,7 @@ public final class ModuleRegistry {
         BooleanSupplier image = () -> ModSettings.cosmeticCapeStyle == Cosmetics.CAPE_IMAGE;
         s.add(new Setting.Header("Cape"));
         s.add(new Setting.Choice("Style", Cosmetics.CAPES, () -> ModSettings.cosmeticCapeStyle, v -> ModSettings.cosmeticCapeStyle = v));
-        s.add(new Setting.Toggle("Also on elytra", () -> ModSettings.cosmeticCapeElytra, v -> ModSettings.cosmeticCapeElytra = v));
+        s.add(new Setting.Shown(() -> !Cosmetics.shapedCape(), new Setting.Toggle("Also on elytra", () -> ModSettings.cosmeticCapeElytra, v -> ModSettings.cosmeticCapeElytra = v)));
         s.add(new Setting.Shown(image, capeImageSetting()));
         s.add(new Setting.Shown(image, new Setting.Info(() -> "Put 64x32 PNG capes in config/skysong/capes")));
         s.add(new Setting.Shown(image, new Setting.Action("Open capes folder", () -> {
