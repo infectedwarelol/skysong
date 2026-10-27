@@ -343,6 +343,7 @@ public final class ModSettings {
     public static int cosmeticHaloColor = -10496;
     public static int cosmeticHaloColor2 = -1;
     public static float cosmeticHaloSize = 1.0F;
+    public static boolean cosmeticHaloPhysics = false;
     public static float cosmeticHaloHeight = 0.0F;
     public static boolean cosmeticHaloSpin = true;
     public static boolean cosmeticHaloGlow = true;
@@ -352,6 +353,7 @@ public final class ModSettings {
     public static int cosmeticHatColor = -14277082;
     public static int cosmeticHatColor2 = -4980736;
     public static float cosmeticHatSize = 1.0F;
+    public static boolean cosmeticHatPhysics = false;
     public static boolean cosmeticHatHideHelmet = true;
     public static boolean cosmeticCape = false;
     public static int cosmeticCapeStyle = 0;
@@ -371,6 +373,7 @@ public final class ModSettings {
     public static int cosmeticWingsColor2 = -2039584;
     public static float cosmeticWingsSize = 1.0F;
     public static float cosmeticWingsSpeed = 1.0F;
+    public static boolean cosmeticWingsPhysics = false;
     public static boolean cosmeticWingsGlow = false;
     public static boolean cosmeticWingsHideElytra = true;
     public static boolean cosmeticAura = false;
@@ -391,6 +394,7 @@ public final class ModSettings {
     public static boolean cosmeticPetFirstPerson = true;
     public static int cosmeticPetExtras = 0;
     public static int cosmeticPetLimit = 3;
+    public static boolean cosmeticPetPhysics = false;
     public static boolean cosmeticReduceMotion = false;
     public static boolean cosmeticTrail = false;
     public static int cosmeticTrailType = 0;

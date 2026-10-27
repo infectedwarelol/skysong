@@ -47,6 +47,37 @@ final class CosmeticPhysics {
     private static final float[] CLOTH_SHOWN = new float[MAX_POINTS * 3];
     private static final float[] COLUMN_REST = new float[MAX_COLUMNS];
     private static final float[] ROW_REST = new float[MAX_ROWS];
+    static final int WING_SPREAD = 0;
+    static final int WING_BEAT = 1;
+    static final int HALO_X = 2;
+    static final int HALO_Z = 3;
+    static final int HALO_PITCH = 4;
+    static final int HALO_ROLL = 5;
+    static final int HALO_WOBBLE = 6;
+    static final int HAT_PITCH = 7;
+    static final int HAT_ROLL = 8;
+    static final int PET_OFFSET = 9;
+    private static final int SPRINGS = PET_OFFSET + Cosmetics.MAX_PETS * 3;
+    private static final float[] SPRING = new float[SPRINGS * 2];
+    private static final float[] SPRING_LAST = new float[SPRINGS];
+    private static final float MAX_PET_DRIFT = 1.5F / MODEL_SCALE;
+    private static final float MAX_HALO_DRIFT = 0.2F;
+    static final int CHAIN_SLOT_POINTS = 40;
+    static final int TENTACLE_POINTS = 7;
+    static final int LANTERN_POINTS = 5;
+    static final int TAIL_POINTS = 5;
+    private static final int CHAIN_NONE = 0;
+    private static final int CHAIN_TENTACLES = 1;
+    private static final int CHAIN_LANTERN = 2;
+    private static final int CHAIN_TAIL = 3;
+    private static final int CHAIN_ITERATIONS = 4;
+    private static final float[] CHAIN = new float[Cosmetics.MAX_PETS * CHAIN_SLOT_POINTS * 3];
+    private static final float[] CHAIN_PREVIOUS = new float[Cosmetics.MAX_PETS * CHAIN_SLOT_POINTS * 3];
+    private static final float[] CHAIN_LAST = new float[Cosmetics.MAX_PETS * CHAIN_SLOT_POINTS * 3];
+    private static final float[] CHAIN_SHOWN = new float[Cosmetics.MAX_PETS * CHAIN_SLOT_POINTS * 3];
+    private static final float[] ANCHOR = new float[3];
+    private static final int[] CHAIN_TYPE = new int[Cosmetics.MAX_PETS];
+    private static final int[] SLOT_TYPES = new int[Cosmetics.MAX_PETS];
     static float capeOffsetY;
     static float capeOffsetZ = 0.135F;
     static float frameX;
@@ -66,6 +97,10 @@ final class CosmeticPhysics {
     private static double lastY;
     private static double lastZ;
     private static float lastYaw;
+    private static float lastHeadYaw;
+    private static float lastPitch;
+    private static float lastVerticalSpeed;
+    private static boolean lastOnGround = true;
 
     private CosmeticPhysics() {
     }
@@ -109,6 +144,12 @@ final class CosmeticPhysics {
             frameTurn = Mth.wrapDegrees(yaw - lastYaw) * Mth.DEG_TO_RAD;
         }
 
+        tickSprings(player, jump);
+        tickPets(player, jump);
+        lastHeadYaw = player.yHeadRot;
+        lastPitch = player.getXRot();
+        lastVerticalSpeed = (float)player.getDeltaMovement().y;
+        lastOnGround = player.onGround();
         lastPlayer = player;
         lastLevel = mc.level;
         lastX = x;
@@ -128,6 +169,18 @@ final class CosmeticPhysics {
         Arrays.fill(COLUMN_REST, 0.0F);
         Arrays.fill(ROW_REST, 0.0F);
         Arrays.fill(CAPSULE, 0.0F);
+        Arrays.fill(SPRING, 0.0F);
+        Arrays.fill(SPRING_LAST, 0.0F);
+        SPRING[WING_BEAT * 2] = 1.0F;
+        SPRING_LAST[WING_BEAT] = 1.0F;
+        Arrays.fill(CHAIN, 0.0F);
+        Arrays.fill(CHAIN_PREVIOUS, 0.0F);
+        Arrays.fill(CHAIN_LAST, 0.0F);
+        Arrays.fill(CHAIN_SHOWN, 0.0F);
+        Arrays.fill(CHAIN_TYPE, -1);
+        Arrays.fill(SLOT_TYPES, -1);
+        lastOnGround = true;
+        lastVerticalSpeed = 0.0F;
         clothReady = false;
         clothStyle = -1;
         clothQuality = -1;
@@ -329,5 +382,206 @@ final class CosmeticPhysics {
             out[3 + axis] = Mth.lerp(sv, shown[i10 + axis] - shown[i00 + axis], shown[i11 + axis] - shown[i01 + axis]) * (columns - 1);
             out[6 + axis] = Mth.lerp(su, shown[i01 + axis] - shown[i00 + axis], shown[i11 + axis] - shown[i10 + axis]) * (clothRows - 1);
         }
+    }
+
+    static float spring(int index, float partialTick) {
+        return Mth.lerp(Math.clamp(partialTick, 0.0F, 1.0F), SPRING_LAST[index], SPRING[index * 2]);
+    }
+
+    private static void resetSpring(int index, float value) {
+        SPRING[index * 2] = value;
+        SPRING[index * 2 + 1] = 0.0F;
+        SPRING_LAST[index] = value;
+    }
+
+    private static void tickSprings(LocalPlayer player, boolean jump) {
+        for (int i = 0; i < SPRINGS; i++) {
+            SPRING_LAST[i] = SPRING[i * 2];
+        }
+
+        if (jump) {
+            for (int i = 0; i < SPRINGS; i++) {
+                resetSpring(i, i == WING_BEAT ? 1.0F : 0.0F);
+            }
+
+            return;
+        }
+
+        float verticalSpeed = (float)player.getDeltaMovement().y;
+        boolean onGround = player.onGround();
+        float impact = onGround && !lastOnGround && lastVerticalSpeed < -0.2F ? Math.min(1.0F, -lastVerticalSpeed) : 0.0F;
+        boolean leapt = !onGround && lastOnGround && verticalSpeed > 0.25F;
+        float headTurn = Math.clamp(Mth.wrapDegrees(player.yHeadRot - lastHeadYaw), -45.0F, 45.0F);
+        float headNod = Math.clamp(player.getXRot() - lastPitch, -45.0F, 45.0F);
+        boolean sprinting = player.isSprinting();
+        if (ModSettings.cosmeticWingsPhysics) {
+            SPRING[WING_SPREAD * 2 + 1] += impact * 18.0F;
+            SPRING[WING_BEAT * 2 + 1] += impact * 0.6F;
+            Motion.spring(SPRING, WING_SPREAD * 2, Math.clamp(-verticalSpeed * 45.0F, -20.0F, 25.0F) - (sprinting ? 10.0F : 0.0F), 0.18F, 0.22F);
+            Motion.spring(SPRING, WING_BEAT * 2, 1.0F + (sprinting ? 0.45F : 0.0F) + Math.min(0.6F, Math.abs(verticalSpeed) * 1.5F), 0.2F, 0.3F);
+            SPRING[WING_SPREAD * 2] = Math.clamp(SPRING[WING_SPREAD * 2], -40.0F, 40.0F);
+            SPRING[WING_BEAT * 2] = Math.clamp(SPRING[WING_BEAT * 2], 0.2F, 2.5F);
+        } else {
+            resetSpring(WING_SPREAD, 0.0F);
+            resetSpring(WING_BEAT, 1.0F);
+        }
+
+        if (ModSettings.cosmeticHaloPhysics) {
+            SPRING[HALO_X * 2] = Math.clamp(SPRING[HALO_X * 2] - frameX * 0.5F, -MAX_HALO_DRIFT, MAX_HALO_DRIFT);
+            SPRING[HALO_Z * 2] = Math.clamp(SPRING[HALO_Z * 2] - frameZ * 0.5F, -MAX_HALO_DRIFT, MAX_HALO_DRIFT);
+            SPRING[HALO_PITCH * 2] = Math.clamp(SPRING[HALO_PITCH * 2] - headNod * 0.5F, -25.0F, 25.0F);
+            SPRING[HALO_ROLL * 2] = Math.clamp(SPRING[HALO_ROLL * 2] + headTurn * 0.3F, -25.0F, 25.0F);
+            Motion.critical(SPRING, HALO_X * 2, 0.0F, 2.5F);
+            Motion.critical(SPRING, HALO_Z * 2, 0.0F, 2.5F);
+            Motion.critical(SPRING, HALO_PITCH * 2, 0.0F, 3.0F);
+            Motion.critical(SPRING, HALO_ROLL * 2, 0.0F, 3.0F);
+            SPRING[HALO_WOBBLE * 2 + 1] += impact * 14.0F;
+            Motion.spring(SPRING, HALO_WOBBLE * 2, 0.0F, 0.3F, 0.12F);
+            SPRING[HALO_WOBBLE * 2] = Math.clamp(SPRING[HALO_WOBBLE * 2], -25.0F, 25.0F);
+        } else {
+            for (int i = HALO_X; i <= HALO_WOBBLE; i++) {
+                resetSpring(i, 0.0F);
+            }
+        }
+
+        if (ModSettings.cosmeticHatPhysics) {
+            SPRING[HAT_PITCH * 2 + 1] += -headNod * 0.25F - frameZ * 20.0F - (leapt ? 6.0F : 0.0F) + impact * 8.0F;
+            SPRING[HAT_ROLL * 2 + 1] += headTurn * 0.2F + frameX * 20.0F;
+            Motion.spring(SPRING, HAT_PITCH * 2, 0.0F, 0.22F, 0.16F);
+            Motion.spring(SPRING, HAT_ROLL * 2, 0.0F, 0.22F, 0.16F);
+            SPRING[HAT_PITCH * 2] = Math.clamp(SPRING[HAT_PITCH * 2], -30.0F, 30.0F);
+            SPRING[HAT_ROLL * 2] = Math.clamp(SPRING[HAT_ROLL * 2], -30.0F, 30.0F);
+        } else {
+            resetSpring(HAT_PITCH, 0.0F);
+            resetSpring(HAT_ROLL, 0.0F);
+        }
+    }
+
+    static int slotType(int slot) {
+        return SLOT_TYPES[slot];
+    }
+
+    private static void tickPets(LocalPlayer player, boolean jump) {
+        int count = ModSettings.cosmeticPet ? CosmeticsLayer.petTypes(SLOT_TYPES) : 0;
+        for (int slot = count; slot < Cosmetics.MAX_PETS; slot++) {
+            SLOT_TYPES[slot] = -1;
+        }
+
+        boolean physics = ModSettings.cosmeticPetPhysics && count > 0;
+        float side = ModSettings.cosmeticPetSide == 1 ? 1.0F : -1.0F;
+        float size = Cosmetics.petSize();
+        float cos = Mth.cos(frameTurn);
+        float sin = Mth.sin(frameTurn);
+        float age = player.tickCount;
+        for (int slot = 0; slot < Cosmetics.MAX_PETS; slot++) {
+            int offset = PET_OFFSET + slot * 3;
+            if (!physics || jump || SLOT_TYPES[slot] < 0) {
+                resetSpring(offset, 0.0F);
+                resetSpring(offset + 1, 0.0F);
+                resetSpring(offset + 2, 0.0F);
+                CHAIN_TYPE[slot] = -1;
+                continue;
+            }
+
+            float[] anchor = CosmeticsLayer.PET_SLOTS[slot];
+            float baseX = side * anchor[0];
+            float baseZ = anchor[2];
+            float oldX = SPRING[offset * 2];
+            float oldY = SPRING[(offset + 1) * 2];
+            float oldZ = SPRING[(offset + 2) * 2];
+            float worldX = baseX + oldX;
+            float worldZ = baseZ + oldZ;
+            SPRING[offset * 2] = worldX * cos - worldZ * sin - frameX - baseX;
+            SPRING[(offset + 1) * 2] = oldY - frameY;
+            SPRING[(offset + 2) * 2] = worldX * sin + worldZ * cos - frameZ - baseZ;
+            Motion.critical(SPRING, offset * 2, 0.0F, 4.0F);
+            Motion.critical(SPRING, (offset + 1) * 2, 0.0F, 4.0F);
+            Motion.critical(SPRING, (offset + 2) * 2, 0.0F, 4.0F);
+            float x = SPRING[offset * 2];
+            float y = SPRING[(offset + 1) * 2];
+            float z = SPRING[(offset + 2) * 2];
+            float drift = (float)Math.sqrt(x * x + y * y + z * z);
+            if (drift > MAX_PET_DRIFT) {
+                float scale = MAX_PET_DRIFT / drift;
+                SPRING[offset * 2] = x * scale;
+                SPRING[(offset + 1) * 2] = y * scale;
+                SPRING[(offset + 2) * 2] = z * scale;
+            }
+
+            float shiftX = -(worldX * cos - worldZ * sin - frameX - baseX - SPRING[offset * 2]) / size;
+            float shiftY = -(oldY - frameY - SPRING[(offset + 1) * 2]) / size;
+            float shiftZ = -(worldX * sin + worldZ * cos - frameZ - baseZ - SPRING[(offset + 2) * 2]) / size;
+            tickChains(slot, SLOT_TYPES[slot], age, cos, sin, shiftX, shiftY, shiftZ);
+        }
+    }
+
+    private static int chainKind(int type) {
+        return switch (type) {
+            case Cosmetics.JELLYFISH_PET -> CHAIN_TENTACLES;
+            case Cosmetics.LANTERN_PET -> CHAIN_LANTERN;
+            case Cosmetics.KOI_PET -> CHAIN_TAIL;
+            default -> CHAIN_NONE;
+        };
+    }
+
+    private static void tickChains(int slot, int type, float age, float cos, float sin, float shiftX, float shiftY, float shiftZ) {
+        int kind = chainKind(type);
+        int first = slot * CHAIN_SLOT_POINTS;
+        if (kind == CHAIN_NONE) {
+            CHAIN_TYPE[slot] = type;
+            return;
+        }
+
+        int strands = kind == CHAIN_TENTACLES ? CosmeticsLayer.TENTACLES : 1;
+        int points = kind == CHAIN_TENTACLES ? TENTACLE_POINTS : kind == CHAIN_LANTERN ? LANTERN_POINTS : TAIL_POINTS;
+        float rest = kind == CHAIN_TENTACLES ? 0.064F : kind == CHAIN_LANTERN ? 0.025F : 0.02F;
+        float gravity = kind == CHAIN_TENTACLES ? 0.004F : kind == CHAIN_LANTERN ? 0.02F : 0.0F;
+        float drag = kind == CHAIN_TENTACLES ? 0.12F : kind == CHAIN_LANTERN ? 0.04F : 0.15F;
+        boolean fresh = CHAIN_TYPE[slot] != type;
+        CHAIN_TYPE[slot] = type;
+        System.arraycopy(CHAIN, first * 3, CHAIN_LAST, first * 3, strands * points * 3);
+        if (!fresh) {
+            Motion.shift(CHAIN, CHAIN_PREVIOUS, first, first + strands * points, 0.0F, 0.0F, cos, sin, shiftX, shiftY, shiftZ);
+        }
+
+        for (int strand = 0; strand < strands; strand++) {
+            CosmeticsLayer.chainAnchor(type, strand, age, ANCHOR);
+            int start = first + strand * points;
+            if (fresh) {
+                for (int k = 0; k < points; k++) {
+                    int i = (start + k) * 3;
+                    CHAIN[i] = ANCHOR[0];
+                    CHAIN[i + 1] = ANCHOR[1] + (kind == CHAIN_TAIL ? 0.0F : k * rest);
+                    CHAIN[i + 2] = ANCHOR[2] - (kind == CHAIN_TAIL ? k * rest : 0.0F);
+                    CHAIN_PREVIOUS[i] = CHAIN[i];
+                    CHAIN_PREVIOUS[i + 1] = CHAIN[i + 1];
+                    CHAIN_PREVIOUS[i + 2] = CHAIN[i + 2];
+                    CHAIN_LAST[i] = CHAIN[i];
+                    CHAIN_LAST[i + 1] = CHAIN[i + 1];
+                    CHAIN_LAST[i + 2] = CHAIN[i + 2];
+                }
+            } else {
+                Motion.chain(CHAIN, CHAIN_PREVIOUS, start, points, ANCHOR[0], ANCHOR[1], ANCHOR[2], rest, gravity, drag, CHAIN_ITERATIONS);
+            }
+        }
+    }
+
+    static boolean chainShown(int slot, int type, float partialTick) {
+        if (!ModSettings.cosmeticPetPhysics || CHAIN_TYPE[slot] != type || chainKind(type) == CHAIN_NONE) {
+            return false;
+        }
+
+        float t = Math.clamp(partialTick, 0.0F, 1.0F);
+        int from = slot * CHAIN_SLOT_POINTS * 3;
+        int to = from + CHAIN_SLOT_POINTS * 3;
+        for (int i = from; i < to; i++) {
+            CHAIN_SHOWN[i] = Mth.lerp(t, CHAIN_LAST[i], CHAIN[i]);
+        }
+
+        return true;
+    }
+
+    static float chainPoint(int slot, int point, int axis) {
+        return CHAIN_SHOWN[(slot * CHAIN_SLOT_POINTS + point) * 3 + axis];
     }
 }

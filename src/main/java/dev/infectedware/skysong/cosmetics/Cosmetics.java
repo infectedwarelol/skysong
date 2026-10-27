@@ -99,6 +99,10 @@ public final class Cosmetics {
         return clamped(ModSettings.cosmeticCapeWind, 0.0F, 2.0F, 1.0F);
     }
 
+    static float petSize() {
+        return clamped(ModSettings.cosmeticPetSize, 0.5F, 2.0F, 1.0F);
+    }
+
     static float clamped(float value, float min, float max, float fallback) {
         return Float.isNaN(value) ? fallback : Math.clamp(value, min, max);
     }

@@ -44,7 +44,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final ItemStackRenderState[] PET_STATES = new ItemStackRenderState[]{
         new ItemStackRenderState(), new ItemStackRenderState(), new ItemStackRenderState()
     };
-    private static final float[][] PET_SLOTS = new float[][]{{0.68F, -0.42F, 0.18F}, {-0.68F, -0.42F, 0.18F}, {0.32F, -0.8F, 0.48F}};
+    static final float[][] PET_SLOTS = new float[][]{{0.68F, -0.42F, 0.18F}, {-0.68F, -0.42F, 0.18F}, {0.32F, -0.8F, 0.48F}};
     private static final float[][] PET_SLOTS_FIRST_PERSON = new float[][]{{0.95F, -0.1F, -1.45F}, {-0.95F, -0.1F, -1.45F}, {1.55F, -0.3F, -1.9F}};
     private static final int BANNER_COLUMNS = 8;
     private static final int BANNER_ROWS = 10;
@@ -54,6 +54,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final float[] BANNER_CURRENT = new float[(BANNER_COLUMNS + 1) * 6];
     private static final float[] CLOTH_SAMPLE = new float[9];
     private static final float[] CAPELET_CORNERS = new float[12];
+    private static final float[] CHAIN_ANCHOR = new float[3];
+    private static final int[] PET_TYPES = new int[Cosmetics.MAX_PETS];
     private static final int CAPELET_COLUMNS = 10;
     private static final int CAPELET_ROWS = 4;
     private static final float[] CAPELET_DROP = capeletDrops();
@@ -90,7 +92,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final int RIBBON_SEGMENTS = 12;
     private static final int SHARD_ROWS = 6;
     private static final int SHARD_COLUMNS = 5;
-    private static final int TENTACLES = 5;
+    static final int TENTACLES = 5;
     private static final int TENTACLE_SEGMENTS = 6;
     private final PlayerModel auraWide;
     private final PlayerModel auraSlim;
@@ -198,6 +200,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             pose.translate(0.0F, -0.68F + bob - ModSettings.cosmeticHaloHeight - lift, 0.0F);
         }
 
+        if (ModSettings.cosmeticHaloPhysics) {
+            float partialTick = Compat.partialTick();
+            float wobble = CosmeticPhysics.spring(CosmeticPhysics.HALO_WOBBLE, partialTick);
+            pose.translate(CosmeticPhysics.spring(CosmeticPhysics.HALO_X, partialTick), 0.0F, CosmeticPhysics.spring(CosmeticPhysics.HALO_Z, partialTick));
+            pose.mulPose(Axis.XP.rotationDegrees(CosmeticPhysics.spring(CosmeticPhysics.HALO_PITCH, partialTick) + wobble));
+            pose.mulPose(Axis.ZP.rotationDegrees(CosmeticPhysics.spring(CosmeticPhysics.HALO_ROLL, partialTick) + wobble * 0.6F));
+        }
+
         pose.mulPose(Axis.YP.rotationDegrees(spin));
         pose.scale(size, size, size);
         RenderType type = RenderTypes.entityTranslucentEmissive(CosmeticTextures.white());
@@ -249,6 +259,12 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         float size = ModSettings.cosmeticHatSize;
         pose.pushPose();
         pose.translate(0.0F, -0.5F, 0.0F);
+        if (ModSettings.cosmeticHatPhysics && tallHat(style)) {
+            float partialTick = Compat.partialTick();
+            pose.mulPose(Axis.XP.rotationDegrees(CosmeticPhysics.spring(CosmeticPhysics.HAT_PITCH, partialTick)));
+            pose.mulPose(Axis.ZP.rotationDegrees(CosmeticPhysics.spring(CosmeticPhysics.HAT_ROLL, partialTick)));
+        }
+
         pose.scale(size, size, size);
         collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> {
             Geo geo = new Geo(p, out, light);
@@ -264,6 +280,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             }
         });
         pose.popPose();
+    }
+
+    private static boolean tallHat(int style) {
+        return style == 2 || style == 3 || style == 7;
     }
 
     private static void topHat(Geo geo, int main, int accent) {
@@ -377,7 +397,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         float flap = Mth.sin(age * 0.18F * speed);
         boolean neon = style == Cosmetics.NEON_WINGS;
         float spread = crouching ? 62.0F : (flying ? 18.0F : (neon ? 14.0F : 32.0F));
-        float angle = spread + flap * (flying ? 22.0F : 12.0F);
+        float amplitude = flying ? 22.0F : 12.0F;
+        if (ModSettings.cosmeticWingsPhysics) {
+            float partialTick = Compat.partialTick();
+            spread += CosmeticPhysics.spring(CosmeticPhysics.WING_SPREAD, partialTick);
+            amplitude *= CosmeticPhysics.spring(CosmeticPhysics.WING_BEAT, partialTick);
+        }
+
+        float angle = spread + flap * amplitude;
         boolean glow = ModSettings.cosmeticWingsGlow || neon;
         RenderType type = glow ? RenderTypes.entityTranslucentEmissive(CosmeticTextures.wings(style)) : RenderTypes.entityTranslucent(CosmeticTextures.wings(style));
         int wingLight = glow ? FULL_BRIGHT : light;
@@ -580,27 +607,74 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     }
 
     static void pets(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion, boolean firstPerson) {
+        int count = petTypes(PET_TYPES);
+        for (int slot = 0; slot < count; slot++) {
+            pet(pose, collector, light, age, motion, firstPerson, PET_TYPES[slot], slot);
+        }
+    }
+
+    static int petTypes(int[] out) {
         int primary = ModSettings.cosmeticPetType;
         int limit = Math.clamp(ModSettings.cosmeticPetLimit, 1, Cosmetics.MAX_PETS);
-        pet(pose, collector, light, age, motion, firstPerson, primary, 0);
+        out[0] = primary;
         int extras = ModSettings.cosmeticPetExtras;
         int slot = 1;
         for (int type = 0; type < Cosmetics.PETS.length && slot < limit; type++) {
             if ((extras & 1 << type) != 0 && type != primary) {
-                pet(pose, collector, light, age, motion, firstPerson, type, slot);
+                out[slot] = type;
                 slot++;
             }
+        }
+
+        return slot;
+    }
+
+    static void chainAnchor(int type, int strand, float age, float[] out) {
+        if (type == Cosmetics.JELLYFISH_PET) {
+            float cycle = age * 0.09F;
+            float contract = Cosmetics.reduceMotion() ? 0.0F : Math.max(0.0F, Mth.sin(cycle));
+            float width = 1.0F - 0.18F * contract;
+            float angle = Mth.TWO_PI * strand / TENTACLES + 0.3F;
+            float baseX = Mth.cos(angle) * 0.11F * width;
+            float baseZ = Mth.sin(angle) * 0.11F * width;
+            float spin = age * 0.4F * Mth.DEG_TO_RAD;
+            float cos = Mth.cos(spin);
+            float sin = Mth.sin(spin);
+            out[0] = baseX * cos + baseZ * sin;
+            out[1] = -0.08F - Mth.sin(cycle - 0.8F) * 0.06F;
+            out[2] = -baseX * sin + baseZ * cos;
+        } else if (type == Cosmetics.KOI_PET) {
+            float course = age * 0.03F + 0.4F * Mth.sin(age * 0.011F);
+            float heading = (float)Mth.atan2(-Mth.sin(course), Mth.cos(course));
+            float cos = Mth.cos(heading);
+            float sin = Mth.sin(heading);
+            int last = KOI_Z.length - 1;
+            float tailX = Mth.sin(age * 0.25F - last * 0.7F) * 0.012F * last;
+            float tailZ = KOI_Z[last];
+            out[0] = Mth.cos(course) * 0.13F + tailX * cos + tailZ * sin;
+            out[1] = Mth.sin(age * 0.06F) * 0.02F;
+            out[2] = Mth.sin(course) * 0.13F - tailX * sin + tailZ * cos;
+        } else {
+            out[0] = 0.0F;
+            out[1] = -0.22F;
+            out[2] = 0.0F;
         }
     }
 
     private static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion, boolean firstPerson, int type, int slot) {
         boolean shaped = Cosmetics.shapedPet(type);
         float side = ModSettings.cosmeticPetSide == 1 ? 1.0F : -1.0F;
-        float size = Math.clamp(ModSettings.cosmeticPetSize, 0.5F, 2.0F);
+        float size = Cosmetics.petSize();
         float bob = shaped ? 0.0F : Mth.sin(age * 0.11F + slot * 2.0F) * 0.06F;
         float[] anchor = firstPerson ? PET_SLOTS_FIRST_PERSON[slot] : PET_SLOTS[slot];
+        float partialTick = Compat.partialTick();
+        boolean physics = ModSettings.cosmeticPetPhysics;
+        float lagX = physics ? CosmeticPhysics.spring(CosmeticPhysics.PET_OFFSET + slot * 3, partialTick) : 0.0F;
+        float lagY = physics ? CosmeticPhysics.spring(CosmeticPhysics.PET_OFFSET + slot * 3 + 1, partialTick) : 0.0F;
+        float lagZ = physics ? CosmeticPhysics.spring(CosmeticPhysics.PET_OFFSET + slot * 3 + 2, partialTick) : 0.0F;
+        boolean chains = physics && CosmeticPhysics.chainShown(slot, type, partialTick);
         pose.pushPose();
-        pose.translate(side * anchor[0], anchor[1] + bob, anchor[2]);
+        pose.translate(side * anchor[0] + lagX, anchor[1] + bob + lagY, anchor[2] + lagZ);
 
         if (!shaped) {
             pose.mulPose(Axis.YP.rotationDegrees(Mth.sin(age * 0.03F) * 25.0F));
@@ -608,15 +682,15 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
 
         pose.scale(size, size, size);
         if (type == Cosmetics.JELLYFISH_PET) {
-            jellyfish(pose, collector, age);
+            jellyfish(pose, collector, age, chains ? slot : -1);
         } else if (type == Cosmetics.ORRERY_PET) {
             orrery(pose, collector, light, age);
         } else if (type == Cosmetics.CRANE_PET) {
             crane(pose, collector, light, age);
         } else if (type == Cosmetics.KOI_PET) {
-            koi(pose, collector, light, age);
+            koi(pose, collector, light, age, chains ? slot : -1);
         } else if (type == Cosmetics.LANTERN_PET) {
-            lantern(pose, collector, light, age, motion);
+            lantern(pose, collector, light, age, motion, chains ? slot : -1);
         } else if (type == Cosmetics.CLOUD_PET) {
             cloud(pose, collector, light, age);
         } else if (type <= 0 || type >= PET_ITEMS.length) {
@@ -827,18 +901,42 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
     }
 
-    private static void koi(PoseStack pose, SubmitNodeCollector collector, int light, float age) {
+    private static void koi(PoseStack pose, SubmitNodeCollector collector, int light, float age, int chainSlot) {
+        if (chainSlot >= 0) {
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> koiTail(new Geo(p, out, light), chainSlot, age));
+        }
+
         float course = age * 0.03F + 0.4F * Mth.sin(age * 0.011F);
         float headingX = -Mth.sin(course);
         float headingZ = Mth.cos(course);
         pose.pushPose();
         pose.translate(Mth.cos(course) * 0.13F, Mth.sin(age * 0.06F) * 0.02F, Mth.sin(course) * 0.13F);
         pose.mulPose(Axis.YP.rotation((float)Mth.atan2(headingX, headingZ)));
-        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> koiBody(new Geo(p, out, light), age));
+        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> koiBody(new Geo(p, out, light), age, chainSlot < 0));
         pose.popPose();
     }
 
-    private static void koiBody(Geo geo, float age) {
+    private static void koiTail(Geo geo, int slot, float age) {
+        float[] anchor = CHAIN_ANCHOR;
+        chainAnchor(Cosmetics.KOI_PET, 0, age, anchor);
+        float shiftX = anchor[0] - CosmeticPhysics.chainPoint(slot, 0, 0);
+        float shiftY = anchor[1] - CosmeticPhysics.chainPoint(slot, 0, 1);
+        float shiftZ = anchor[2] - CosmeticPhysics.chainPoint(slot, 0, 2);
+        int last = CosmeticPhysics.TAIL_POINTS - 1;
+        for (int k = 0; k < last; k++) {
+            float h0 = 0.012F + 0.043F * k / last;
+            float h1 = 0.012F + 0.043F * (k + 1) / last;
+            float x0 = CosmeticPhysics.chainPoint(slot, k, 0) + shiftX;
+            float y0 = CosmeticPhysics.chainPoint(slot, k, 1) + shiftY;
+            float z0 = CosmeticPhysics.chainPoint(slot, k, 2) + shiftZ;
+            float x1 = CosmeticPhysics.chainPoint(slot, k + 1, 0) + shiftX;
+            float y1 = CosmeticPhysics.chainPoint(slot, k + 1, 1) + shiftY;
+            float z1 = CosmeticPhysics.chainPoint(slot, k + 1, 2) + shiftZ;
+            geo.quad(x0, y0 - h0, z0, x1, y1 - h1, z1, x1, y1 + h1, z1, x0, y0 + h0, z0, KOI_FIN);
+        }
+    }
+
+    private static void koiBody(Geo geo, float age, boolean fin) {
         float[] ring = KOI_RING;
         int rings = KOI_Z.length;
         for (int k = 0; k < rings; k++) {
@@ -874,8 +972,11 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         float tailX = ring[tail];
         float tailZ = KOI_Z[rings - 1];
         float flick = Mth.sin(age * 0.25F - rings * 0.7F) * 0.03F;
-        geo.quad(tailX, 0.0F, tailZ, tailX + flick, -0.055F, tailZ - 0.07F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, KOI_FIN);
-        geo.quad(tailX, 0.0F, tailZ, tailX + flick, 0.055F, tailZ - 0.07F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, KOI_FIN);
+        if (fin) {
+            geo.quad(tailX, 0.0F, tailZ, tailX + flick, -0.055F, tailZ - 0.07F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, KOI_FIN);
+            geo.quad(tailX, 0.0F, tailZ, tailX + flick, 0.055F, tailZ - 0.07F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, KOI_FIN);
+        }
+
         float paddle = Mth.sin(age * 0.2F) * 0.012F;
         for (int side = -1; side <= 1; side += 2) {
             float x = side * KOI_RADIUS[1];
@@ -885,18 +986,41 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
     }
 
-    private static void lantern(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion) {
+    private static void lantern(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion, int chainSlot) {
         float sway = 6.0F + 20.0F * Math.clamp(motion, 0.0F, 1.0F);
         float glow = Cosmetics.reduceMotion() ? 1.0F : 0.92F + 0.08F * Mth.sin(age * 0.17F) * Mth.sin(age * 0.071F);
         int paper = Colors.darken(LANTERN_PAPER, glow);
         int rib = Colors.darken(paper, 0.86F);
         int core = Cosmetics.withAlpha(0xFFFFF1C1, 0.55F * glow);
         pose.pushPose();
-        pose.translate(0.0F, -0.22F, 0.0F);
-        pose.mulPose(Axis.ZP.rotationDegrees(Mth.sin(age * 0.08F) * sway));
-        pose.mulPose(Axis.XP.rotationDegrees(Mth.sin(age * 0.061F + 1.3F) * sway * 0.5F));
-        pose.mulPose(Axis.YP.rotationDegrees(age * 0.3F));
-        collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> lanternFrame(new Geo(p, out, light), age));
+        if (chainSlot >= 0) {
+            float[] anchor = CHAIN_ANCHOR;
+            chainAnchor(Cosmetics.LANTERN_PET, 0, age, anchor);
+            int last = CosmeticPhysics.LANTERN_POINTS - 1;
+            float shiftX = anchor[0] - CosmeticPhysics.chainPoint(chainSlot, 0, 0);
+            float shiftY = anchor[1] - CosmeticPhysics.chainPoint(chainSlot, 0, 1);
+            float shiftZ = anchor[2] - CosmeticPhysics.chainPoint(chainSlot, 0, 2);
+            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> lanternString(new Geo(p, out, light), chainSlot, shiftX, shiftY, shiftZ));
+            float endX = CosmeticPhysics.chainPoint(chainSlot, last, 0) + shiftX;
+            float endY = CosmeticPhysics.chainPoint(chainSlot, last, 1) + shiftY;
+            float endZ = CosmeticPhysics.chainPoint(chainSlot, last, 2) + shiftZ;
+            float dx = endX - CosmeticPhysics.chainPoint(chainSlot, last - 1, 0) - shiftX;
+            float dy = endY - CosmeticPhysics.chainPoint(chainSlot, last - 1, 1) - shiftY;
+            float dz = endZ - CosmeticPhysics.chainPoint(chainSlot, last - 1, 2) - shiftZ;
+            float inverse = Mth.invSqrt(Math.max(1.0E-8F, dx * dx + dy * dy + dz * dz));
+            pose.translate(endX, endY, endZ);
+            pose.mulPose(Axis.ZP.rotation((float)Mth.atan2(-dx, dy)));
+            pose.mulPose(Axis.XP.rotation((float)Math.asin(Math.clamp(dz * inverse, -1.0F, 1.0F))));
+            pose.mulPose(Axis.YP.rotationDegrees(age * 0.3F));
+            pose.translate(0.0F, -0.1F, 0.0F);
+        } else {
+            pose.translate(0.0F, -0.22F, 0.0F);
+            pose.mulPose(Axis.ZP.rotationDegrees(Mth.sin(age * 0.08F) * sway));
+            pose.mulPose(Axis.XP.rotationDegrees(Mth.sin(age * 0.061F + 1.3F) * sway * 0.5F));
+            pose.mulPose(Axis.YP.rotationDegrees(age * 0.3F));
+        }
+
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> lanternFrame(new Geo(p, out, light), age, chainSlot < 0));
         collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> {
             Geo geo = new Geo(p, out, FULL_BRIGHT);
             for (int ring = 0; ring < LANTERN_RADIUS.length - 1; ring++) {
@@ -907,8 +1031,24 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         pose.popPose();
     }
 
-    private static void lanternFrame(Geo geo, float age) {
-        geo.quad(-0.004F, 0.0F, 0.0F, 0.004F, 0.0F, 0.0F, 0.004F, 0.1F, 0.0F, -0.004F, 0.1F, 0.0F, LANTERN_WOOD);
+    private static void lanternString(Geo geo, int slot, float shiftX, float shiftY, float shiftZ) {
+        for (int k = 0; k < CosmeticPhysics.LANTERN_POINTS - 1; k++) {
+            float x0 = CosmeticPhysics.chainPoint(slot, k, 0) + shiftX;
+            float y0 = CosmeticPhysics.chainPoint(slot, k, 1) + shiftY;
+            float z0 = CosmeticPhysics.chainPoint(slot, k, 2) + shiftZ;
+            float x1 = CosmeticPhysics.chainPoint(slot, k + 1, 0) + shiftX;
+            float y1 = CosmeticPhysics.chainPoint(slot, k + 1, 1) + shiftY;
+            float z1 = CosmeticPhysics.chainPoint(slot, k + 1, 2) + shiftZ;
+            geo.quad(x0 - 0.004F, y0, z0, x0 + 0.004F, y0, z0, x1 + 0.004F, y1, z1, x1 - 0.004F, y1, z1, LANTERN_WOOD);
+            geo.quad(x0, y0, z0 - 0.004F, x0, y0, z0 + 0.004F, x1, y1, z1 + 0.004F, x1, y1, z1 - 0.004F, LANTERN_WOOD);
+        }
+    }
+
+    private static void lanternFrame(Geo geo, float age, boolean string) {
+        if (string) {
+            geo.quad(-0.004F, 0.0F, 0.0F, 0.004F, 0.0F, 0.0F, 0.004F, 0.1F, 0.0F, -0.004F, 0.1F, 0.0F, LANTERN_WOOD);
+        }
+
         lanternBand(geo, 0.03F, 0.1F, 0.058F, 0.125F, LANTERN_WOOD, LANTERN_WOOD);
         lanternBand(geo, 0.058F, 0.295F, 0.045F, 0.315F, LANTERN_WOOD, LANTERN_WOOD);
         for (int i = 0; i < 3; i++) {
@@ -972,7 +1112,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         return Cosmetics.color(ModSettings.cosmeticPetColorMode, ModSettings.cosmeticPetColor, ModSettings.cosmeticPetColor2, t);
     }
 
-    private static void jellyfish(PoseStack pose, SubmitNodeCollector collector, float age) {
+    private static void jellyfish(PoseStack pose, SubmitNodeCollector collector, float age, int chainSlot) {
         int c1 = petColor(0.0F);
         int c2 = petColor(1.0F);
         float cycle = age * 0.09F;
@@ -986,6 +1126,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         int rim = Cosmetics.withAlpha(c2, 0.8F);
         int core = Cosmetics.withAlpha(Colors.mixWhite(c2, 0.5F), 0.85F);
         int tentacle = Cosmetics.withAlpha(Colors.lerp(c1, c2, 0.5F), 0.6F);
+        if (chainSlot >= 0) {
+            pose.popPose();
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> tentacleChains(new Geo(p, out, FULL_BRIGHT), chainSlot, age, tentacle));
+            pose.pushPose();
+            pose.translate(0.0F, -0.08F - Mth.sin(cycle - 0.8F) * 0.06F, 0.0F);
+            pose.mulPose(Axis.YP.rotationDegrees(age * 0.4F));
+        }
+
         collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> {
             Geo geo = new Geo(p, out, FULL_BRIGHT);
             float w = widthScale;
@@ -996,7 +1144,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             geo.frustum(0.08F * w, 0.0F, -0.16F * h, -0.175F * h, 16, bell, false, false);
             geo.frustum(0.165F * w, 0.16F * w, 0.012F, -0.004F, 16, rim, false, false);
             geo.ball(0.0F, -0.08F * h, 0.0F, 0.045F, core);
-            for (int i = 0; i < TENTACLES; i++) {
+            for (int i = 0; i < TENTACLES && chainSlot < 0; i++) {
                 float angle = Mth.TWO_PI * i / TENTACLES + 0.3F;
                 float baseX = Mth.cos(angle) * 0.11F * w;
                 float baseZ = Mth.sin(angle) * 0.11F * w;
@@ -1026,6 +1174,39 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             }
         });
         pose.popPose();
+    }
+
+    private static void tentacleChains(Geo geo, int slot, float age, int tentacle) {
+        float[] anchor = CHAIN_ANCHOR;
+        for (int i = 0; i < TENTACLES; i++) {
+            chainAnchor(Cosmetics.JELLYFISH_PET, i, age, anchor);
+            int first = i * CosmeticPhysics.TENTACLE_POINTS;
+            float prevX = anchor[0];
+            float prevY = anchor[1];
+            float prevZ = anchor[2];
+            float shiftX = anchor[0] - CosmeticPhysics.chainPoint(slot, first, 0);
+            float shiftY = anchor[1] - CosmeticPhysics.chainPoint(slot, first, 1);
+            float shiftZ = anchor[2] - CosmeticPhysics.chainPoint(slot, first, 2);
+            for (int k = 1; k < CosmeticPhysics.TENTACLE_POINTS; k++) {
+                float t = (float)k / (CosmeticPhysics.TENTACLE_POINTS - 1);
+                float x = CosmeticPhysics.chainPoint(slot, first + k, 0) + shiftX;
+                float y = CosmeticPhysics.chainPoint(slot, first + k, 1) + shiftY;
+                float z = CosmeticPhysics.chainPoint(slot, first + k, 2) + shiftZ;
+                float half = 0.009F * (1.0F - 0.6F * t);
+                int faded = Cosmetics.withAlpha(tentacle, 0.6F * (1.0F - 0.7F * t));
+                geo.vertex(prevX - half, prevY, prevZ, faded, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+                geo.vertex(prevX + half, prevY, prevZ, faded, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+                geo.vertex(x + half, y, z, faded, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F);
+                geo.vertex(x - half, y, z, faded, 0.0F, 1.0F, 0.0F, 0.0F, 1.0F);
+                geo.vertex(prevX, prevY, prevZ - half, faded, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+                geo.vertex(prevX, prevY, prevZ + half, faded, 1.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+                geo.vertex(x, y, z + half, faded, 1.0F, 1.0F, 1.0F, 0.0F, 0.0F);
+                geo.vertex(x, y, z - half, faded, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F);
+                prevX = x;
+                prevY = y;
+                prevZ = z;
+            }
+        }
     }
 
     private static void orrery(PoseStack pose, SubmitNodeCollector collector, int light, float age) {

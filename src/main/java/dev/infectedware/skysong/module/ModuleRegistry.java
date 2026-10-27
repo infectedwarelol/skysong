@@ -1330,6 +1330,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Height", -0.2F, 0.5F, 0.01F, 0.0, () -> ModSettings.cosmeticHaloHeight, v -> ModSettings.cosmeticHaloHeight = (float)v));
         s.add(new Setting.Toggle("Spin", () -> ModSettings.cosmeticHaloSpin, v -> ModSettings.cosmeticHaloSpin = v));
         s.add(new Setting.Toggle("Glow", () -> ModSettings.cosmeticHaloGlow, v -> ModSettings.cosmeticHaloGlow = v));
+        s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticHaloPhysics, v -> ModSettings.cosmeticHaloPhysics = v));
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticHaloColorMode,
@@ -1349,6 +1350,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Choice("Style", Cosmetics.HATS, () -> ModSettings.cosmeticHatStyle, v -> ModSettings.cosmeticHatStyle = v));
         s.add(new Setting.Slide("Size", 0.5F, 1.5F, 0.05F, 1.0, () -> ModSettings.cosmeticHatSize, v -> ModSettings.cosmeticHatSize = (float)v));
         s.add(new Setting.Toggle("Hide under a helmet", () -> ModSettings.cosmeticHatHideHelmet, v -> ModSettings.cosmeticHatHideHelmet = v));
+        s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticHatPhysics, v -> ModSettings.cosmeticHatPhysics = v));
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticHatColorMode,
@@ -1423,6 +1425,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Flap speed", 0.0F, 3.0F, 0.05F, 1.0, () -> ModSettings.cosmeticWingsSpeed, v -> ModSettings.cosmeticWingsSpeed = (float)v));
         s.add(new Setting.Toggle("Glow", () -> ModSettings.cosmeticWingsGlow, v -> ModSettings.cosmeticWingsGlow = v));
         s.add(new Setting.Toggle("Hide with an elytra", () -> ModSettings.cosmeticWingsHideElytra, v -> ModSettings.cosmeticWingsHideElytra = v));
+        s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticWingsPhysics, v -> ModSettings.cosmeticWingsPhysics = v));
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticWingsColorMode,
@@ -1464,6 +1467,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Choice("Side", Cosmetics.SIDES, () -> ModSettings.cosmeticPetSide, v -> ModSettings.cosmeticPetSide = v));
         s.add(new Setting.Slide("Size", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticPetSize, v -> ModSettings.cosmeticPetSize = (float)v));
         s.add(new Setting.Toggle("Show in first person", () -> ModSettings.cosmeticPetFirstPerson, v -> ModSettings.cosmeticPetFirstPerson = v));
+        s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticPetPhysics, v -> ModSettings.cosmeticPetPhysics = v));
         s.add(new Setting.Multi("Extra pets", Cosmetics.PETS, () -> ModSettings.cosmeticPetExtras, v -> ModSettings.cosmeticPetExtras = v));
         s.add(new Setting.Slide("Max pets", 1.0F, Cosmetics.MAX_PETS, 1.0F, Cosmetics.MAX_PETS, () -> ModSettings.cosmeticPetLimit, v -> ModSettings.cosmeticPetLimit = (int)Math.round(v)));
         s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
