@@ -1,5 +1,7 @@
 package dev.infectedware.skysong.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.blaze3d.vertex.PoseStack;
 import dev.infectedware.skysong.ModSettings;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -14,7 +16,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.At.Shift;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ScreenEffectRenderer.class)
@@ -33,21 +34,23 @@ abstract class ScreenEffectRendererMixin {
         }
     }
 
-    @Redirect(
+    @WrapOperation(
         method = "renderItemActivationAnimation",
         at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/item/ItemStackRenderState;submit(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/SubmitNodeCollector;III)V"
         )
     )
-    private void skysong$ignorePackTotemSize(ItemStackRenderState state, PoseStack poseStack, SubmitNodeCollector collector, int light, int overlay, int outline) {
+    private void skysong$ignorePackTotemSize(
+        ItemStackRenderState state, PoseStack poseStack, SubmitNodeCollector collector, int light, int overlay, int outline, Operation<Void> original
+    ) {
         if (ModSettings.pvpSmallTotem && ModSettings.pvpTotemIgnorePack) {
             for (int i = 0; i < state.activeLayerCount; i++) {
                 state.layers[i].transform = VANILLA_FIXED;
             }
         }
 
-        state.submit(poseStack, collector, light, overlay, outline);
+        original.call(state, poseStack, collector, light, overlay, outline);
     }
 
     @Inject(method = "renderFire", at = @At("HEAD"))
