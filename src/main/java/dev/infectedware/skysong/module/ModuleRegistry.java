@@ -1331,6 +1331,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Toggle("Spin", () -> ModSettings.cosmeticHaloSpin, v -> ModSettings.cosmeticHaloSpin = v));
         s.add(new Setting.Toggle("Glow", () -> ModSettings.cosmeticHaloGlow, v -> ModSettings.cosmeticHaloGlow = v));
         s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticHaloPhysics, v -> ModSettings.cosmeticHaloPhysics = v));
+        s.add(fxQualitySetting());
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticHaloColorMode,
@@ -1351,6 +1352,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Size", 0.5F, 1.5F, 0.05F, 1.0, () -> ModSettings.cosmeticHatSize, v -> ModSettings.cosmeticHatSize = (float)v));
         s.add(new Setting.Toggle("Hide under a helmet", () -> ModSettings.cosmeticHatHideHelmet, v -> ModSettings.cosmeticHatHideHelmet = v));
         s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticHatPhysics, v -> ModSettings.cosmeticHatPhysics = v));
+        s.add(fxQualitySetting());
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticHatColorMode,
@@ -1369,7 +1371,8 @@ public final class ModuleRegistry {
         BooleanSupplier image = () -> ModSettings.cosmeticCapeStyle == Cosmetics.CAPE_IMAGE;
         s.add(new Setting.Header("Cape"));
         s.add(new Setting.Choice("Style", Cosmetics.CAPES, () -> ModSettings.cosmeticCapeStyle, v -> ModSettings.cosmeticCapeStyle = v));
-        s.add(new Setting.Shown(Cosmetics::shapedCape, new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v)));
+        s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
+        s.add(fxQualitySetting());
         s.add(new Setting.Shown(Cosmetics::shapedCape, new Setting.Toggle("Cloth physics", () -> ModSettings.cosmeticCapePhysics, v -> ModSettings.cosmeticCapePhysics = v)));
         BooleanSupplier cloth = () -> Cosmetics.shapedCape() && ModSettings.cosmeticCapePhysics;
         s.add(new Setting.Shown(cloth, new Setting.Choice("Physics quality", Cosmetics.QUALITIES, () -> ModSettings.cosmeticCapePhysicsQuality, v -> ModSettings.cosmeticCapePhysicsQuality = v)));
@@ -1405,6 +1408,10 @@ public final class ModuleRegistry {
         return s;
     }
 
+    private static Setting fxQualitySetting() {
+        return new Setting.Choice("Effects quality", Cosmetics.QUALITIES, () -> ModSettings.cosmeticFxQuality, v -> ModSettings.cosmeticFxQuality = v);
+    }
+
     private static Setting capeImageSetting() {
         List<String> names = CosmeticTextures.capeImages();
         if (names.isEmpty()) {
@@ -1426,6 +1433,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Toggle("Glow", () -> ModSettings.cosmeticWingsGlow, v -> ModSettings.cosmeticWingsGlow = v));
         s.add(new Setting.Toggle("Hide with an elytra", () -> ModSettings.cosmeticWingsHideElytra, v -> ModSettings.cosmeticWingsHideElytra = v));
         s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticWingsPhysics, v -> ModSettings.cosmeticWingsPhysics = v));
+        s.add(fxQualitySetting());
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticWingsColorMode,
@@ -1447,6 +1455,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Speed", 0.0F, 4.0F, 0.1F, 1.0, () -> ModSettings.cosmeticAuraSpeed, v -> ModSettings.cosmeticAuraSpeed = (float)v));
         s.add(new Setting.Toggle("On my hands in first person", () -> ModSettings.cosmeticAuraHands, v -> ModSettings.cosmeticAuraHands = v));
         s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
+        s.add(fxQualitySetting());
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticAuraColorMode,
@@ -1471,6 +1480,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Multi("Extra pets", Cosmetics.PETS, () -> ModSettings.cosmeticPetExtras, v -> ModSettings.cosmeticPetExtras = v));
         s.add(new Setting.Slide("Max pets", 1.0F, Cosmetics.MAX_PETS, 1.0F, Cosmetics.MAX_PETS, () -> ModSettings.cosmeticPetLimit, v -> ModSettings.cosmeticPetLimit = (int)Math.round(v)));
         s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
+        s.add(fxQualitySetting());
         List<Setting> colors = new ArrayList<>();
         cosmeticColors(
             colors,
@@ -1496,6 +1506,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Amount", 0.2F, 4.0F, 0.1F, 1.0, () -> ModSettings.cosmeticTrailDensity, v -> ModSettings.cosmeticTrailDensity = (float)v));
         s.add(new Setting.Toggle("Only while moving", () -> ModSettings.cosmeticTrailMoving, v -> ModSettings.cosmeticTrailMoving = v));
         s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
+        s.add(fxQualitySetting());
         List<Setting> colors = new ArrayList<>();
         cosmeticColors(
             colors,

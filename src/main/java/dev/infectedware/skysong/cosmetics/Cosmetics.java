@@ -48,6 +48,8 @@ public final class Cosmetics {
     public static final String[] QUALITIES = new String[]{"Low", "Medium", "High"};
     public static final String[] SIDES = new String[]{"Right", "Left"};
     private static final RandomSource RANDOM = RandomSource.create();
+    private static final int MAX_TRAIL_SPAWNS = 6;
+    private static final float ACCENT_CHANCE = 0.25F;
     private static Vec3 lastTrailPos;
     private static int tickCount;
 
@@ -97,6 +99,10 @@ public final class Cosmetics {
 
     static float capeWind() {
         return clamped(ModSettings.cosmeticCapeWind, 0.0F, 2.0F, 1.0F);
+    }
+
+    static int fxQuality() {
+        return Math.clamp(ModSettings.cosmeticFxQuality, 0, 2);
     }
 
     static float petSize() {
@@ -153,14 +159,19 @@ public final class Cosmetics {
     }
 
     private static void trail(Minecraft mc, LocalPlayer player) {
-        float density = Math.clamp(ModSettings.cosmeticTrailDensity, 0.1F, 4.0F);
-        int count = (int)density + (RANDOM.nextFloat() < density - (int)density ? 1 : 0);
+        float density = clamped(ModSettings.cosmeticTrailDensity, 0.1F, 4.0F, 1.0F);
+        int count = Math.min(MAX_TRAIL_SPAWNS - 1, (int)density + (RANDOM.nextFloat() < density - (int)density ? 1 : 0));
+        int type = ModSettings.cosmeticTrailType;
+        ParticleOptions accent = fxQuality() > 0 && RANDOM.nextFloat() < ACCENT_CHANCE ? trailAccent(type) : null;
+        if (accent != null) {
+            mc.level.addParticle(accent, player.getX() + (RANDOM.nextDouble() - 0.5) * 0.4, player.getY() + 0.15 + RANDOM.nextDouble() * 0.3, player.getZ() + (RANDOM.nextDouble() - 0.5) * 0.4, 0.0, 0.015, 0.0);
+        }
+
         for (int i = 0; i < count; i++) {
             double x = player.getX() + (RANDOM.nextDouble() - 0.5) * 0.5;
             double y = player.getY() + 0.1 + RANDOM.nextDouble() * 0.2;
             double z = player.getZ() + (RANDOM.nextDouble() - 0.5) * 0.5;
             float t = RANDOM.nextFloat();
-            int type = ModSettings.cosmeticTrailType;
             double vx = type == 2 ? (tickCount % 24) / 24.0 : (RANDOM.nextDouble() - 0.5) * 0.02;
             mc.level.addParticle(trailParticle(type, t), x, y, z, vx, type == 2 ? 0.0 : 0.01, (RANDOM.nextDouble() - 0.5) * 0.02);
         }
@@ -181,6 +192,19 @@ public final class Cosmetics {
         };
     }
 
+    private static ParticleOptions trailAccent(int type) {
+        return switch (type) {
+            case 0 -> ParticleTypes.SMOKE;
+            case 3 -> ParticleTypes.ELECTRIC_SPARK;
+            case 4 -> ParticleTypes.SOUL;
+            case 6 -> ParticleTypes.WHITE_ASH;
+            case 7 -> ParticleTypes.WITCH;
+            case 8 -> ParticleTypes.WAX_ON;
+            case 9 -> new DustParticleOptions(color(ModSettings.cosmeticTrailColorMode, ModSettings.cosmeticTrailColor, ModSettings.cosmeticTrailColor2, 1.0F) & 0xFFFFFF, 0.6F);
+            default -> null;
+        };
+    }
+
     private static void sparkles(Minecraft mc, LocalPlayer player) {
         if (tickCount % 2 != 0) {
             return;
@@ -191,7 +215,8 @@ public final class Cosmetics {
         double x = player.getX() + Mth.cos(angle) * r;
         double y = player.getY() + RANDOM.nextDouble() * player.getBbHeight();
         double z = player.getZ() + Mth.sin(angle) * r;
-        int c = color(ModSettings.cosmeticAuraColorMode, ModSettings.cosmeticAuraColor, ModSettings.cosmeticAuraColor2, RANDOM.nextFloat());
+        float flow = angle / Mth.TWO_PI + (reduceMotion() ? 0.0F : tickCount * 0.01F);
+        int c = color(ModSettings.cosmeticAuraColorMode, ModSettings.cosmeticAuraColor, ModSettings.cosmeticAuraColor2, flow - Mth.floor(flow));
         mc.level.addParticle(new DustParticleOptions(c & 0xFFFFFF, 0.7F), x, y, z, 0.0, 0.02, 0.0);
     }
 

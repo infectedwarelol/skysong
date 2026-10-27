@@ -396,6 +396,7 @@ public final class ModSettings {
     public static int cosmeticPetLimit = 3;
     public static boolean cosmeticPetPhysics = false;
     public static boolean cosmeticReduceMotion = false;
+    public static int cosmeticFxQuality = 1;
     public static boolean cosmeticTrail = false;
     public static int cosmeticTrailType = 0;
     public static int cosmeticTrailColorMode = 1;

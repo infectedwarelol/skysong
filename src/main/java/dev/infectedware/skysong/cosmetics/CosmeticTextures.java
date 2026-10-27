@@ -28,7 +28,14 @@ public final class CosmeticTextures {
     private static final int CAPE_W = 64;
     private static final int CAPE_H = 32;
     private static final long CAPE_REFRESH_MS = 100L;
+    private static final int GLOW_W = 40;
+    private static final int GLOW_H = 64;
     private static final Map<Integer, Identifier> WINGS = new HashMap<>();
+    private static final Map<Integer, Identifier> WING_EDGES = new HashMap<>();
+    private static DynamicTexture glowTexture;
+    private static Identifier glowId;
+    private static long glowKey = Long.MIN_VALUE;
+    private static long glowCheckedAt;
     private static Identifier white;
     private static DynamicTexture capeTexture;
     private static Identifier capeId;
@@ -53,6 +60,38 @@ public final class CosmeticTextures {
 
     static Identifier wings(int style) {
         return WINGS.computeIfAbsent(style, s -> register("wings_" + s, paintWings(s)));
+    }
+
+    static Identifier wingsEdge(int style) {
+        return WING_EDGES.computeIfAbsent(style, s -> register("wings_edge_" + s, paintWingEdge(s)));
+    }
+
+    static Identifier capeGlow() {
+        long now = System.currentTimeMillis();
+        if (glowTexture != null && now - glowCheckedAt < CAPE_REFRESH_MS) {
+            return glowId;
+        }
+
+        glowCheckedAt = now;
+        int style = ModSettings.cosmeticCapeStyle;
+        int c1 = Cosmetics.color(ModSettings.cosmeticCapeColorMode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 0.0F);
+        int c2 = Cosmetics.color(ModSettings.cosmeticCapeColorMode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 1.0F);
+        boolean still = Cosmetics.reduceMotion();
+        long frame = still ? 0L : now / CAPE_REFRESH_MS;
+        long key = ((long)style << 56) ^ ((long)(c1 & 0xFFFFFF) << 32) ^ ((long)(c2 & 0xFFFFFF) << 8) ^ frame * 0x9E3779B97F4A7C15L;
+        if (glowTexture == null) {
+            glowTexture = Compat.dynamicTexture("cape glow", new NativeImage(NativeImage.Format.RGBA, GLOW_W, GLOW_H, false));
+            glowId = Ids.of("skysong", "cosmetics/cape_glow");
+            Minecraft.getInstance().getTextureManager().register(glowId, glowTexture);
+        }
+
+        if (key != glowKey && glowTexture.getPixels() != null) {
+            glowKey = key;
+            paintCapeGlow(glowTexture.getPixels(), style, c1, c2, still ? 0.0F : (now % 3600000L) / 1000.0F);
+            glowTexture.upload();
+        }
+
+        return glowId;
     }
 
     public static Identifier cape() {
@@ -155,27 +194,7 @@ public final class CosmeticTextures {
         boolean[][] mask = new boolean[WING_SIZE][WING_SIZE];
         int[][] shade = new int[WING_SIZE][WING_SIZE];
         int[][] alpha = new int[WING_SIZE][WING_SIZE];
-
-        for (int y = 0; y < WING_SIZE; y++) {
-            for (int x = 0; x < WING_SIZE; x++) {
-                float u = (x + 0.5F) / WING_SIZE;
-                float v = (y + 0.5F) / WING_SIZE;
-                int[] px = switch (style) {
-                    case 1 -> bat(u, v, false);
-                    case 2 -> fairy(u, v, false);
-                    case 3 -> fairy(u, v, true);
-                    case 4 -> bat(u, v, true);
-                    case 5 -> neon(u, v);
-                    default -> feathers(u, v);
-                };
-                if (px != null) {
-                    mask[y][x] = true;
-                    shade[y][x] = px[0];
-                    alpha[y][x] = px[1];
-                }
-            }
-        }
-
+        wingMask(style, mask, shade, alpha);
         NativeImage image = new NativeImage(NativeImage.Format.RGBA, WING_SIZE, WING_SIZE, false);
         for (int y = 0; y < WING_SIZE; y++) {
             for (int x = 0; x < WING_SIZE; x++) {
@@ -196,6 +215,64 @@ public final class CosmeticTextures {
         }
 
         return image;
+    }
+
+    private static NativeImage paintWingEdge(int style) {
+        boolean[][] mask = new boolean[WING_SIZE][WING_SIZE];
+        wingMask(style, mask, new int[WING_SIZE][WING_SIZE], new int[WING_SIZE][WING_SIZE]);
+        NativeImage image = new NativeImage(NativeImage.Format.RGBA, WING_SIZE, WING_SIZE, false);
+        for (int y = 0; y < WING_SIZE; y++) {
+            for (int x = 0; x < WING_SIZE; x++) {
+                int depth = mask[y][x] ? edgeDepth(mask, x, y) : 0;
+                int g = switch (depth) {
+                    case 1 -> 255;
+                    case 2 -> 150;
+                    case 3 -> 60;
+                    default -> 0;
+                };
+                image.setPixel(x, y, (g == 0 ? 0 : 0xFF) << 24 | g << 16 | g << 8 | g);
+            }
+        }
+
+        return image;
+    }
+
+    private static int edgeDepth(boolean[][] mask, int x, int y) {
+        for (int radius = 1; radius <= 3; radius++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dx = -radius; dx <= radius; dx++) {
+                    int nx = x + dx;
+                    int ny = y + dy;
+                    if (nx < 0 || ny < 0 || nx >= WING_SIZE || ny >= WING_SIZE || !mask[ny][nx]) {
+                        return radius;
+                    }
+                }
+            }
+        }
+
+        return 0;
+    }
+
+    private static void wingMask(int style, boolean[][] mask, int[][] shade, int[][] alpha) {
+        for (int y = 0; y < WING_SIZE; y++) {
+            for (int x = 0; x < WING_SIZE; x++) {
+                float u = (x + 0.5F) / WING_SIZE;
+                float v = (y + 0.5F) / WING_SIZE;
+                int[] px = switch (style) {
+                    case 1 -> bat(u, v, false);
+                    case 2 -> fairy(u, v, false);
+                    case 3 -> fairy(u, v, true);
+                    case 4 -> bat(u, v, true);
+                    case 5 -> neon(u, v);
+                    default -> feathers(u, v);
+                };
+                if (px != null) {
+                    mask[y][x] = true;
+                    shade[y][x] = px[0];
+                    alpha[y][x] = px[1];
+                }
+            }
+        }
     }
 
     private static boolean edge(boolean[][] mask, int x, int y) {
@@ -414,6 +491,68 @@ public final class CosmeticTextures {
                 yield star > 0.93F ? Colors.mixWhite(color, 0.6F + (star - 0.93F) * 5.0F) : color;
             }
         };
+    }
+
+    private static void paintCapeGlow(NativeImage image, int style, int c1, int c2, float time) {
+        for (int y = 0; y < GLOW_H; y++) {
+            for (int x = 0; x < GLOW_W; x++) {
+                float u = (x + 0.5F) / GLOW_W;
+                float v = (y + 0.5F) / GLOW_H;
+                image.setPixel(x, y, capeGlowPixel(style, x, y, u, v, time, c1, c2));
+            }
+        }
+    }
+
+    private static int capeGlowPixel(int style, int x, int y, float u, float v, float time, int c1, int c2) {
+        return switch (style) {
+            case 1 -> {
+                float center = frac(time * 0.12F) * 1.6F - 0.3F;
+                float distance = Math.abs(v - center - (u - 0.5F) * 0.3F);
+                yield glowPixel(Colors.mixWhite(c2, 0.6F), Math.max(0.0F, 1.0F - distance / 0.08F) * 0.45F);
+            }
+            case 2 -> {
+                float n = noise(u * 6.0F, v * 5.0F + time * 1.6F);
+                float heat = Math.clamp(v * 1.25F - 0.45F + n * 0.6F - 0.5F, 0.0F, 1.0F);
+                yield glowPixel(Colors.lerp(c2, 0xFFFFE9A8, heat), heat * 0.85F);
+            }
+            case 3 -> {
+                float crest = Mth.sin(v * (float)Math.PI * 7.0F + Mth.sin(u * (float)Math.PI * 2.0F) * 1.4F - time * 1.2F);
+                yield glowPixel(Colors.mixWhite(c2, 0.5F), Math.max(0.0F, 1.0F - Math.abs(crest) / 0.18F) * 0.55F);
+            }
+            case 4 -> {
+                boolean edgeLine = (x + y) % 6 == 0;
+                float pulse = frac((u + v) * 0.5F - time * 0.15F);
+                float window = Math.max(0.0F, 1.0F - Math.abs(pulse - 0.5F) / 0.2F);
+                yield edgeLine ? glowPixel(Colors.mixWhite(c1, 0.5F), 0.25F + 0.5F * window) : 0;
+            }
+            case 5 -> {
+                float cu = u * 5.0F;
+                float cv = v * 8.0F;
+                float du = Math.min(frac(cu), 1.0F - frac(cu));
+                float dv = Math.min(frac(cv), 1.0F - frac(cv));
+                int glint = Math.round(cu) + Math.round(cv) * 6;
+                float active = frac(glint * 0.37F + time * 0.4F);
+                float bright = active < 0.25F ? Mth.sin(active / 0.25F * (float)Math.PI) : 0.0F;
+                float star = Math.max(0.0F, 1.0F - (du + dv) / 0.12F);
+                yield glowPixel(Colors.mixWhite(c2, 0.7F), star * (0.15F + 0.75F * bright));
+            }
+            case 6 -> x == 0 || y == 0 || x == GLOW_W - 1 || y == GLOW_H - 1 ? glowPixel(0xFFFFFFFF, 0.35F) : 0;
+            default -> {
+                float star = hash(x * 7, y * 13);
+                if (star > 0.955F) {
+                    float twinkle = 0.5F + 0.5F * Mth.sin(time * 2.4F + hash(x, y) * Mth.TWO_PI);
+                    yield glowPixel(Colors.mixWhite(Colors.lerp(c1, c2, u), 0.75F), 0.45F + 0.5F * twinkle);
+                }
+
+                float nebula = noise(u * 3.0F + time * 0.03F, v * 4.0F);
+                yield nebula > 0.62F ? glowPixel(Colors.lerp(c1, c2, nebula), (nebula - 0.62F) * 0.8F) : 0;
+            }
+        };
+    }
+
+    private static int glowPixel(int color, float strength) {
+        int alpha = Math.clamp(Math.round(strength * 255.0F), 0, 255);
+        return alpha == 0 ? 0 : alpha << 24 | color & 0xFFFFFF;
     }
 
     private static float frac(float f) {
