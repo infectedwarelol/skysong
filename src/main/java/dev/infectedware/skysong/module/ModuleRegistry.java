@@ -1469,7 +1469,7 @@ public final class ModuleRegistry {
             false
         );
         for (Setting c : colors) {
-            s.add(new Setting.Shown(() -> ModSettings.cosmeticPetType == 0, c));
+            s.add(new Setting.Shown(() -> Cosmetics.petUsesColors(ModSettings.cosmeticPetType), c));
         }
 
         return s;

@@ -47,6 +47,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final int RIBBON_SEGMENTS = 12;
     private static final int SHARD_ROWS = 6;
     private static final int SHARD_COLUMNS = 5;
+    private static final int TENTACLES = 5;
+    private static final int TENTACLE_SEGMENTS = 6;
     private final PlayerModel auraWide;
     private final PlayerModel auraSlim;
 
@@ -459,9 +461,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
 
     static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson) {
         int type = ModSettings.cosmeticPetType;
+        boolean shaped = Cosmetics.shapedPet(type);
         float side = ModSettings.cosmeticPetSide == 1 ? 1.0F : -1.0F;
         float size = ModSettings.cosmeticPetSize;
-        float bob = Mth.sin(age * 0.11F) * 0.06F;
+        float bob = shaped ? 0.0F : Mth.sin(age * 0.11F) * 0.06F;
         pose.pushPose();
         if (firstPerson) {
             pose.translate(side * 0.95F, -0.1F + bob, -1.45F);
@@ -469,9 +472,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             pose.translate(side * 0.68F, -0.42F + bob, 0.18F);
         }
 
-        pose.mulPose(Axis.YP.rotationDegrees(Mth.sin(age * 0.03F) * 25.0F));
+        if (!shaped) {
+            pose.mulPose(Axis.YP.rotationDegrees(Mth.sin(age * 0.03F) * 25.0F));
+        }
+
         pose.scale(size, size, size);
-        if (type <= 0 || type >= PET_ITEMS.length) {
+        if (type == Cosmetics.JELLYFISH_PET) {
+            jellyfish(pose, collector, age);
+        } else if (type <= 0 || type >= PET_ITEMS.length) {
             wisp(pose, collector, age);
         } else {
             pose.mulPose(Axis.ZP.rotationDegrees(180.0F));
@@ -484,10 +492,69 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         pose.popPose();
     }
 
+    private static int petColor(float t) {
+        return Cosmetics.color(ModSettings.cosmeticPetColorMode, ModSettings.cosmeticPetColor, ModSettings.cosmeticPetColor2, t);
+    }
+
+    private static void jellyfish(PoseStack pose, SubmitNodeCollector collector, float age) {
+        int c1 = petColor(0.0F);
+        int c2 = petColor(1.0F);
+        float cycle = age * 0.09F;
+        float contract = Math.max(0.0F, Mth.sin(cycle));
+        float widthScale = 1.0F - 0.18F * contract;
+        float heightScale = 1.0F + 0.15F * contract;
+        pose.pushPose();
+        pose.translate(0.0F, -0.08F - Mth.sin(cycle - 0.8F) * 0.06F, 0.0F);
+        pose.mulPose(Axis.YP.rotationDegrees(age * 0.4F));
+        int bell = Cosmetics.withAlpha(Colors.mixWhite(c1, 0.2F), 0.42F);
+        int rim = Cosmetics.withAlpha(c2, 0.8F);
+        int core = Cosmetics.withAlpha(Colors.mixWhite(c2, 0.5F), 0.85F);
+        int tentacle = Cosmetics.withAlpha(Colors.lerp(c1, c2, 0.5F), 0.6F);
+        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> {
+            Geo geo = new Geo(p, out, FULL_BRIGHT);
+            float w = widthScale;
+            float h = heightScale;
+            geo.frustum(0.16F * w, 0.17F * w, 0.0F, -0.06F * h, 16, bell, false, false);
+            geo.frustum(0.17F * w, 0.14F * w, -0.06F * h, -0.12F * h, 16, bell, false, false);
+            geo.frustum(0.14F * w, 0.08F * w, -0.12F * h, -0.16F * h, 16, bell, false, false);
+            geo.frustum(0.08F * w, 0.0F, -0.16F * h, -0.175F * h, 16, bell, false, false);
+            geo.frustum(0.165F * w, 0.16F * w, 0.012F, -0.004F, 16, rim, false, false);
+            geo.ball(0.0F, -0.08F * h, 0.0F, 0.045F, core);
+            for (int i = 0; i < TENTACLES; i++) {
+                float angle = Mth.TWO_PI * i / TENTACLES + 0.3F;
+                float baseX = Mth.cos(angle) * 0.11F * w;
+                float baseZ = Mth.sin(angle) * 0.11F * w;
+                float prevX = baseX;
+                float prevY = 0.0F;
+                float prevZ = baseZ;
+                for (int k = 1; k <= TENTACLE_SEGMENTS; k++) {
+                    float t = (float)k / TENTACLE_SEGMENTS;
+                    float pull = 1.0F - 0.35F * contract * t;
+                    float x = baseX * pull + Mth.sin(age * 0.13F - t * 4.0F + i) * 0.03F * t;
+                    float y = t * 0.32F * (1.2F - 0.2F * contract);
+                    float z = baseZ * pull + Mth.cos(age * 0.11F - t * 4.0F + i * 1.7F) * 0.03F * t;
+                    float half = 0.009F * (1.0F - 0.6F * t);
+                    int faded = Cosmetics.withAlpha(tentacle, 0.6F * (1.0F - 0.7F * t));
+                    geo.vertex(prevX - half, prevY, prevZ, faded, 0.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+                    geo.vertex(prevX + half, prevY, prevZ, faded, 1.0F, 0.0F, 0.0F, 0.0F, 1.0F);
+                    geo.vertex(x + half, y, z, faded, 1.0F, 1.0F, 0.0F, 0.0F, 1.0F);
+                    geo.vertex(x - half, y, z, faded, 0.0F, 1.0F, 0.0F, 0.0F, 1.0F);
+                    geo.vertex(prevX, prevY, prevZ - half, faded, 0.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+                    geo.vertex(prevX, prevY, prevZ + half, faded, 1.0F, 0.0F, 1.0F, 0.0F, 0.0F);
+                    geo.vertex(x, y, z + half, faded, 1.0F, 1.0F, 1.0F, 0.0F, 0.0F);
+                    geo.vertex(x, y, z - half, faded, 0.0F, 1.0F, 1.0F, 0.0F, 0.0F);
+                    prevX = x;
+                    prevY = y;
+                    prevZ = z;
+                }
+            }
+        });
+        pose.popPose();
+    }
+
     private static void wisp(PoseStack pose, SubmitNodeCollector collector, float age) {
-        int mode = ModSettings.cosmeticPetColorMode;
-        int c1 = Cosmetics.color(mode, ModSettings.cosmeticPetColor, ModSettings.cosmeticPetColor2, 0.0F);
-        int c2 = Cosmetics.color(mode, ModSettings.cosmeticPetColor, ModSettings.cosmeticPetColor2, 1.0F);
+        int c1 = petColor(0.0F);
+        int c2 = petColor(1.0F);
         float pulse = 1.0F + Mth.sin(age * 0.25F) * 0.08F;
         collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> {
             Geo geo = new Geo(p, out, FULL_BRIGHT);
