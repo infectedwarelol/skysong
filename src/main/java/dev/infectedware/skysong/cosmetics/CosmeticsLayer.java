@@ -316,14 +316,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         float size = ModSettings.cosmeticWingsSize;
         float speed = ModSettings.cosmeticWingsSpeed * (flying ? 2.6F : 1.0F);
         float flap = Mth.sin(age * 0.18F * speed);
-        float spread = crouching ? 62.0F : (flying ? 18.0F : 32.0F);
+        boolean neon = style == Cosmetics.NEON_WINGS;
+        float spread = crouching ? 62.0F : (flying ? 18.0F : (neon ? 14.0F : 32.0F));
         float angle = spread + flap * (flying ? 22.0F : 12.0F);
-        RenderType type = ModSettings.cosmeticWingsGlow
-            ? RenderTypes.entityTranslucentEmissive(CosmeticTextures.wings(style))
-            : RenderTypes.entityTranslucent(CosmeticTextures.wings(style));
-        int wingLight = ModSettings.cosmeticWingsGlow ? FULL_BRIGHT : light;
-        float w = 1.05F * size;
-        float h = 1.1F * size;
+        boolean glow = ModSettings.cosmeticWingsGlow || neon;
+        RenderType type = glow ? RenderTypes.entityTranslucentEmissive(CosmeticTextures.wings(style)) : RenderTypes.entityTranslucent(CosmeticTextures.wings(style));
+        int wingLight = glow ? FULL_BRIGHT : light;
+        float w = (neon ? 1.35F : 1.05F) * size;
+        float h = (neon ? 0.95F : 1.1F) * size;
 
         for (int side = -1; side <= 1; side += 2) {
             pose.pushPose();

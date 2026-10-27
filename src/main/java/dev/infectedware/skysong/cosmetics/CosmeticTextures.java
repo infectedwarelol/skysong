@@ -165,6 +165,7 @@ public final class CosmeticTextures {
                     case 2 -> fairy(u, v, false);
                     case 3 -> fairy(u, v, true);
                     case 4 -> bat(u, v, true);
+                    case 5 -> neon(u, v);
                     default -> feathers(u, v);
                 };
                 if (px != null) {
@@ -186,7 +187,7 @@ public final class CosmeticTextures {
                 int g = shade[y][x];
                 int a = alpha[y][x];
                 if (edge(mask, x, y)) {
-                    g = style == 2 ? 255 : Math.round(g * 0.72F);
+                    g = style == 2 || style == 5 ? 255 : Math.round(g * 0.72F);
                     a = Math.max(a, 235);
                 }
 
@@ -279,6 +280,38 @@ public final class CosmeticTextures {
         }
 
         return new int[]{g, dragon ? 250 : 232};
+    }
+
+    private static int[] neon(float u, float v) {
+        float[][] tips = {{1.0F, 0.12F}, {0.86F, 0.52F}, {0.6F, 0.66F}, {0.34F, 0.7F}};
+        float jx = 0.22F;
+        float jy = 0.12F;
+        float[][] outline = {{0.0F, 0.32F}, {jx, jy}, tips[0], tips[1], tips[2], tips[3], {0.0F, 0.62F}};
+        if (!inside(outline, u, v)) {
+            return null;
+        }
+
+        for (int i = 1; i < tips.length; i++) {
+            float[] p = tips[i - 1];
+            float[] q = tips[i];
+            float len = (float)Math.hypot(q[0] - p[0], q[1] - p[1]);
+            float mx = (p[0] + q[0]) / 2.0F;
+            float my = (p[1] + q[1]) / 2.0F;
+            if (Math.hypot(u - mx, v - (my + len * 0.38F)) < len * 0.55F) {
+                return null;
+            }
+        }
+
+        float rib = segment(u, v, 0.0F, 0.32F, jx, jy);
+        for (int i = 1; i < tips.length; i++) {
+            rib = Math.min(rib, segment(u, v, jx, jy, tips[i][0], tips[i][1]));
+        }
+
+        if (rib < 0.012F) {
+            return new int[]{255, 255};
+        }
+
+        return new int[]{255, Math.round(165.0F + 55.0F * (1.0F - v))};
     }
 
     private static int[] fairy(float u, float v, boolean butterfly) {

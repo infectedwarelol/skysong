@@ -29,7 +29,8 @@ public final class Cosmetics {
     public static final String[] HATS = new String[]{"Top hat", "Crown", "Witch hat", "Party hat", "Cat ears", "Bunny ears", "Horns", "Conical hat"};
     public static final String[] CAPES = new String[]{"Galaxy", "Gradient", "Flames", "Waves", "Stripes", "Checkers", "My image"};
     public static final int CAPE_IMAGE = 6;
-    public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon"};
+    public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon", "Neon"};
+    public static final int NEON_WINGS = 5;
     public static final String[] AURAS = new String[]{"Energy", "Sparkles", "Energy + sparkles"};
     public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst"};
     public static final String[] TRAILS = new String[]{"Flames", "Hearts", "Notes", "Sparkles", "Souls", "Cherry petals", "Snow", "Enchant", "Glow", "Color dust"};
