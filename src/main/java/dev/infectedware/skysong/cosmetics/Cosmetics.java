@@ -26,7 +26,7 @@ import net.minecraft.world.phys.Vec3;
 public final class Cosmetics {
     public static final String[] COLOR_MODES = new String[]{"Theme", "Rainbow", "Custom", "Two colors"};
     public static final String[] HALOS = new String[]{"Ring", "Double ring", "Rays", "Tilted"};
-    public static final String[] HATS = new String[]{"Top hat", "Crown", "Witch hat", "Party hat", "Cat ears", "Bunny ears", "Horns"};
+    public static final String[] HATS = new String[]{"Top hat", "Crown", "Witch hat", "Party hat", "Cat ears", "Bunny ears", "Horns", "Conical hat"};
     public static final String[] CAPES = new String[]{"Galaxy", "Gradient", "Flames", "Waves", "Stripes", "Checkers", "My image"};
     public static final int CAPE_IMAGE = 6;
     public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon"};

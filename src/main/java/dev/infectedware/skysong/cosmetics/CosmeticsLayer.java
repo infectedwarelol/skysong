@@ -3,6 +3,7 @@ package dev.infectedware.skysong.cosmetics;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import dev.infectedware.skysong.ModSettings;
+import dev.infectedware.skysong.theme.Colors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.EntityModelSet;
 import net.minecraft.client.model.geom.builders.CubeDeformation;
@@ -38,7 +39,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         new ItemStack(Items.ENDER_EYE),
         new ItemStack(Items.AMETHYST_CLUSTER)
     };
-    private static final float[] HAT_HEIGHTS = new float[]{0.42F, 0.27F, 0.62F, 0.46F, 0.21F, 0.5F, 0.3F};
+    private static final float[] HAT_HEIGHTS = new float[]{0.42F, 0.27F, 0.62F, 0.46F, 0.21F, 0.5F, 0.3F, 0.34F};
     private static final ItemStackRenderState PET_STATE = new ItemStackRenderState();
     private final PlayerModel auraWide;
     private final PlayerModel auraSlim;
@@ -199,6 +200,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                 case 4 -> ears(geo, main, accentColor, false);
                 case 5 -> ears(geo, main, accentColor, true);
                 case 6 -> horns(p, geo, main, accentColor);
+                case 7 -> conicalHat(geo, main, accentColor);
                 default -> topHat(geo, main, accentColor);
             }
         });
@@ -209,6 +211,21 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         geo.frustum(0.36F, 0.36F, -0.03F, -0.055F, 24, main, true, true);
         geo.frustum(0.21F, 0.22F, -0.055F, -0.42F, 24, main, false, true);
         geo.frustum(0.218F, 0.222F, -0.06F, -0.13F, 24, accent, false, false);
+    }
+
+    private static void conicalHat(Geo geo, int main, int accent) {
+        int shade = Colors.darken(main, 0.82F);
+        Vector3f tip = new Vector3f(0.0F, -0.34F, 0.0F);
+        geo.cone(0.5F, -0.02F, tip, 32, i -> i % 2 == 0 ? main : shade, false);
+        geo.frustum(0.5F, 0.47F, -0.02F, -0.045F, 32, accent, false, false);
+        geo.frustum(0.26F, 0.26F, -0.01F, -0.12F, 20, shade, false, false);
+        for (int ring = 1; ring <= 2; ring++) {
+            float r = 0.5F - ring * 0.14F;
+            float y = -0.02F - 0.32F * (1.0F - r / 0.5F) - 0.004F;
+            geo.frustum(r + 0.012F, r - 0.012F, y + 0.008F, y - 0.008F, 32, Colors.darken(main, 0.7F), false, false);
+        }
+
+        geo.ball(0.0F, -0.35F, 0.0F, 0.03F, accent);
     }
 
     private static void crown(Geo geo, int main, int accent) {
