@@ -55,6 +55,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final int CAPELET_ROWS = 4;
     private static final float[] CAPELET_DROP = capeletDrops();
     private static final int CAPELET_MOTES = 6;
+    private static final float[] KOI_Z = new float[]{0.09F, 0.06F, 0.02F, -0.02F, -0.06F, -0.09F, -0.12F};
+    private static final float[] KOI_RADIUS = new float[]{0.03F, 0.048F, 0.052F, 0.045F, 0.032F, 0.018F, 0.004F};
+    private static final int[] KOI_PATCH = new int[]{0xFFF7F3EC, 0xFFF26B1D, 0xFFF26B1D, 0xFFF7F3EC, 0xFFE8541A, 0xFFF7F3EC};
+    private static final int KOI_BELLY = 0xFFF7F3EC;
+    private static final int KOI_FIN = 0xC0F26B1D;
+    private static final float[] KOI_SIDE_X = new float[]{0.0F, 1.0F, 0.0F, -1.0F};
+    private static final float[] KOI_SIDE_Y = new float[]{-1.0F, 0.0F, 0.8F, 0.0F};
+    private static final float[] KOI_RING = new float[KOI_Z.length * 4 * 3];
     private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
@@ -520,6 +528,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             orrery(pose, collector, light, age);
         } else if (type == Cosmetics.CRANE_PET) {
             crane(pose, collector, light, age);
+        } else if (type == Cosmetics.KOI_PET) {
+            koi(pose, collector, light, age);
         } else if (type <= 0 || type >= PET_ITEMS.length) {
             wisp(pose, collector, age);
         } else {
@@ -638,6 +648,64 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             geo.vertex(x, y, z + 0.02F, core, 1.0F, 0.5F, 1.0F, 0.0F, 0.0F);
             geo.vertex(x, y + 0.022F, z, core, 0.5F, 1.0F, 1.0F, 0.0F, 0.0F);
             geo.vertex(x, y, z - 0.02F, core, 0.0F, 0.5F, 1.0F, 0.0F, 0.0F);
+        }
+    }
+
+    private static void koi(PoseStack pose, SubmitNodeCollector collector, int light, float age) {
+        float course = age * 0.03F + 0.4F * Mth.sin(age * 0.011F);
+        float headingX = -Mth.sin(course);
+        float headingZ = Mth.cos(course);
+        pose.pushPose();
+        pose.translate(Mth.cos(course) * 0.13F, Mth.sin(age * 0.06F) * 0.02F, Mth.sin(course) * 0.13F);
+        pose.mulPose(Axis.YP.rotation((float)Mth.atan2(headingX, headingZ)));
+        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> koiBody(new Geo(p, out, light), age));
+        pose.popPose();
+    }
+
+    private static void koiBody(Geo geo, float age) {
+        float[] ring = KOI_RING;
+        int rings = KOI_Z.length;
+        for (int k = 0; k < rings; k++) {
+            float sway = Mth.sin(age * 0.25F - k * 0.7F) * 0.012F * k;
+            float radius = KOI_RADIUS[k];
+            for (int side = 0; side < 4; side++) {
+                int i = (k * 4 + side) * 3;
+                ring[i] = sway + KOI_SIDE_X[side] * radius;
+                ring[i + 1] = KOI_SIDE_Y[side] * radius;
+                ring[i + 2] = KOI_Z[k];
+            }
+        }
+
+        for (int side = 0; side < 4; side++) {
+            int a = side * 3;
+            int b = (side + 1) % 4 * 3;
+            geo.quad(ring[a], ring[a + 1], ring[a + 2], ring[b], ring[b + 1], ring[b + 2], 0.0F, 0.0F, KOI_Z[0] + 0.03F, 0.0F, 0.0F, KOI_Z[0] + 0.03F, KOI_PATCH[0]);
+        }
+
+        for (int k = 0; k < rings - 1; k++) {
+            for (int side = 0; side < 4; side++) {
+                int next = (side + 1) % 4;
+                int a = (k * 4 + side) * 3;
+                int b = (k * 4 + next) * 3;
+                int c = ((k + 1) * 4 + next) * 3;
+                int d = ((k + 1) * 4 + side) * 3;
+                int color = side == 0 || side == 3 ? KOI_PATCH[k] : KOI_BELLY;
+                geo.quad(ring[a], ring[a + 1], ring[a + 2], ring[b], ring[b + 1], ring[b + 2], ring[c], ring[c + 1], ring[c + 2], ring[d], ring[d + 1], ring[d + 2], color);
+            }
+        }
+
+        int tail = (rings - 1) * 4 * 3;
+        float tailX = ring[tail];
+        float tailZ = KOI_Z[rings - 1];
+        float flick = Mth.sin(age * 0.25F - rings * 0.7F) * 0.03F;
+        geo.quad(tailX, 0.0F, tailZ, tailX + flick, -0.055F, tailZ - 0.07F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, KOI_FIN);
+        geo.quad(tailX, 0.0F, tailZ, tailX + flick, 0.055F, tailZ - 0.07F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, tailX + flick * 0.5F, 0.0F, tailZ - 0.045F, KOI_FIN);
+        float paddle = Mth.sin(age * 0.2F) * 0.012F;
+        for (int side = -1; side <= 1; side += 2) {
+            float x = side * KOI_RADIUS[1];
+            geo.quad(x, 0.01F, 0.06F, x + side * 0.05F, 0.025F + paddle, 0.03F, x, 0.01F, 0.035F, x, 0.01F, 0.035F, KOI_FIN);
+            float eyeX = side * KOI_RADIUS[1] * 0.92F;
+            geo.quad(eyeX, -0.018F, 0.07F, eyeX, -0.018F, 0.06F, eyeX, -0.008F, 0.06F, eyeX, -0.008F, 0.07F, 0xFF1A1A1A);
         }
     }
 
