@@ -1477,6 +1477,8 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Size", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticPetSize, v -> ModSettings.cosmeticPetSize = (float)v));
         s.add(new Setting.Toggle("Show in first person", () -> ModSettings.cosmeticPetFirstPerson, v -> ModSettings.cosmeticPetFirstPerson = v));
         s.add(new Setting.Toggle("Physics", () -> ModSettings.cosmeticPetPhysics, v -> ModSettings.cosmeticPetPhysics = v));
+        s.add(new Setting.Slide("Giant pet size", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticPetMaxSize, v -> ModSettings.cosmeticPetMaxSize = (float)v));
+        s.add(new Setting.Choice("Giant pet effects", Cosmetics.QUALITIES, () -> ModSettings.cosmeticPetEffectDensity, v -> ModSettings.cosmeticPetEffectDensity = v));
         s.add(new Setting.Multi("Extra pets", Cosmetics.PETS, () -> ModSettings.cosmeticPetExtras, v -> ModSettings.cosmeticPetExtras = v));
         s.add(new Setting.Slide("Max pets", 1.0F, Cosmetics.MAX_PETS, 1.0F, Cosmetics.MAX_PETS, () -> ModSettings.cosmeticPetLimit, v -> ModSettings.cosmeticPetLimit = (int)Math.round(v)));
         s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));

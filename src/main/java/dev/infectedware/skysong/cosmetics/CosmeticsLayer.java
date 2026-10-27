@@ -727,7 +727,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
     }
 
-    private static void crossDiamond(Geo geo, float x, float y, float z, float size, int argb) {
+    static void crossDiamond(Geo geo, float x, float y, float z, float size, int argb) {
         geo.vertex(x, y - size, z, argb, 0.5F, 0.0F, 0.0F, 0.0F, 1.0F);
         geo.vertex(x + size, y, z, argb, 1.0F, 0.5F, 0.0F, 0.0F, 1.0F);
         geo.vertex(x, y + size, z, argb, 0.5F, 1.0F, 0.0F, 0.0F, 1.0F);
@@ -888,6 +888,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         float lagX = physics ? CosmeticPhysics.spring(CosmeticPhysics.PET_OFFSET + slot * 3, partialTick) : 0.0F;
         float lagY = physics ? CosmeticPhysics.spring(CosmeticPhysics.PET_OFFSET + slot * 3 + 1, partialTick) : 0.0F;
         float lagZ = physics ? CosmeticPhysics.spring(CosmeticPhysics.PET_OFFSET + slot * 3 + 2, partialTick) : 0.0F;
+        if (GiantPets.giant(type)) {
+            if (!firstPerson) {
+                GiantPets.render(pose, collector, light, age, type, slot, lagX, lagY, lagZ);
+            }
+
+            return;
+        }
+
         boolean chains = physics && CosmeticPhysics.chainShown(slot, type, partialTick);
         pose.pushPose();
         pose.translate(side * anchor[0] + lagX, anchor[1] + bob + lagY, anchor[2] + lagZ);

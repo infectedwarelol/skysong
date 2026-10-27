@@ -36,13 +36,26 @@ public final class Cosmetics {
     public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon", "Neon"};
     public static final int NEON_WINGS = 5;
     public static final String[] AURAS = new String[]{"Energy", "Sparkles", "Energy + sparkles"};
-    public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst", "Jellyfish", "Orrery", "Paper crane", "Koi", "Paper lantern", "Rain cloud"};
+    public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst", "Jellyfish", "Orrery", "Paper crane", "Koi", "Paper lantern", "Rain cloud", "Sky dragon", "Great serpent", "Crystal turtle", "Phoenix", "Giant spider", "Kraken", "Wyrm", "Ember beast", "Tide titan", "Leaf golem", "Star beetle", "Crystal stag", "Dusk fox"};
     public static final int JELLYFISH_PET = 8;
     public static final int ORRERY_PET = 9;
     public static final int CRANE_PET = 10;
     public static final int KOI_PET = 11;
     public static final int LANTERN_PET = 12;
     public static final int CLOUD_PET = 13;
+    public static final int SKY_DRAGON_PET = 14;
+    public static final int SERPENT_PET = 15;
+    public static final int TURTLE_PET = 16;
+    public static final int PHOENIX_PET = 17;
+    public static final int SPIDER_PET = 18;
+    public static final int KRAKEN_PET = 19;
+    public static final int WYRM_PET = 20;
+    public static final int EMBER_BEAST_PET = 21;
+    public static final int TIDE_TITAN_PET = 22;
+    public static final int LEAF_GOLEM_PET = 23;
+    public static final int STAR_BEETLE_PET = 24;
+    public static final int CRYSTAL_STAG_PET = 25;
+    public static final int DUSK_FOX_PET = 26;
     public static final int MAX_PETS = 3;
     public static final String[] TRAILS = new String[]{"Flames", "Hearts", "Notes", "Sparkles", "Souls", "Cherry petals", "Snow", "Enchant", "Glow", "Color dust"};
     public static final String[] QUALITIES = new String[]{"Low", "Medium", "High"};
@@ -62,7 +75,10 @@ public final class Cosmetics {
                 helper.register(new CosmeticsLayer(avatar, context.getModelSet()));
             }
         });
-        WorldRenderEvents.BEFORE_ENTITIES.register(context -> firstPersonPet(context.matrices(), context.commandQueue()));
+        WorldRenderEvents.BEFORE_ENTITIES.register(context -> {
+            GiantPets.frame();
+            firstPersonPet(context.matrices(), context.commandQueue());
+        });
         ClientTickEvents.END_CLIENT_TICK.register(client -> tick(client));
         Emotes.init();
     }

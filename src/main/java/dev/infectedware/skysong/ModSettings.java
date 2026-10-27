@@ -395,6 +395,8 @@ public final class ModSettings {
     public static int cosmeticPetExtras = 0;
     public static int cosmeticPetLimit = 3;
     public static boolean cosmeticPetPhysics = false;
+    public static float cosmeticPetMaxSize = 1.0F;
+    public static int cosmeticPetEffectDensity = 1;
     public static boolean cosmeticReduceMotion = false;
     public static int cosmeticFxQuality = 1;
     public static boolean cosmeticTrail = false;

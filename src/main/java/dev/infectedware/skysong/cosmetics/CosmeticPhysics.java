@@ -146,6 +146,7 @@ final class CosmeticPhysics {
 
         tickSprings(player, jump);
         tickPets(player, jump);
+        GiantPets.tick(mc, player, jump);
         lastHeadYaw = player.yHeadRot;
         lastPitch = player.getXRot();
         lastVerticalSpeed = (float)player.getDeltaMovement().y;
@@ -161,6 +162,7 @@ final class CosmeticPhysics {
     }
 
     static void clear() {
+        GiantPets.clear();
         Arrays.fill(CLOTH, 0.0F);
         Arrays.fill(CLOTH_PREVIOUS, 0.0F);
         Arrays.fill(CLOTH_REST, 0.0F);
