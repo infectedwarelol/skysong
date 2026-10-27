@@ -63,6 +63,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final float[] KOI_SIDE_X = new float[]{0.0F, 1.0F, 0.0F, -1.0F};
     private static final float[] KOI_SIDE_Y = new float[]{-1.0F, 0.0F, 0.8F, 0.0F};
     private static final float[] KOI_RING = new float[KOI_Z.length * 4 * 3];
+    private static final int LANTERN_SIDES = 8;
+    private static final float[] LANTERN_COS = octagon(true);
+    private static final float[] LANTERN_SIN = octagon(false);
+    private static final float[] LANTERN_RADIUS = new float[]{0.055F, 0.085F, 0.095F, 0.085F, 0.055F};
+    private static final float[] LANTERN_Y = new float[]{0.125F, 0.16F, 0.21F, 0.26F, 0.295F};
+    private static final int LANTERN_PAPER = 0xFFFFB347;
+    private static final int LANTERN_WOOD = 0xFF4A2C1A;
+    private static final int LANTERN_TASSEL = 0xFFC0392B;
     private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
@@ -128,7 +136,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         if (ModSettings.cosmeticPet && state.deathTime <= 0.0F) {
             pose.pushPose();
             this.getParentModel().root().translateAndRotate(pose);
-            pets(pose, collector, light, age, false);
+            pets(pose, collector, light, age, state.walkAnimationSpeed, false);
             pose.popPose();
         }
     }
@@ -494,21 +502,21 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         geo.vertex(cx - halfWidth, cy, cz, argb, 0.0F, 0.5F, 0.0F, 0.0F, 1.0F);
     }
 
-    static void pets(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson) {
+    static void pets(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion, boolean firstPerson) {
         int primary = ModSettings.cosmeticPetType;
         int limit = Math.clamp(ModSettings.cosmeticPetLimit, 1, Cosmetics.MAX_PETS);
-        pet(pose, collector, light, age, firstPerson, primary, 0);
+        pet(pose, collector, light, age, motion, firstPerson, primary, 0);
         int extras = ModSettings.cosmeticPetExtras;
         int slot = 1;
         for (int type = 0; type < Cosmetics.PETS.length && slot < limit; type++) {
             if ((extras & 1 << type) != 0 && type != primary) {
-                pet(pose, collector, light, age, firstPerson, type, slot);
+                pet(pose, collector, light, age, motion, firstPerson, type, slot);
                 slot++;
             }
         }
     }
 
-    private static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, boolean firstPerson, int type, int slot) {
+    private static void pet(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion, boolean firstPerson, int type, int slot) {
         boolean shaped = Cosmetics.shapedPet(type);
         float side = ModSettings.cosmeticPetSide == 1 ? 1.0F : -1.0F;
         float size = Math.clamp(ModSettings.cosmeticPetSize, 0.5F, 2.0F);
@@ -530,6 +538,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             crane(pose, collector, light, age);
         } else if (type == Cosmetics.KOI_PET) {
             koi(pose, collector, light, age);
+        } else if (type == Cosmetics.LANTERN_PET) {
+            lantern(pose, collector, light, age, motion);
         } else if (type <= 0 || type >= PET_ITEMS.length) {
             wisp(pose, collector, age);
         } else {
@@ -561,6 +571,16 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
 
         return drops;
+    }
+
+    private static float[] octagon(boolean cosine) {
+        float[] values = new float[LANTERN_SIDES + 1];
+        for (int i = 0; i <= LANTERN_SIDES; i++) {
+            float angle = Mth.TWO_PI * i / LANTERN_SIDES;
+            values[i] = cosine ? Mth.cos(angle) : Mth.sin(angle);
+        }
+
+        return values;
     }
 
     private static void banner(Geo geo, float age, int c1, int c2) {
@@ -706,6 +726,48 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             geo.quad(x, 0.01F, 0.06F, x + side * 0.05F, 0.025F + paddle, 0.03F, x, 0.01F, 0.035F, x, 0.01F, 0.035F, KOI_FIN);
             float eyeX = side * KOI_RADIUS[1] * 0.92F;
             geo.quad(eyeX, -0.018F, 0.07F, eyeX, -0.018F, 0.06F, eyeX, -0.008F, 0.06F, eyeX, -0.008F, 0.07F, 0xFF1A1A1A);
+        }
+    }
+
+    private static void lantern(PoseStack pose, SubmitNodeCollector collector, int light, float age, float motion) {
+        float sway = 6.0F + 20.0F * Math.clamp(motion, 0.0F, 1.0F);
+        float glow = Cosmetics.reduceMotion() ? 1.0F : 0.92F + 0.08F * Mth.sin(age * 0.17F) * Mth.sin(age * 0.071F);
+        int paper = Colors.darken(LANTERN_PAPER, glow);
+        int rib = Colors.darken(paper, 0.86F);
+        int core = Cosmetics.withAlpha(0xFFFFF1C1, 0.55F * glow);
+        pose.pushPose();
+        pose.translate(0.0F, -0.22F, 0.0F);
+        pose.mulPose(Axis.ZP.rotationDegrees(Mth.sin(age * 0.08F) * sway));
+        pose.mulPose(Axis.XP.rotationDegrees(Mth.sin(age * 0.061F + 1.3F) * sway * 0.5F));
+        pose.mulPose(Axis.YP.rotationDegrees(age * 0.3F));
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> lanternFrame(new Geo(p, out, light), age));
+        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> {
+            Geo geo = new Geo(p, out, FULL_BRIGHT);
+            for (int ring = 0; ring < LANTERN_RADIUS.length - 1; ring++) {
+                lanternBand(geo, LANTERN_RADIUS[ring], LANTERN_Y[ring], LANTERN_RADIUS[ring + 1], LANTERN_Y[ring + 1], paper, rib);
+                lanternBand(geo, LANTERN_RADIUS[ring] * 0.45F, LANTERN_Y[ring], LANTERN_RADIUS[ring + 1] * 0.45F, LANTERN_Y[ring + 1], core, core);
+            }
+        });
+        pose.popPose();
+    }
+
+    private static void lanternFrame(Geo geo, float age) {
+        geo.quad(-0.004F, 0.0F, 0.0F, 0.004F, 0.0F, 0.0F, 0.004F, 0.1F, 0.0F, -0.004F, 0.1F, 0.0F, LANTERN_WOOD);
+        lanternBand(geo, 0.03F, 0.1F, 0.058F, 0.125F, LANTERN_WOOD, LANTERN_WOOD);
+        lanternBand(geo, 0.058F, 0.295F, 0.045F, 0.315F, LANTERN_WOOD, LANTERN_WOOD);
+        for (int i = 0; i < 3; i++) {
+            float x = (i - 1) * 0.012F + Mth.sin(age * 0.09F + i) * 0.004F;
+            geo.quad(x - 0.003F, 0.315F, 0.0F, x + 0.003F, 0.315F, 0.0F, x + 0.003F, 0.4F, 0.0F, x - 0.003F, 0.4F, 0.0F, LANTERN_TASSEL);
+        }
+    }
+
+    private static void lanternBand(Geo geo, float r0, float y0, float r1, float y1, int color, int alternate) {
+        for (int i = 0; i < LANTERN_SIDES; i++) {
+            float cos0 = LANTERN_COS[i];
+            float sin0 = LANTERN_SIN[i];
+            float cos1 = LANTERN_COS[i + 1];
+            float sin1 = LANTERN_SIN[i + 1];
+            geo.quad(r0 * cos0, y0, r0 * sin0, r0 * cos1, y0, r0 * sin1, r1 * cos1, y1, r1 * sin1, r1 * cos0, y1, r1 * sin0, (i & 1) == 0 ? color : alternate);
         }
     }
 
