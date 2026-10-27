@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Build
+        run: ./gradlew build --no-daemon -Dorg.gradle.java.home="$JAVA_HOME"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          minecraft=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
+          gh release create "$GITHUB_REF_NAME" build/libs/skysong-*.jar \
+            --title "Skysong $version for Minecraft $minecraft" \
+            --notes-from-tag
