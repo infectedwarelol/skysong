@@ -340,7 +340,7 @@ public final class ModuleRegistry {
         ),
         new ClientModule(
             "World Shader",
-            "Shaders for the whole world: Storm, Aurora, Black Hole, Starfall.",
+            "Shaders for the whole world: Storm, Aurora, Black Hole, Starfall, Sunset.",
             Category.VISUALS,
             () -> ModSettings.worldShader,
             v -> ModSettings.worldShader = v,

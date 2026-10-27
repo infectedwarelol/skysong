@@ -22,6 +22,7 @@ public final class Fx {
     static final Shader skyStarfall = Shader.of("fx_sky_starfall");
     static final Shader skyBlackHole = Shader.of("fx_sky_blackhole");
     static final Shader skyStorm = Shader.of("fx_sky_storm");
+    static final Shader skySunset = Shader.of("fx_sky_sunset");
     static final Shader storm = Shader.of("fx_storm");
     static final Shader bloomDown = Shader.of("fx_bloom_down");
     static final Shader skyComposite = Shader.of("fx_sky_composite");

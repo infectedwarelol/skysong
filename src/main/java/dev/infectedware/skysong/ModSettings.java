@@ -224,7 +224,7 @@ public final class ModSettings {
     public static final String[] SHADER_FILLS = new String[]{"Normal", "Gradient", "Glass", "Dark", "Aura"};
     public static float shaderAuraSpeed = 1.0F;
     public static float shaderAuraScale = 1.0F;
-    public static final String[] WORLD_SHADERS = new String[]{"Storm", "Aurora", "Black Hole", "Starfall"};
+    public static final String[] WORLD_SHADERS = new String[]{"Storm", "Aurora", "Black Hole", "Starfall", "Sunset"};
     public static final String[] SHADER_COLOR_NAMES = new String[]{"Client", "Custom"};
     public static final String[] SHADER_TARGET_NAMES = new String[]{"Players", "Mobs", "Yourself"};
     public static int shaderColorMode = 0;

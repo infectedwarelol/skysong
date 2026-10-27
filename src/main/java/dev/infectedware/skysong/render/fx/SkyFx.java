@@ -72,6 +72,7 @@ public final class SkyFx {
                     case 1 -> Fx.skyBlackHole;
                     case 2 -> Fx.skyStarfall;
                     case 3 -> Fx.skyStorm;
+                    case 4 -> Fx.skySunset;
                     default -> Fx.skyAurora;
                 };
                 if (march.ready() && Fx.bloomDown.ready() && Fx.skyComposite.ready()) {
@@ -140,6 +141,7 @@ public final class SkyFx {
             case 1 -> 0;
             case 2 -> 1;
             case 3 -> 2;
+            case 4 -> 4;
             default -> 3;
         };
     }
@@ -174,6 +176,7 @@ public final class SkyFx {
         return switch (skyType()) {
             case 1 -> new float[]{0.012F + r * 0.02F, 0.012F + g * 0.02F, 0.02F + b * 0.02F};
             case 2 -> new float[]{0.02F + r * 0.04F * brightness, 0.028F + g * 0.04F * brightness, 0.06F + b * 0.04F * brightness};
+            case 4 -> new float[]{0.58F * brightness, 0.54F * brightness, 0.66F * brightness};
             default -> new float[]{0.03F + r * 0.09F * brightness, 0.042F + g * 0.09F * brightness, 0.085F + b * 0.09F * brightness};
         };
     }
