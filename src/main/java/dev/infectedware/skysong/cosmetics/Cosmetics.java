@@ -36,12 +36,13 @@ public final class Cosmetics {
     public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon", "Neon"};
     public static final int NEON_WINGS = 5;
     public static final String[] AURAS = new String[]{"Energy", "Sparkles", "Energy + sparkles"};
-    public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst", "Jellyfish", "Orrery", "Paper crane", "Koi", "Paper lantern"};
+    public static final String[] PETS = new String[]{"Wisp", "Creeper", "Dragon", "Wither", "Piglin", "Slime", "Ender eye", "Amethyst", "Jellyfish", "Orrery", "Paper crane", "Koi", "Paper lantern", "Rain cloud"};
     public static final int JELLYFISH_PET = 8;
     public static final int ORRERY_PET = 9;
     public static final int CRANE_PET = 10;
     public static final int KOI_PET = 11;
     public static final int LANTERN_PET = 12;
+    public static final int CLOUD_PET = 13;
     public static final int MAX_PETS = 3;
     public static final String[] TRAILS = new String[]{"Flames", "Hearts", "Notes", "Sparkles", "Souls", "Cherry petals", "Snow", "Enchant", "Glow", "Color dust"};
     public static final String[] SIDES = new String[]{"Right", "Left"};
@@ -74,7 +75,7 @@ public final class Cosmetics {
     }
 
     public static boolean shapedPet(int type) {
-        return type >= JELLYFISH_PET && type <= LANTERN_PET;
+        return type >= JELLYFISH_PET && type <= CLOUD_PET;
     }
 
     public static boolean petUsesColors(int type) {

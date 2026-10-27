@@ -71,6 +71,16 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final int LANTERN_PAPER = 0xFFFFB347;
     private static final int LANTERN_WOOD = 0xFF4A2C1A;
     private static final int LANTERN_TASSEL = 0xFFC0392B;
+    private static final int SPHERE_LATITUDES = 6;
+    private static final int SPHERE_LONGITUDES = 8;
+    private static final float[] SPHERE = unitSphere();
+    private static final float[] CLOUD_PUFFS = new float[]{
+        0.0F, 0.0F, 0.0F, 0.09F, 0.09F, 0.02F, 0.0F, 0.07F, -0.09F, 0.02F, 0.01F, 0.07F, 0.04F, -0.06F, 0.01F, 0.065F, -0.04F, -0.05F, -0.02F, 0.06F
+    };
+    private static final float[] CLOUD_DROPS = new float[]{-0.07F, 0.02F, 0.03F, -0.03F, 0.08F, 0.01F, -0.02F, 0.04F, 0.05F, 0.05F, -0.06F, -0.04F};
+    private static final int CLOUD_TOP = 0xFFF4F7FB;
+    private static final int CLOUD_BOTTOM = 0xFFC9D3E0;
+    private static final int RAIN = 0xFF8EC9FF;
     private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
@@ -540,6 +550,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             koi(pose, collector, light, age);
         } else if (type == Cosmetics.LANTERN_PET) {
             lantern(pose, collector, light, age, motion);
+        } else if (type == Cosmetics.CLOUD_PET) {
+            cloud(pose, collector, light, age);
         } else if (type <= 0 || type >= PET_ITEMS.length) {
             wisp(pose, collector, age);
         } else {
@@ -581,6 +593,30 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
 
         return values;
+    }
+
+    private static float[] unitSphere() {
+        float[] sphere = new float[SPHERE_LATITUDES * SPHERE_LONGITUDES * 12];
+        int index = 0;
+        for (int lat = 0; lat < SPHERE_LATITUDES; lat++) {
+            for (int lon = 0; lon < SPHERE_LONGITUDES; lon++) {
+                index = spherePoint(sphere, index, lat, lon);
+                index = spherePoint(sphere, index, lat, lon + 1);
+                index = spherePoint(sphere, index, lat + 1, lon + 1);
+                index = spherePoint(sphere, index, lat + 1, lon);
+            }
+        }
+
+        return sphere;
+    }
+
+    private static int spherePoint(float[] sphere, int index, int lat, int lon) {
+        float theta = (float)Math.PI * lat / SPHERE_LATITUDES;
+        float phi = Mth.TWO_PI * lon / SPHERE_LONGITUDES;
+        sphere[index] = Mth.sin(theta) * Mth.cos(phi);
+        sphere[index + 1] = -Mth.cos(theta);
+        sphere[index + 2] = Mth.sin(theta) * Mth.sin(phi);
+        return index + 3;
     }
 
     private static void banner(Geo geo, float age, int c1, int c2) {
@@ -768,6 +804,47 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             float cos1 = LANTERN_COS[i + 1];
             float sin1 = LANTERN_SIN[i + 1];
             geo.quad(r0 * cos0, y0, r0 * sin0, r0 * cos1, y0, r0 * sin1, r1 * cos1, y1, r1 * sin1, r1 * cos0, y1, r1 * sin0, (i & 1) == 0 ? color : alternate);
+        }
+    }
+
+    private static void cloud(PoseStack pose, SubmitNodeCollector collector, int light, float age) {
+        float breathe = Cosmetics.reduceMotion() ? 1.0F : 1.0F + 0.04F * Mth.sin(age * 0.05F);
+        float rain = Math.clamp(Mth.sin(age * 0.012F) * 2.0F + 0.5F, 0.0F, 1.0F);
+        pose.pushPose();
+        pose.translate(Mth.sin(age * 0.02F) * 0.05F, -0.04F, Mth.cos(age * 0.017F) * 0.03F);
+        collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
+            Geo geo = new Geo(p, out, light);
+            for (int i = 0; i < CLOUD_PUFFS.length; i += 4) {
+                puff(geo, CLOUD_PUFFS[i], CLOUD_PUFFS[i + 1], CLOUD_PUFFS[i + 2], CLOUD_PUFFS[i + 3], breathe);
+            }
+
+            if (rain <= 0.0F) {
+                return;
+            }
+
+            for (int i = 0; i < CLOUD_DROPS.length; i += 2) {
+                float phase = age * 0.045F + i * 0.085F;
+                phase -= Mth.floor(phase);
+                float x = CLOUD_DROPS[i];
+                float z = CLOUD_DROPS[i + 1];
+                float y = 0.06F + phase * 0.35F;
+                int drop = Cosmetics.withAlpha(RAIN, 0.7F * rain * (1.0F - phase));
+                geo.quad(x - 0.003F, y, z, x + 0.003F, y, z, x + 0.003F, y + 0.05F, z, x - 0.003F, y + 0.05F, z, drop);
+                geo.quad(x, y, z - 0.003F, x, y, z + 0.003F, x, y + 0.05F, z + 0.003F, x, y + 0.05F, z - 0.003F, drop);
+            }
+        });
+        pose.popPose();
+    }
+
+    private static void puff(Geo geo, float cx, float cy, float cz, float radius, float breathe) {
+        float[] sphere = SPHERE;
+        float vertical = radius * breathe;
+        for (int i = 0; i < sphere.length; i += 3) {
+            float nx = sphere[i];
+            float ny = sphere[i + 1];
+            float nz = sphere[i + 2];
+            int color = Colors.lerp(CLOUD_TOP, CLOUD_BOTTOM, (ny + 1.0F) * 0.5F);
+            geo.vertex(cx + nx * radius, cy + ny * vertical, cz + nz * radius, color, 0.0F, 0.0F, nx, ny, nz);
         }
     }
 
