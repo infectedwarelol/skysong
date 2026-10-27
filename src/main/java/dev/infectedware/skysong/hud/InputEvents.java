@@ -1,5 +1,7 @@
 package dev.infectedware.skysong.hud;
 
+import dev.infectedware.skysong.ModSettings;
+import dev.infectedware.skysong.cosmetics.Emotes;
 import dev.infectedware.skysong.module.Binds;
 import java.util.ArrayDeque;
 import java.util.BitSet;
@@ -27,6 +29,10 @@ public final class InputEvents {
             if (action == 1 || action == 0) {
                 Binds.handle(-100 - button, action == 1);
             }
+
+            if (action == 1) {
+                emoteKey(-100 - button);
+            }
         }
     }
 
@@ -42,6 +48,16 @@ public final class InputEvents {
             if (action == 1 || action == 0) {
                 Binds.handle(key, action == 1);
             }
+
+            if (action == 1) {
+                emoteKey(key);
+            }
+        }
+    }
+
+    private static void emoteKey(int key) {
+        if (key != -1 && key == ModSettings.cosmeticEmoteKey && ModSettings.cosmeticEmotes && Minecraft.getInstance().player != null) {
+            Emotes.toggleSelected();
         }
     }
 

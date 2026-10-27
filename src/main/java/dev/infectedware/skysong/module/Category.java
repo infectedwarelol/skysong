@@ -4,7 +4,8 @@ public enum Category {
     VISUALS("Visuals", "p", "r"),
     DISPLAY("Display", "j", "i"),
     UTILS("Utils", "r", "j"),
-    PVP("PvP", "r", "r");
+    PVP("PvP", "r", "r"),
+    COSMETICS("Cosmetics", "f", "f");
 
     public final String title;
     public final String icon;

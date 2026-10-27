@@ -24,7 +24,9 @@
     "PackRepositoryMixin",
     "ScreenEffectRendererMixin",
     "HurtCameraMixin",
-    "ParticleEngineMixin"
+    "ParticleEngineMixin",
+    "AvatarRendererMixin",
+    "PlayerModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

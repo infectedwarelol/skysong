@@ -4,6 +4,7 @@ import dev.infectedware.skysong.compat.Compat;
 import dev.infectedware.skysong.compat.Hooks;
 import dev.infectedware.skysong.compat.Ids;
 import dev.infectedware.skysong.compat.Shader;
+import dev.infectedware.skysong.cosmetics.Cosmetics;
 import dev.infectedware.skysong.gui.HudEditorScreen;
 import dev.infectedware.skysong.gui.LyricsScreen;
 import dev.infectedware.skysong.gui.click.ClientMenuScreen;
@@ -136,6 +137,7 @@ public class SkysongClient implements ClientModInitializer {
         });
         KillFx.init();
         Explosions.init();
+        Cosmetics.init();
         DeathFx.init();
         ClientTickEvents.END_CLIENT_TICK.register(StormFx::tick);
         ClientTickEvents.END_CLIENT_TICK.register(client -> PartyClient.tick());

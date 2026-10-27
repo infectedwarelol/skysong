@@ -5,6 +5,9 @@ import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.Profiles;
 import dev.infectedware.skysong.SpotifyManager;
 import dev.infectedware.skysong.SkysongClient;
+import dev.infectedware.skysong.cosmetics.CosmeticTextures;
+import dev.infectedware.skysong.cosmetics.Cosmetics;
+import dev.infectedware.skysong.cosmetics.Emotes;
 import dev.infectedware.skysong.gui.HudEditorScreen;
 import dev.infectedware.skysong.gui.LyricsScreen;
 import dev.infectedware.skysong.gui.click.CrosshairEditorScreen;
@@ -28,6 +31,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Util;
 
@@ -653,6 +658,78 @@ public final class ModuleRegistry {
             ModuleRegistry::partySettings
         ),
         new ClientModule(
+            "Halo",
+            "A glowing halo floating above your head.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticHalo,
+            v -> ModSettings.cosmeticHalo = v,
+            () -> Cosmetics.HALOS[Math.floorMod(ModSettings.cosmeticHaloStyle, Cosmetics.HALOS.length)],
+            ModuleRegistry::haloSettings
+        ),
+        new ClientModule(
+            "Hat",
+            "Top hat, crown, witch hat, party hat, ears or horns.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticHat,
+            v -> ModSettings.cosmeticHat = v,
+            () -> Cosmetics.HATS[Math.floorMod(ModSettings.cosmeticHatStyle, Cosmetics.HATS.length)],
+            ModuleRegistry::hatSettings
+        ),
+        new ClientModule(
+            "Cape",
+            "Your own cape: patterns in your colors or any cape image you like.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticCape,
+            v -> ModSettings.cosmeticCape = v,
+            () -> Cosmetics.CAPES[Math.floorMod(ModSettings.cosmeticCapeStyle, Cosmetics.CAPES.length)],
+            ModuleRegistry::capeSettings
+        ),
+        new ClientModule(
+            "Wings",
+            "Flapping wings on your back that beat faster while you fly.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticWings,
+            v -> ModSettings.cosmeticWings = v,
+            () -> Cosmetics.WINGS[Math.floorMod(ModSettings.cosmeticWingsStyle, Cosmetics.WINGS.length)],
+            ModuleRegistry::wingsSettings
+        ),
+        new ClientModule(
+            "Aura",
+            "An energy field around your body and hands, with optional sparkles.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticAura,
+            v -> ModSettings.cosmeticAura = v,
+            () -> Cosmetics.AURAS[Math.floorMod(ModSettings.cosmeticAuraStyle, Cosmetics.AURAS.length)],
+            ModuleRegistry::auraSettings
+        ),
+        new ClientModule(
+            "Pet",
+            "A little companion floating next to your shoulder.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticPet,
+            v -> ModSettings.cosmeticPet = v,
+            () -> Cosmetics.PETS[Math.floorMod(ModSettings.cosmeticPetType, Cosmetics.PETS.length)],
+            ModuleRegistry::petSettings
+        ),
+        new ClientModule(
+            "Trail",
+            "Particles that follow your steps: flames, hearts, notes and more.",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticTrail,
+            v -> ModSettings.cosmeticTrail = v,
+            () -> Cosmetics.TRAILS[Math.floorMod(ModSettings.cosmeticTrailType, Cosmetics.TRAILS.length)],
+            ModuleRegistry::trailSettings
+        ),
+        new ClientModule(
+            "Emotes",
+            "Wave, dab, clap, cheer and more with a key or /" + Emotes.ROOT + ".",
+            Category.COSMETICS,
+            () -> ModSettings.cosmeticEmotes,
+            v -> ModSettings.cosmeticEmotes = v,
+            () -> Emotes.NAMES[Math.floorMod(ModSettings.cosmeticEmote, Emotes.NAMES.length)],
+            ModuleRegistry::emoteSettings
+        ),
+        new ClientModule(
             "Config", "Save profiles, share your settings with a code, or reset everything.", Category.UTILS, null, null, null, ModuleRegistry::configSettings
         )
     );
@@ -1188,6 +1265,209 @@ public final class ModuleRegistry {
             SettingsPopup.rebuildSoon();
         }));
         s.add(new Setting.Action("Reconnect", PartyClient::reconnect));
+        return s;
+    }
+
+    private static void cosmeticColors(
+        List<Setting> s, IntSupplier mode, IntConsumer setMode, IntSupplier c1, IntConsumer setC1, IntSupplier c2, IntConsumer setC2, boolean accent
+    ) {
+        s.add(new Setting.Header("Color"));
+        s.add(new Setting.Choice("Color", Cosmetics.COLOR_MODES, mode, setMode));
+        s.add(new Setting.Shown(() -> mode.getAsInt() >= 2, new Setting.ColorPick(accent ? "Main color" : "Color 1", c1, setC1)));
+        s.add(new Setting.Shown(() -> mode.getAsInt() == 3 || accent && mode.getAsInt() == 2, new Setting.ColorPick(accent ? "Accent color" : "Color 2", c2, setC2)));
+    }
+
+    private static List<Setting> haloSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Halo"));
+        s.add(new Setting.Choice("Style", Cosmetics.HALOS, () -> ModSettings.cosmeticHaloStyle, v -> ModSettings.cosmeticHaloStyle = v));
+        s.add(new Setting.Slide("Size", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticHaloSize, v -> ModSettings.cosmeticHaloSize = (float)v));
+        s.add(new Setting.Slide("Height", -0.2F, 0.5F, 0.01F, 0.0, () -> ModSettings.cosmeticHaloHeight, v -> ModSettings.cosmeticHaloHeight = (float)v));
+        s.add(new Setting.Toggle("Spin", () -> ModSettings.cosmeticHaloSpin, v -> ModSettings.cosmeticHaloSpin = v));
+        s.add(new Setting.Toggle("Glow", () -> ModSettings.cosmeticHaloGlow, v -> ModSettings.cosmeticHaloGlow = v));
+        cosmeticColors(
+            s,
+            () -> ModSettings.cosmeticHaloColorMode,
+            v -> ModSettings.cosmeticHaloColorMode = v,
+            () -> ModSettings.cosmeticHaloColor,
+            v -> ModSettings.cosmeticHaloColor = v,
+            () -> ModSettings.cosmeticHaloColor2,
+            v -> ModSettings.cosmeticHaloColor2 = v,
+            false
+        );
+        return s;
+    }
+
+    private static List<Setting> hatSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Hat"));
+        s.add(new Setting.Choice("Style", Cosmetics.HATS, () -> ModSettings.cosmeticHatStyle, v -> ModSettings.cosmeticHatStyle = v));
+        s.add(new Setting.Slide("Size", 0.5F, 1.5F, 0.05F, 1.0, () -> ModSettings.cosmeticHatSize, v -> ModSettings.cosmeticHatSize = (float)v));
+        s.add(new Setting.Toggle("Hide under a helmet", () -> ModSettings.cosmeticHatHideHelmet, v -> ModSettings.cosmeticHatHideHelmet = v));
+        cosmeticColors(
+            s,
+            () -> ModSettings.cosmeticHatColorMode,
+            v -> ModSettings.cosmeticHatColorMode = v,
+            () -> ModSettings.cosmeticHatColor,
+            v -> ModSettings.cosmeticHatColor = v,
+            () -> ModSettings.cosmeticHatColor2,
+            v -> ModSettings.cosmeticHatColor2 = v,
+            true
+        );
+        return s;
+    }
+
+    private static List<Setting> capeSettings() {
+        List<Setting> s = new ArrayList<>();
+        BooleanSupplier image = () -> ModSettings.cosmeticCapeStyle == Cosmetics.CAPE_IMAGE;
+        s.add(new Setting.Header("Cape"));
+        s.add(new Setting.Choice("Style", Cosmetics.CAPES, () -> ModSettings.cosmeticCapeStyle, v -> ModSettings.cosmeticCapeStyle = v));
+        s.add(new Setting.Toggle("Also on elytra", () -> ModSettings.cosmeticCapeElytra, v -> ModSettings.cosmeticCapeElytra = v));
+        s.add(new Setting.Shown(image, capeImageSetting()));
+        s.add(new Setting.Shown(image, new Setting.Info(() -> "Put 64x32 PNG capes in config/skysong/capes")));
+        s.add(new Setting.Shown(image, new Setting.Action("Open capes folder", () -> {
+            CosmeticTextures.capeImages();
+            Util.getPlatform().openPath(CosmeticTextures.CAPE_DIR);
+        })));
+        s.add(new Setting.Shown(image, new Setting.Action("Reload capes", () -> {
+            CosmeticTextures.reloadCapeImage();
+            SettingsPopup.rebuildSoon();
+        })));
+        s.add(new Setting.Shown(() -> !CosmeticTextures.capeProblem().isEmpty(), new Setting.Info(CosmeticTextures::capeProblem)));
+        List<Setting> colors = new ArrayList<>();
+        cosmeticColors(
+            colors,
+            () -> ModSettings.cosmeticCapeColorMode,
+            v -> ModSettings.cosmeticCapeColorMode = v,
+            () -> ModSettings.cosmeticCapeColor,
+            v -> ModSettings.cosmeticCapeColor = v,
+            () -> ModSettings.cosmeticCapeColor2,
+            v -> ModSettings.cosmeticCapeColor2 = v,
+            false
+        );
+        for (Setting c : colors) {
+            s.add(new Setting.Shown(() -> !image.getAsBoolean(), c));
+        }
+
+        return s;
+    }
+
+    private static Setting capeImageSetting() {
+        List<String> names = CosmeticTextures.capeImages();
+        if (names.isEmpty()) {
+            return new Setting.Info(() -> "No cape images found yet.");
+        }
+
+        String[] options = names.toArray(String[]::new);
+        return new Setting.Choice(
+            "Image", options, () -> Math.max(0, names.indexOf(ModSettings.cosmeticCapeImage)), v -> ModSettings.cosmeticCapeImage = options[Math.floorMod(v, options.length)]
+        );
+    }
+
+    private static List<Setting> wingsSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Wings"));
+        s.add(new Setting.Choice("Style", Cosmetics.WINGS, () -> ModSettings.cosmeticWingsStyle, v -> ModSettings.cosmeticWingsStyle = v));
+        s.add(new Setting.Slide("Size", 0.4F, 1.6F, 0.05F, 1.0, () -> ModSettings.cosmeticWingsSize, v -> ModSettings.cosmeticWingsSize = (float)v));
+        s.add(new Setting.Slide("Flap speed", 0.0F, 3.0F, 0.05F, 1.0, () -> ModSettings.cosmeticWingsSpeed, v -> ModSettings.cosmeticWingsSpeed = (float)v));
+        s.add(new Setting.Toggle("Glow", () -> ModSettings.cosmeticWingsGlow, v -> ModSettings.cosmeticWingsGlow = v));
+        s.add(new Setting.Toggle("Hide with an elytra", () -> ModSettings.cosmeticWingsHideElytra, v -> ModSettings.cosmeticWingsHideElytra = v));
+        cosmeticColors(
+            s,
+            () -> ModSettings.cosmeticWingsColorMode,
+            v -> ModSettings.cosmeticWingsColorMode = v,
+            () -> ModSettings.cosmeticWingsColor,
+            v -> ModSettings.cosmeticWingsColor = v,
+            () -> ModSettings.cosmeticWingsColor2,
+            v -> ModSettings.cosmeticWingsColor2 = v,
+            false
+        );
+        return s;
+    }
+
+    private static List<Setting> auraSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Aura"));
+        s.add(new Setting.Choice("Style", Cosmetics.AURAS, () -> ModSettings.cosmeticAuraStyle, v -> ModSettings.cosmeticAuraStyle = v));
+        s.add(new Setting.Slide("Strength", 0.1F, 1.0F, 0.05F, 0.7, () -> ModSettings.cosmeticAuraStrength, v -> ModSettings.cosmeticAuraStrength = (float)v));
+        s.add(new Setting.Slide("Speed", 0.0F, 4.0F, 0.1F, 1.0, () -> ModSettings.cosmeticAuraSpeed, v -> ModSettings.cosmeticAuraSpeed = (float)v));
+        s.add(new Setting.Toggle("On my hands in first person", () -> ModSettings.cosmeticAuraHands, v -> ModSettings.cosmeticAuraHands = v));
+        cosmeticColors(
+            s,
+            () -> ModSettings.cosmeticAuraColorMode,
+            v -> ModSettings.cosmeticAuraColorMode = v,
+            () -> ModSettings.cosmeticAuraColor,
+            v -> ModSettings.cosmeticAuraColor = v,
+            () -> ModSettings.cosmeticAuraColor2,
+            v -> ModSettings.cosmeticAuraColor2 = v,
+            false
+        );
+        return s;
+    }
+
+    private static List<Setting> petSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Pet"));
+        s.add(new Setting.Choice("Pet", Cosmetics.PETS, () -> ModSettings.cosmeticPetType, v -> ModSettings.cosmeticPetType = v));
+        s.add(new Setting.Choice("Side", Cosmetics.SIDES, () -> ModSettings.cosmeticPetSide, v -> ModSettings.cosmeticPetSide = v));
+        s.add(new Setting.Slide("Size", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticPetSize, v -> ModSettings.cosmeticPetSize = (float)v));
+        s.add(new Setting.Toggle("Show in first person", () -> ModSettings.cosmeticPetFirstPerson, v -> ModSettings.cosmeticPetFirstPerson = v));
+        List<Setting> colors = new ArrayList<>();
+        cosmeticColors(
+            colors,
+            () -> ModSettings.cosmeticPetColorMode,
+            v -> ModSettings.cosmeticPetColorMode = v,
+            () -> ModSettings.cosmeticPetColor,
+            v -> ModSettings.cosmeticPetColor = v,
+            () -> ModSettings.cosmeticPetColor2,
+            v -> ModSettings.cosmeticPetColor2 = v,
+            false
+        );
+        for (Setting c : colors) {
+            s.add(new Setting.Shown(() -> ModSettings.cosmeticPetType == 0, c));
+        }
+
+        return s;
+    }
+
+    private static List<Setting> trailSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Trail"));
+        s.add(new Setting.Choice("Particles", Cosmetics.TRAILS, () -> ModSettings.cosmeticTrailType, v -> ModSettings.cosmeticTrailType = v));
+        s.add(new Setting.Slide("Amount", 0.2F, 4.0F, 0.1F, 1.0, () -> ModSettings.cosmeticTrailDensity, v -> ModSettings.cosmeticTrailDensity = (float)v));
+        s.add(new Setting.Toggle("Only while moving", () -> ModSettings.cosmeticTrailMoving, v -> ModSettings.cosmeticTrailMoving = v));
+        List<Setting> colors = new ArrayList<>();
+        cosmeticColors(
+            colors,
+            () -> ModSettings.cosmeticTrailColorMode,
+            v -> ModSettings.cosmeticTrailColorMode = v,
+            () -> ModSettings.cosmeticTrailColor,
+            v -> ModSettings.cosmeticTrailColor = v,
+            () -> ModSettings.cosmeticTrailColor2,
+            v -> ModSettings.cosmeticTrailColor2 = v,
+            false
+        );
+        for (Setting c : colors) {
+            s.add(new Setting.Shown(() -> ModSettings.cosmeticTrailType == Cosmetics.TRAILS.length - 1, c));
+        }
+
+        return s;
+    }
+
+    private static List<Setting> emoteSettings() {
+        List<Setting> s = new ArrayList<>();
+        s.add(new Setting.Header("Emote"));
+        s.add(new Setting.Choice("Emote", Emotes.NAMES, () -> ModSettings.cosmeticEmote, v -> ModSettings.cosmeticEmote = v));
+        s.add(new Setting.KeyPick("Emote key", () -> ModSettings.cosmeticEmoteKey, v -> ModSettings.cosmeticEmoteKey = v));
+        s.add(new Setting.Info(() -> "Press it to play, again to stop. Moving stops it too."));
+        s.add(new Setting.Action("Play now", () -> {
+            ModSettings.cosmeticEmotes = true;
+            closeScreen();
+            Emotes.play(Math.floorMod(ModSettings.cosmeticEmote, Emotes.NAMES.length));
+        }));
+        s.add(new Setting.Slide("Speed", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticEmoteSpeed, v -> ModSettings.cosmeticEmoteSpeed = (float)v));
+        s.add(new Setting.Toggle("Third person while emoting", () -> ModSettings.cosmeticEmoteThirdPerson, v -> ModSettings.cosmeticEmoteThirdPerson = v));
+        s.add(new Setting.Info(() -> "In chat: /" + Emotes.ROOT + " <emote>, /" + Emotes.ROOT + " stop"));
         return s;
     }
 

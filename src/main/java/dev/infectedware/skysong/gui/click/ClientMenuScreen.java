@@ -91,6 +91,7 @@ public class ClientMenuScreen extends VScreen {
         DISPLAY("Display", Items.PAINTING, Category.DISPLAY),
         UTILS("Utils", Items.COMPARATOR, Category.UTILS),
         PVP("PvP", Items.IRON_SWORD, Category.PVP),
+        COSMETICS("Cosmetics", Items.ELYTRA, Category.COSMETICS),
         THEMES("Themes", Items.GLOW_INK_SAC, null),
         PROFILES("Profiles", Items.WRITABLE_BOOK, null);
 
