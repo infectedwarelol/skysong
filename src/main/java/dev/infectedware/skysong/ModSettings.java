@@ -62,6 +62,7 @@ public final class ModSettings {
     public static boolean menu3d = false;
     public static boolean pvpSmallTotem = false;
     public static float pvpTotemScale = 0.5F;
+    public static boolean pvpTotemIgnorePack = true;
     public static boolean pvpLowFire = false;
     public static float pvpFireDrop = 0.3F;
     public static boolean pvpNoHurtCam = false;

@@ -574,13 +574,15 @@ public final class ModuleRegistry {
         ),
         new ClientModule(
             "Small Totem",
-            "Shrinks the totem pop animation so it doesn't cover your screen.",
+            "Shrinks the totem pop animation so it doesn't cover your screen, whatever resource pack you use.",
             Category.PVP,
             () -> ModSettings.pvpSmallTotem,
             v -> ModSettings.pvpSmallTotem = v,
             null,
             () -> List.of(
-                new Setting.Slide("Totem size", 0.1F, 1.0F, 0.05F, 0.5, () -> ModSettings.pvpTotemScale, v -> ModSettings.pvpTotemScale = (float)v)
+                new Setting.Slide("Totem size", 0.1F, 1.0F, 0.05F, 0.5, () -> ModSettings.pvpTotemScale, v -> ModSettings.pvpTotemScale = (float)v),
+                new Setting.Toggle("Ignore resource pack size", () -> ModSettings.pvpTotemIgnorePack, v -> ModSettings.pvpTotemIgnorePack = v),
+                new Setting.Info(() -> "Uses the vanilla size even when a pack resizes the totem.")
             )
         ),
         new ClientModule(
