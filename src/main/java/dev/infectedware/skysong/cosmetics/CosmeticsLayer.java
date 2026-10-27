@@ -51,6 +51,10 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static final float[] BANNER_PLEAT = pleats();
     private static final float[] BANNER_PREVIOUS = new float[(BANNER_COLUMNS + 1) * 3];
     private static final float[] BANNER_CURRENT = new float[(BANNER_COLUMNS + 1) * 3];
+    private static final int CAPELET_COLUMNS = 10;
+    private static final int CAPELET_ROWS = 4;
+    private static final float[] CAPELET_DROP = capeletDrops();
+    private static final int CAPELET_MOTES = 6;
     private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
@@ -384,13 +388,22 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         boolean armored = !state.chestEquipment.isEmpty();
         pose.translate(0.0F, armored ? -0.053F : 0.0F, armored ? 0.19F : 0.135F);
         int style = ModSettings.cosmeticCapeStyle;
+        if (style == Cosmetics.CAPELET_CAPE) {
+            pose.pushPose();
+            pose.translate(0.0F, 0.32F, 0.2F);
+            collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> motes(new Geo(p, out, FULL_BRIGHT), age, c2));
+            pose.popPose();
+        }
+
         float swing = 6.0F + state.capeLean / 2.0F + state.capeFlap;
-        pose.mulPose(Axis.XP.rotationDegrees(swing));
+        pose.mulPose(Axis.XP.rotationDegrees(style == Cosmetics.CAPELET_CAPE ? swing * 0.5F : swing));
         pose.mulPose(Axis.ZP.rotationDegrees(state.capeLean2 / 2.0F));
         if (style == Cosmetics.SHARD_CAPE) {
             collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> shards(new Geo(p, out, FULL_BRIGHT), age, c1, c2));
         } else if (style == Cosmetics.BANNER_CAPE) {
             collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> banner(new Geo(p, out, light), age, c1, c2));
+        } else if (style == Cosmetics.CAPELET_CAPE) {
+            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> capelet(new Geo(p, out, light), c1, c2));
         } else {
             collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
                 Geo geo = new Geo(p, out, light);
@@ -530,6 +543,16 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         return pleats;
     }
 
+    private static float[] capeletDrops() {
+        float[] drops = new float[CAPELET_COLUMNS + 1];
+        for (int k = 0; k <= CAPELET_COLUMNS; k++) {
+            float centered = 2.0F * k / CAPELET_COLUMNS - 1.0F;
+            drops[k] = 0.36F - 0.12F * centered * centered;
+        }
+
+        return drops;
+    }
+
     private static void banner(Geo geo, float age, int c1, int c2) {
         float[] previous = BANNER_PREVIOUS;
         float[] current = BANNER_CURRENT;
@@ -573,6 +596,48 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
 
             System.arraycopy(current, 0, previous, 0, current.length);
             previousColor = rowColor;
+        }
+    }
+
+    private static void capelet(Geo geo, int c1, int c2) {
+        int top = Colors.mixWhite(c1, 0.12F);
+        int bottom = Colors.darken(c1, 0.78F);
+        for (int row = 0; row < CAPELET_ROWS; row++) {
+            float v0 = (float)row / CAPELET_ROWS;
+            float v1 = (float)(row + 1) / CAPELET_ROWS;
+            int color = row == CAPELET_ROWS - 1 ? c2 : Colors.lerp(top, bottom, v0);
+            for (int k = 0; k < CAPELET_COLUMNS; k++) {
+                float u0 = 2.0F * k / CAPELET_COLUMNS - 1.0F;
+                float u1 = 2.0F * (k + 1) / CAPELET_COLUMNS - 1.0F;
+                geo.quad(
+                    u0 * (0.28F + 0.05F * v0), v0 * CAPELET_DROP[k], capeletDepth(u0, v0),
+                    u1 * (0.28F + 0.05F * v0), v0 * CAPELET_DROP[k + 1], capeletDepth(u1, v0),
+                    u1 * (0.28F + 0.05F * v1), v1 * CAPELET_DROP[k + 1], capeletDepth(u1, v1),
+                    u0 * (0.28F + 0.05F * v1), v1 * CAPELET_DROP[k], capeletDepth(u0, v1),
+                    color
+                );
+            }
+        }
+    }
+
+    private static float capeletDepth(float centered, float v) {
+        return (0.02F + 0.035F * (1.0F - centered * centered)) * v;
+    }
+
+    private static void motes(Geo geo, float age, int c2) {
+        int core = Cosmetics.withAlpha(Colors.mixWhite(c2, 0.35F), 0.95F);
+        int glow = Cosmetics.withAlpha(c2, 0.25F);
+        for (int i = 0; i < CAPELET_MOTES; i++) {
+            float angle = age * 0.04F + Mth.TWO_PI * i / CAPELET_MOTES;
+            float x = Mth.cos(angle) * 0.3F;
+            float y = Mth.sin(angle) * 0.3F;
+            float z = Mth.sin(angle * 2.0F) * 0.03F;
+            diamond(geo, x, y, z, 0.045F, 0.045F, glow);
+            diamond(geo, x, y, z - 0.002F, 0.02F, 0.022F, core);
+            geo.vertex(x, y - 0.022F, z, core, 0.5F, 0.0F, 1.0F, 0.0F, 0.0F);
+            geo.vertex(x, y, z + 0.02F, core, 1.0F, 0.5F, 1.0F, 0.0F, 0.0F);
+            geo.vertex(x, y + 0.022F, z, core, 0.5F, 1.0F, 1.0F, 0.0F, 0.0F);
+            geo.vertex(x, y, z - 0.02F, core, 0.0F, 0.5F, 1.0F, 0.0F, 0.0F);
         }
     }
 
