@@ -1367,6 +1367,7 @@ public final class ModuleRegistry {
         BooleanSupplier image = () -> ModSettings.cosmeticCapeStyle == Cosmetics.CAPE_IMAGE;
         s.add(new Setting.Header("Cape"));
         s.add(new Setting.Choice("Style", Cosmetics.CAPES, () -> ModSettings.cosmeticCapeStyle, v -> ModSettings.cosmeticCapeStyle = v));
+        s.add(new Setting.Shown(Cosmetics::shapedCape, new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v)));
         s.add(new Setting.Shown(() -> !Cosmetics.shapedCape(), new Setting.Toggle("Also on elytra", () -> ModSettings.cosmeticCapeElytra, v -> ModSettings.cosmeticCapeElytra = v)));
         s.add(new Setting.Shown(image, capeImageSetting()));
         s.add(new Setting.Shown(image, new Setting.Info(() -> "Put 64x32 PNG capes in config/skysong/capes")));
@@ -1437,6 +1438,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Slide("Strength", 0.1F, 1.0F, 0.05F, 0.7, () -> ModSettings.cosmeticAuraStrength, v -> ModSettings.cosmeticAuraStrength = (float)v));
         s.add(new Setting.Slide("Speed", 0.0F, 4.0F, 0.1F, 1.0, () -> ModSettings.cosmeticAuraSpeed, v -> ModSettings.cosmeticAuraSpeed = (float)v));
         s.add(new Setting.Toggle("On my hands in first person", () -> ModSettings.cosmeticAuraHands, v -> ModSettings.cosmeticAuraHands = v));
+        s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
         cosmeticColors(
             s,
             () -> ModSettings.cosmeticAuraColorMode,
@@ -1457,6 +1459,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Choice("Side", Cosmetics.SIDES, () -> ModSettings.cosmeticPetSide, v -> ModSettings.cosmeticPetSide = v));
         s.add(new Setting.Slide("Size", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.cosmeticPetSize, v -> ModSettings.cosmeticPetSize = (float)v));
         s.add(new Setting.Toggle("Show in first person", () -> ModSettings.cosmeticPetFirstPerson, v -> ModSettings.cosmeticPetFirstPerson = v));
+        s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
         List<Setting> colors = new ArrayList<>();
         cosmeticColors(
             colors,
@@ -1481,6 +1484,7 @@ public final class ModuleRegistry {
         s.add(new Setting.Choice("Particles", Cosmetics.TRAILS, () -> ModSettings.cosmeticTrailType, v -> ModSettings.cosmeticTrailType = v));
         s.add(new Setting.Slide("Amount", 0.2F, 4.0F, 0.1F, 1.0, () -> ModSettings.cosmeticTrailDensity, v -> ModSettings.cosmeticTrailDensity = (float)v));
         s.add(new Setting.Toggle("Only while moving", () -> ModSettings.cosmeticTrailMoving, v -> ModSettings.cosmeticTrailMoving = v));
+        s.add(new Setting.Toggle("Reduce motion", () -> ModSettings.cosmeticReduceMotion, v -> ModSettings.cosmeticReduceMotion = v));
         List<Setting> colors = new ArrayList<>();
         cosmeticColors(
             colors,

@@ -75,6 +75,10 @@ public final class Cosmetics {
         return type == 0 || shapedPet(type);
     }
 
+    public static boolean reduceMotion() {
+        return ModSettings.cosmeticReduceMotion;
+    }
+
     public static int color(int mode, int custom, int custom2, float t) {
         return switch (mode) {
             case 0 -> ClientAccent.gradientColor(t, 255.0F);
@@ -106,6 +110,10 @@ public final class Cosmetics {
         Vec3 pos = player.position();
         boolean moving = lastTrailPos != null && pos.distanceToSqr(lastTrailPos) > 4.0E-4;
         lastTrailPos = pos;
+        if (reduceMotion()) {
+            return;
+        }
+
         if (ModSettings.cosmeticTrail && (moving || !ModSettings.cosmeticTrailMoving)) {
             trail(mc, player);
         }
@@ -116,7 +124,7 @@ public final class Cosmetics {
     }
 
     private static void trail(Minecraft mc, LocalPlayer player) {
-        float density = Math.max(0.1F, ModSettings.cosmeticTrailDensity);
+        float density = Math.clamp(ModSettings.cosmeticTrailDensity, 0.1F, 4.0F);
         int count = (int)density + (RANDOM.nextFloat() < density - (int)density ? 1 : 0);
         for (int i = 0; i < count; i++) {
             double x = player.getX() + (RANDOM.nextDouble() - 0.5) * 0.5;

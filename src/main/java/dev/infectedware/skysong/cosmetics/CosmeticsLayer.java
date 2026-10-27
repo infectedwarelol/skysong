@@ -131,7 +131,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     }
 
     public static int auraTint(float age) {
-        int c = Cosmetics.color(ModSettings.cosmeticAuraColorMode, ModSettings.cosmeticAuraColor, ModSettings.cosmeticAuraColor2, 0.5F + 0.5F * Mth.sin(age * 0.05F));
+        int c = Cosmetics.color(ModSettings.cosmeticAuraColorMode, ModSettings.cosmeticAuraColor, ModSettings.cosmeticAuraColor2, Cosmetics.reduceMotion() ? 0.5F : 0.5F + 0.5F * Mth.sin(age * 0.05F));
         float s = Math.clamp(ModSettings.cosmeticAuraStrength, 0.0F, 1.0F);
         int r = Math.round((c >> 16 & 0xFF) * s);
         int g = Math.round((c >> 8 & 0xFF) * s);
@@ -444,7 +444,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
                 float cx = offset * spacing + Mth.sin(age * 0.05F + row * 1.3F + column) * 0.006F;
                 float cy = 0.06F + row * 0.155F;
                 float cz = Mth.sin(age * 0.12F - row * 0.7F + offset * 0.4F) * 0.03F * (0.3F + v);
-                float twinkle = 0.5F + 0.5F * Mth.sin(age * 0.09F + row * 2.7F + column * 1.9F);
+                float twinkle = Cosmetics.reduceMotion() ? 0.5F : 0.5F + 0.5F * Mth.sin(age * 0.09F + row * 2.7F + column * 1.9F);
                 int body = Colors.lerp(c1, c2, v);
                 diamond(geo, cx, cy, cz, halfWidth, halfHeight, Cosmetics.withAlpha(body, 0.55F + 0.2F * twinkle));
                 diamond(geo, cx, cy, cz - 0.004F, halfWidth * 0.45F, halfHeight * 0.45F, Cosmetics.withAlpha(Colors.mixWhite(body, 0.45F + 0.4F * twinkle), 0.9F));
@@ -504,7 +504,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         int c1 = petColor(0.0F);
         int c2 = petColor(1.0F);
         float cycle = age * 0.09F;
-        float contract = Math.max(0.0F, Mth.sin(cycle));
+        float contract = Cosmetics.reduceMotion() ? 0.0F : Math.max(0.0F, Mth.sin(cycle));
         float widthScale = 1.0F - 0.18F * contract;
         float heightScale = 1.0F + 0.15F * contract;
         pose.pushPose();
@@ -631,7 +631,7 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     private static void wisp(PoseStack pose, SubmitNodeCollector collector, float age) {
         int c1 = petColor(0.0F);
         int c2 = petColor(1.0F);
-        float pulse = 1.0F + Mth.sin(age * 0.25F) * 0.08F;
+        float pulse = Cosmetics.reduceMotion() ? 1.0F : 1.0F + Mth.sin(age * 0.25F) * 0.08F;
         collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> {
             Geo geo = new Geo(p, out, FULL_BRIGHT);
             geo.ball(0.0F, 0.0F, 0.0F, 0.07F * pulse, Cosmetics.withAlpha(0xFFFFFF, 0.95F));
