@@ -41,7 +41,7 @@ public final class CardFx {
     private static final int CELLS = 11;
     private static final float CARD_H = 0.42F;
     private static final float CARD_W = CARD_H * 20.0F / 28.0F;
-    private static final float KILL_GATHER = 0.3F;
+    static final float KILL_GATHER = 0.3F;
     private static final float GRAVITY = 9.0F;
     private static final String[][] RANKS = new String[][]{
         {".#.", "#.#", "###", "#.#", "#.#"},
@@ -106,6 +106,7 @@ public final class CardFx {
             return InteractionResult.PASS;
         });
         WorldRenderEvents.BEFORE_ENTITIES.register(context -> render(context.matrices(), context.commandQueue()));
+        PiecesFx.init();
     }
 
     private static void hit(LivingEntity target) {
@@ -124,7 +125,7 @@ public final class CardFx {
     }
 
     static void killBurst(Vec3 at, float height) {
-        BURSTS.add(new Burst(true, -1, at, height, KILL_GATHER + 2.2F + 4.0F, 14));
+        BURSTS.add(new Burst(true, -1, at, height, KILL_GATHER + 2.2F + ModSettings.killPiecesLie, 14));
     }
 
     static Identifier atlas() {

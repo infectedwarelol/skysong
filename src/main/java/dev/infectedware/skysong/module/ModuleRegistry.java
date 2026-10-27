@@ -1063,6 +1063,12 @@ public final class ModuleRegistry {
             closeScreen();
             KillFx.preview(ModSettings.killEffectType);
         }));
+        s.add(
+            new Setting.Shown(
+                () -> ModSettings.killEffectType == KillFx.CARDS,
+                new Setting.Slide("Pieces stay (s)", 1.0F, 10.0F, 0.5F, 4.0, () -> ModSettings.killPiecesLie, v -> ModSettings.killPiecesLie = (float)v)
+            )
+        );
         s.add(new Setting.Toggle("Players only", () -> ModSettings.killEffectPlayersOnly, v -> ModSettings.killEffectPlayersOnly = v));
         s.add(new Setting.Toggle("Sounds", () -> ModSettings.killEffectSounds, v -> ModSettings.killEffectSounds = v));
         s.add(new Setting.Header("Color"));

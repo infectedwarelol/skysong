@@ -284,6 +284,7 @@ public final class ModSettings {
     public static int killEffectCustomColor2 = -45149;
     public static boolean killEffectPlayersOnly = false;
     public static boolean killEffectSounds = true;
+    public static float killPiecesLie = 4.0F;
     public static boolean deathEffect = false;
     public static int deathEffectType = 0;
     public static int deathEffectColor = 0;

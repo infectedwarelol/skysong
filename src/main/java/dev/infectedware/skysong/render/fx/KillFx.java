@@ -22,6 +22,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvent;
@@ -35,7 +36,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
 public final class KillFx {
-    public static final String[] EFFECTS = new String[]{"Shatter", "Soul Rift", "Thunderclap", "Black Hole", "Disintegrate", "Judgement", "Firework", "Frostbite", "Inferno", "Blossom", "Ender Warp", "Vortex", "Comet", "Aurora", "Glitch", "Starfall", "Shockwave", "Eclipse", "Crystal Spikes", "Halo", "Supernova", "Random"};
+    public static final String[] EFFECTS = new String[]{"Shatter", "Soul Rift", "Thunderclap", "Black Hole", "Disintegrate", "Judgement", "Firework", "Frostbite", "Inferno", "Blossom", "Ender Warp", "Vortex", "Comet", "Aurora", "Glitch", "Starfall", "Shockwave", "Eclipse", "Crystal Spikes", "Halo", "Supernova", "Cards", "Random"};
     public static final String[] COLORS = new String[]{"Theme", "White", "Custom", "Two colors"};
     public static final int SHATTER = 0;
     public static final int SOUL = 1;
@@ -56,9 +57,10 @@ public final class KillFx {
     public static final int CRYSTAL = 18;
     public static final int HALO = 19;
     public static final int NOVA = 20;
-    private static final int KINDS = 21;
+    public static final int CARDS = 21;
+    private static final int KINDS = 22;
     private static final float[] LIFE = new float[]{
-        1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F, 1.9F, 2.0F, 2.2F, 2.6F, 1.2F, 2.2F, 1.9F, 2.6F, 1.4F, 2.3F, 1.5F, 2.4F, 2.0F, 2.4F, 1.8F
+        1.7F, 2.4F, 1.2F, 1.7F, 2.1F, 1.8F, 1.9F, 2.0F, 2.2F, 2.6F, 1.2F, 2.2F, 1.9F, 2.6F, 1.4F, 2.3F, 1.5F, 2.4F, 2.0F, 2.4F, 1.8F, 1.7F
     };
     private static final float COMET_FALL = 0.45F;
     private static final float GLITCH_TIME = 0.95F;
@@ -156,7 +158,7 @@ public final class KillFx {
     }
 
     private static boolean usesModel(int type) {
-        return type == SHATTER || type == SOUL || type == VOID || type == DUST || type == FROST || type == INFERNO || type == BLOSSOM || type == WARP || type == GLITCH;
+        return type == SHATTER || type == SOUL || type == VOID || type == DUST || type == FROST || type == INFERNO || type == BLOSSOM || type == WARP || type == GLITCH || type == CARDS;
     }
 
     private static boolean usesShards(int type) {
@@ -296,6 +298,8 @@ public final class KillFx {
                                 case CRYSTAL -> drawCrystal(e, t, cam, themed(AMETHYST6, tint));
                                 case HALO -> drawHalo(e, t, cam, themed(GOLD6, tint));
                                 case NOVA -> drawSupernova(e, t, cam, themed(NOVA6, tint));
+                                case CARDS -> {
+                                }
                                 default -> drawShatterFlash(e, t, cam, tint);
                             }
                         }
@@ -343,6 +347,12 @@ public final class KillFx {
             if (victim != mc.player) {
                 hidden.put(victim.getId(), e.born);
             }
+        }
+
+        if (type == CARDS) {
+            PiecesFx.spawn(e.parts, at, e.height, CardFx.KILL_GATHER, e.seed);
+            CardFx.killBurst(at, e.height);
+            e.parts = List.of();
         }
 
         if (type == 2) {
@@ -1509,11 +1519,20 @@ public final class KillFx {
             case NOVA:
                 particles(mc, ParticleTypes.ENCHANT, e.x, cy, e.z, 40, 1.2);
                 break;
+            case CARDS:
+                particles(mc, ParticleTypes.CRIT, e.x, cy, e.z, 10, 0.3);
+                break;
         }
     }
 
     private static void moments(Minecraft mc, KillFx.Effect e, float t) {
         double cy = e.y + e.height * 0.5;
+        if (e.type == CARDS && t >= CardFx.KILL_GATHER && (e.fired & 1) == 0) {
+            e.fired |= 1;
+            particles(mc, new DustParticleOptions(0x9A1010, 1.6F), e.x, cy, e.z, 36, 0.35);
+            particles(mc, ParticleTypes.SWEEP_ATTACK, e.x, cy, e.z, 1, 0.0);
+        }
+
         if (e.type == 3 && t >= 0.78F && (e.fired & 1) == 0) {
             e.fired |= 1;
             particles(mc, ParticleTypes.END_ROD, e.x, cy, e.z, 30, 0.6);

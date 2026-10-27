@@ -298,6 +298,13 @@
       }
     ]
   },
+  "fx.kill_cards": {
+    "sounds": [
+      {
+        "name": "skysong:fx/kill_cards"
+      }
+    ]
+  },
   "fx.kill_shatter": {
     "sounds": [
       {

@@ -142,10 +142,11 @@ final class ModelSnapshot {
         float[] data = new float[512];
         int vertices;
         final int texture;
+        final Identifier location;
 
         Part(RenderType layer) {
-            Identifier location = Compat.layerTexture(layer);
-            this.texture = location == null ? 0 : Gpu.textureId(location, false);
+            this.location = Compat.layerTexture(layer);
+            this.texture = this.location == null ? 0 : Gpu.textureId(this.location, false);
         }
 
         void add() {

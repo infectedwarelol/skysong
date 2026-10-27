@@ -28,7 +28,7 @@ public final class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Map<Field, Object> DEFAULTS = captureDefaults();
     private static final String EFFECT_LIST_KEY = "effectListVersion";
-    private static final int EFFECT_LIST_VERSION = 3;
+    private static final int EFFECT_LIST_VERSION = 4;
     private static final Set<String> PERSONAL = Set.of(
         "spotifyClientId", "popupPositions", "shareMySong", "partyEnabled", "partyShareSong", "partyRelayUrl", "partyKey"
     );
@@ -67,6 +67,10 @@ public final class ModConfig {
         if (version < 3) {
             remap(json, "killEffectType", 11, 21);
             remap(json, "deathEffectType", 8, 18);
+        }
+
+        if (version < 4) {
+            remap(json, "killEffectType", 21, 22);
         }
 
         json.addProperty(EFFECT_LIST_KEY, EFFECT_LIST_VERSION);
