@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      notes:
+        description: Release notes
+        required: true
 
 permissions:
   contents: write
@@ -25,9 +30,13 @@ jobs:
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
+          NOTES: ${{ inputs.notes }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          version=$(grep '^mod_version=' gradle.properties | cut -d= -f2 | cut -d+ -f1)
           minecraft=$(grep '^minecraft_version=' gradle.properties | cut -d= -f2)
-          gh release create "$GITHUB_REF_NAME" build/libs/skysong-*.jar \
-            --title "Skysong $version for Minecraft $minecraft" \
-            --notes-from-tag
+          tag="v$version"
+          if [ "$GITHUB_EVENT_NAME" = "push" ]; then
+            gh release create "$tag" build/libs/skysong-*.jar --title "Skysong $version for Minecraft $minecraft" --notes-from-tag
+          else
+            gh release create "$tag" build/libs/skysong-*.jar --title "Skysong $version for Minecraft $minecraft" --notes "$NOTES" --target "$GITHUB_SHA"
+          fi
