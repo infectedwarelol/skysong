@@ -23,7 +23,8 @@
     "WorldRendererMixin",
     "PackRepositoryMixin",
     "ScreenEffectRendererMixin",
-    "HurtCameraMixin"
+    "HurtCameraMixin",
+    "ParticleEngineMixin"
   ],
   "injectors": {
     "defaultRequire": 1

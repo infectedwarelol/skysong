@@ -14,6 +14,7 @@ import dev.infectedware.skysong.hud.InfoHud;
 import dev.infectedware.skysong.lyrics.LyricTranslator;
 import dev.infectedware.skysong.party.PartyClient;
 import dev.infectedware.skysong.party.PartyCommands;
+import dev.infectedware.skysong.pvp.Explosions;
 import dev.infectedware.skysong.render.AspectRatio;
 import dev.infectedware.skysong.render.CustomFonts;
 import dev.infectedware.skysong.render.fx.DeathFx;
@@ -604,6 +605,43 @@ public final class ModuleRegistry {
             v -> ModSettings.pvpNoHurtCam = v,
             null,
             null
+        ),
+        new ClientModule(
+            "Crystal Sound",
+            "Plays a sound of your choice when an end crystal blows up.",
+            Category.PVP,
+            () -> ModSettings.pvpCrystalSound,
+            v -> ModSettings.pvpCrystalSound = v,
+            () -> Explosions.SOUNDS[Math.floorMod(ModSettings.pvpCrystalSoundType, Explosions.SOUNDS.length)],
+            () -> List.of(
+                new Setting.Choice("Sound", Explosions.SOUNDS, () -> ModSettings.pvpCrystalSoundType, v -> ModSettings.pvpCrystalSoundType = v),
+                new Setting.Action("Preview", Explosions::preview),
+                new Setting.Slide("Volume", 0.1F, 2.0F, 0.05F, 1.0, () -> ModSettings.pvpCrystalVolume, v -> ModSettings.pvpCrystalVolume = (float)v),
+                new Setting.Slide("Pitch", 0.5F, 2.0F, 0.05F, 1.0, () -> ModSettings.pvpCrystalPitch, v -> ModSettings.pvpCrystalPitch = (float)v),
+                new Setting.Toggle("Mute the explosion", () -> ModSettings.pvpCrystalMuteVanilla, v -> ModSettings.pvpCrystalMuteVanilla = v),
+                new Setting.Toggle("Only crystals I hit", () -> ModSettings.pvpCrystalOnlyMine, v -> ModSettings.pvpCrystalOnlyMine = v)
+            )
+        ),
+        new ClientModule(
+            "Particle Filter",
+            "Hides the particles that block your view: totem pops, crystals, anchors and more.",
+            Category.PVP,
+            () -> ModSettings.pvpParticleFilter,
+            v -> ModSettings.pvpParticleFilter = v,
+            null,
+            () -> List.of(
+                new Setting.Header("Explosions"),
+                new Setting.Toggle("Totem pops", () -> ModSettings.pvpHideTotemParticles, v -> ModSettings.pvpHideTotemParticles = v),
+                new Setting.Toggle("End crystals", () -> ModSettings.pvpHideCrystalParticles, v -> ModSettings.pvpHideCrystalParticles = v),
+                new Setting.Toggle("Respawn anchors", () -> ModSettings.pvpHideAnchorParticles, v -> ModSettings.pvpHideAnchorParticles = v),
+                new Setting.Toggle("Other explosions", () -> ModSettings.pvpHideOtherExplosions, v -> ModSettings.pvpHideOtherExplosions = v),
+                new Setting.Info(() -> "Other: TNT, beds, creepers, wind charges."),
+                new Setting.Header("Combat"),
+                new Setting.Toggle("Critical hits", () -> ModSettings.pvpHideCrits, v -> ModSettings.pvpHideCrits = v),
+                new Setting.Toggle("Sweep attacks", () -> ModSettings.pvpHideSweep, v -> ModSettings.pvpHideSweep = v),
+                new Setting.Toggle("Damage hearts", () -> ModSettings.pvpHideDamageHearts, v -> ModSettings.pvpHideDamageHearts = v),
+                new Setting.Toggle("Potion swirls", () -> ModSettings.pvpHidePotionSwirls, v -> ModSettings.pvpHidePotionSwirls = v)
+            )
         ),
         new ClientModule(
             "Party",
