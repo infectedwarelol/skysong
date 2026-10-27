@@ -481,6 +481,8 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             jellyfish(pose, collector, age);
         } else if (type == Cosmetics.ORRERY_PET) {
             orrery(pose, collector, light, age);
+        } else if (type == Cosmetics.CRANE_PET) {
+            crane(pose, collector, light, age);
         } else if (type <= 0 || type >= PET_ITEMS.length) {
             wisp(pose, collector, age);
         } else {
@@ -585,6 +587,43 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
             Geo geo = new Geo(p, out, light);
             geo.torus(radius, 0.006F, 20, 4, i -> ringColor);
             geo.ball(px, 0.0F, pz, planetRadius, planetColor);
+        });
+        pose.popPose();
+    }
+
+    private static void crane(PoseStack pose, SubmitNodeCollector collector, int light, float age) {
+        int paper = Colors.mixWhite(petColor(0.0F), 0.7F);
+        int fold = Colors.darken(paper, 0.82F);
+        int crease = Colors.darken(paper, 0.68F);
+        int tipColor = petColor(1.0F);
+        float phase = age * 0.05F;
+        float dx = Mth.cos(phase) * 0.18F;
+        float dz = Mth.cos(phase * 2.0F) * 0.18F;
+        float glide = Math.clamp((0.35F - Mth.sin(age * 0.031F)) * 3.0F, 0.0F, 1.0F);
+        float lift = -(0.02F + Mth.sin(age * 0.45F) * 0.08F * glide);
+        pose.pushPose();
+        pose.translate(Mth.sin(phase) * 0.18F, -Mth.cos(phase * 2.0F) * 0.04F, Mth.sin(phase * 2.0F) * 0.09F);
+        pose.mulPose(Axis.YP.rotation((float)Mth.atan2(dx, dz)));
+        pose.mulPose(Axis.ZP.rotationDegrees(-Mth.sin(phase) * 25.0F));
+        collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> {
+            Geo geo = new Geo(p, out, light);
+            Vector3f front = new Vector3f(0.0F, 0.0F, 0.09F);
+            Vector3f back = new Vector3f(0.0F, 0.0F, -0.09F);
+            geo.tri(front, back, new Vector3f(-0.022F, 0.035F, 0.0F), fold);
+            geo.tri(front, back, new Vector3f(0.022F, 0.035F, 0.0F), crease);
+            Vector3f head = new Vector3f(0.0F, -0.13F, 0.15F);
+            geo.tri(new Vector3f(0.0F, 0.0F, 0.05F), front, head, paper);
+            geo.tri(head, new Vector3f(0.0F, -0.115F, 0.135F), new Vector3f(0.0F, -0.1F, 0.2F), tipColor);
+            geo.tri(new Vector3f(0.0F, 0.0F, -0.05F), back, new Vector3f(0.0F, -0.12F, -0.15F), paper);
+            for (int side = -1; side <= 1; side += 2) {
+                Vector3f rootFront = new Vector3f(0.0F, -0.01F, 0.05F);
+                Vector3f rootBack = new Vector3f(0.0F, -0.01F, -0.06F);
+                Vector3f tip = new Vector3f(side * 0.21F, lift, -0.03F);
+                Vector3f mid = new Vector3f(side * 0.09F, lift * 0.45F - 0.012F, 0.005F);
+                geo.tri(rootFront, mid, tip, paper);
+                geo.tri(rootFront, rootBack, mid, fold);
+                geo.tri(rootBack, tip, mid, crease);
+            }
         });
         pose.popPose();
     }
