@@ -18,6 +18,7 @@ import dev.infectedware.skysong.module.Binds;
 import dev.infectedware.skysong.module.Category;
 import dev.infectedware.skysong.module.ClientModule;
 import dev.infectedware.skysong.party.PartyClient;
+import dev.infectedware.skysong.party.PartyCommands;
 import dev.infectedware.skysong.render.CinematicTextRenderer;
 import dev.infectedware.skysong.render.StarGlyphs;
 import dev.infectedware.skysong.render.WorldTextRenderer;
@@ -136,6 +137,7 @@ public class SkysongClient implements ClientModInitializer {
         DeathFx.init();
         ClientTickEvents.END_CLIENT_TICK.register(StormFx::tick);
         ClientTickEvents.END_CLIENT_TICK.register(client -> PartyClient.tick());
+        PartyCommands.init();
         ClientLifecycleEvents.CLIENT_STOPPING.register(client -> PartyClient.shutdown());
         Hooks.afterEntities(EntityFx::capture);
         Hooks.last(ctx -> {

@@ -4,25 +4,27 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.authlib.GameProfile;
+import dev.infectedware.skysong.ModConfig;
 import dev.infectedware.skysong.ModSettings;
 import dev.infectedware.skysong.SkysongClient;
 import dev.infectedware.skysong.SpotifyManager;
 import dev.infectedware.skysong.gui.click.SettingsPopup;
-import dev.infectedware.skysong.hud.Notifications;
+import dev.infectedware.skysong.hud.Feedback;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.WebSocket;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.Signature;
+import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -30,8 +32,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.User;
-import net.minecraft.world.entity.player.ProfileKeyPair;
-import net.minecraft.world.entity.player.ProfilePublicKey;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 public final class PartyClient {
     public static final String DEFAULT_RELAY = "https://skysong-relay.developingjules.workers.dev";
@@ -41,6 +43,8 @@ public final class PartyClient {
     private static final long SONG_REFRESH_MS = 20000L;
     private static final long SONG_DRIFT_MS = 2500L;
     private static final int MAX_FRAME = 262144;
+    private static final String NAME = "[A-Za-z0-9_]{3,16}";
+    private static final String INSTALL_KEY = "[A-Za-z0-9_-]{32,128}";
     private static final ScheduledExecutorService IO = Executors.newSingleThreadScheduledExecutor(task -> {
         Thread thread = new Thread(task, "Skysong party");
         thread.setDaemon(true);
@@ -55,7 +59,6 @@ public final class PartyClient {
     private static volatile List<Person> outgoing = List.of();
     private static final Map<String, String> VERIFIED = new ConcurrentHashMap<>();
     private static final Set<String> LOOKING = ConcurrentHashMap.newKeySet();
-    private static ProfileKeyPair keys;
     private static volatile String following;
     private static WebSocket socket;
     private static String activeUrl = "";
@@ -84,6 +87,9 @@ public final class PartyClient {
     }
 
     public record Person(String uuid, String name) {
+    }
+
+    public record Candidate(String uuid, String name) {
     }
 
     private PartyClient() {
@@ -144,6 +150,10 @@ public final class PartyClient {
         }
 
         boolean want = ModSettings.partyEnabled;
+        if (want) {
+            ensureInstallKey();
+        }
+
         String url = relayUrl();
         IO.execute(() -> reconcile(want, url));
         if (connected) {
@@ -165,13 +175,49 @@ public final class PartyClient {
         });
     }
 
-    public static void addFriend(String rawName) {
+    public static void invite(String rawName) {
         String name = rawName.trim();
-        if (!name.matches("[A-Za-z0-9_]{3,16}")) {
+        if (!name.matches(NAME)) {
             notify("That isn't a Minecraft name");
             return;
         }
 
+        if (!ModSettings.partyEnabled) {
+            notify("Turn on Party first");
+            return;
+        }
+
+        if (name.equalsIgnoreCase(Minecraft.getInstance().getUser().getName())) {
+            notify("You can't invite yourself");
+            return;
+        }
+
+        Candidate here = playerHere(name);
+        if (here != null && onlineUuid(here.uuid())) {
+            invite(here);
+            return;
+        }
+
+        lookupAndInvite(name);
+    }
+
+    public static void invite(Candidate player) {
+        if (onlineUuid(player.uuid())) {
+            IO.execute(() -> sendInvite(player.uuid(), player.name()));
+        } else {
+            lookupAndInvite(player.name());
+        }
+    }
+
+    private static boolean onlineUuid(String uuid) {
+        try {
+            return UUID.fromString(uuid).version() == 4;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    private static void lookupAndInvite(String name) {
         IO.execute(() -> {
             JsonObject profile = getJson("https://api.mojang.com/users/profiles/minecraft/" + name);
             if (profile == null || string(profile, "id").length() != 32) {
@@ -181,8 +227,100 @@ public final class PartyClient {
 
             String uuid = dashed(string(profile, "id"));
             VERIFIED.put(uuid, string(profile, "name"));
-            send(message("add", "uuid", uuid).toString());
+            sendInvite(uuid, string(profile, "name"));
         });
+    }
+
+    private static void sendInvite(String uuid, String name) {
+        if (!connected) {
+            notify("Not connected to the party relay yet");
+            return;
+        }
+
+        JsonObject invite = message("invite", "uuid", uuid);
+        invite.addProperty("name", name);
+        send(invite.toString());
+    }
+
+    public static List<Candidate> playersHere() {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return List.of();
+        }
+
+        String self = Minecraft.getInstance().getUser().getProfileId().toString();
+        List<Candidate> out = new ArrayList<>();
+        for (PlayerInfo info : connection.getOnlinePlayers()) {
+            GameProfile profile = info.getProfile();
+            String uuid = profile.id().toString();
+            if (!uuid.equals(self) && profile.name().matches(NAME) && friend(uuid) == null && !isPending(uuid)) {
+                out.add(new Candidate(uuid, profile.name()));
+            }
+        }
+
+        out.sort((a, b) -> a.name().compareToIgnoreCase(b.name()));
+        return out;
+    }
+
+    private static Candidate playerHere(String name) {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) {
+            return null;
+        }
+
+        for (PlayerInfo info : connection.getOnlinePlayers()) {
+            GameProfile profile = info.getProfile();
+            if (profile.name().equalsIgnoreCase(name)) {
+                return new Candidate(profile.id().toString(), profile.name());
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean isPending(String uuid) {
+        for (Person p : incoming) {
+            if (p.uuid().equals(uuid)) {
+                return true;
+            }
+        }
+
+        for (Person p : outgoing) {
+            if (p.uuid().equals(uuid)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static Person byName(List<? extends Person> people, String name) {
+        for (Person p : people) {
+            if (p.name().equalsIgnoreCase(name)) {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
+    public static Friend friendByName(String name) {
+        for (Friend f : friends) {
+            if (f.name().equalsIgnoreCase(name)) {
+                return f;
+            }
+        }
+
+        return null;
+    }
+
+    private static void ensureInstallKey() {
+        if (ModSettings.partyKey == null || !ModSettings.partyKey.matches(INSTALL_KEY)) {
+            byte[] bytes = new byte[32];
+            new SecureRandom().nextBytes(bytes);
+            ModSettings.partyKey = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+            ModConfig.save();
+        }
     }
 
     public static void accept(String uuid) {
@@ -331,24 +469,6 @@ public final class PartyClient {
 
     private static void connect(String url) {
         retryAt = Long.MAX_VALUE;
-        Minecraft mc = Minecraft.getInstance();
-        setStatus("Signing in…");
-
-        try {
-            keys = mc.getProfileKeyPairManager().prepareKeyPair().get(20L, TimeUnit.SECONDS).orElse(null);
-        } catch (Exception e) {
-            if (e instanceof InterruptedException) {
-                Thread.currentThread().interrupt();
-            }
-
-            keys = null;
-        }
-
-        if (keys == null) {
-            failed("Couldn't get your Minecraft chat key: play online with a Microsoft account");
-            return;
-        }
-
         URI uri;
         try {
             uri = URI.create(url);
@@ -369,28 +489,19 @@ public final class PartyClient {
         }));
     }
 
-    private static void sendHello(String nonce) {
-        ProfileKeyPair pair = keys;
-        if (pair == null || nonce.isEmpty()) {
+    private static void sendHello() {
+        User user = Minecraft.getInstance().getUser();
+        String key = ModSettings.partyKey;
+        if (key == null || !key.matches(INSTALL_KEY)) {
+            failed("Party key missing, try Reconnect");
             return;
         }
 
-        try {
-            Signature signer = Signature.getInstance("SHA256withRSA");
-            signer.initSign(pair.privateKey());
-            signer.update(nonce.getBytes(StandardCharsets.UTF_8));
-            ProfilePublicKey.Data data = pair.publicKey().data();
-            User user = Minecraft.getInstance().getUser();
-            JsonObject hello = message("hello", "name", user.getName());
-            hello.addProperty("uuid", user.getProfileId().toString());
-            hello.addProperty("key", Base64.getEncoder().encodeToString(data.key().getEncoded()));
-            hello.addProperty("keySignature", Base64.getEncoder().encodeToString(data.keySignature()));
-            hello.addProperty("expiresAt", data.expiresAt().toEpochMilli());
-            hello.addProperty("signature", Base64.getEncoder().encodeToString(signer.sign()));
-            send(hello.toString());
-        } catch (GeneralSecurityException e) {
-            failed("Couldn't sign in: " + e.getMessage());
-        }
+        setStatus("Signing in…");
+        JsonObject hello = message("hello", "name", user.getName());
+        hello.addProperty("uuid", user.getProfileId().toString().toLowerCase(Locale.ROOT));
+        hello.addProperty("installKey", key);
+        send(hello.toString());
     }
 
     private static void failed(String reason) {
@@ -467,7 +578,7 @@ public final class PartyClient {
         }
 
         switch (string(m, "t")) {
-            case "challenge" -> sendHello(string(m, "nonce"));
+            case "challenge" -> sendHello();
             case "welcome" -> {
                 myName = string(m, "name");
                 connected = true;
@@ -505,7 +616,14 @@ public final class PartyClient {
 
         list.sort((a, b) -> a.online() != b.online() ? (a.online() ? -1 : 1) : a.name().compareToIgnoreCase(b.name()));
         friends = List.copyOf(list);
+        List<Person> previous = incoming;
         incoming = people(m.get("incoming"));
+        for (Person p : incoming) {
+            if (byName(previous, p.name()) == null) {
+                Minecraft.getInstance().execute(() -> PartyCommands.announceInvite(p.name()));
+            }
+        }
+
         outgoing = people(m.get("outgoing"));
         following = m.get("following") != null && m.get("following").isJsonPrimitive() ? m.get("following").getAsString() : null;
         if (!before.equals(signature())) {
@@ -622,7 +740,7 @@ public final class PartyClient {
 
     private static void notify(String text) {
         if (!text.isEmpty()) {
-            Minecraft.getInstance().execute(() -> Notifications.notify(text, 4000L));
+            Feedback.show(text, 4000L);
         }
     }
 

@@ -68,6 +68,7 @@ public final class ModSettings {
     public static boolean partyEnabled = false;
     public static boolean partyShareSong = true;
     public static String partyRelayUrl = "";
+    public static String partyKey = "";
     public static boolean shareMySong = false;
     public static boolean showOthersSongs = true;
     public static String lyricCustomFont = "";

@@ -13,6 +13,7 @@ import dev.infectedware.skysong.hud.Crosshair;
 import dev.infectedware.skysong.hud.InfoHud;
 import dev.infectedware.skysong.lyrics.LyricTranslator;
 import dev.infectedware.skysong.party.PartyClient;
+import dev.infectedware.skysong.party.PartyCommands;
 import dev.infectedware.skysong.render.AspectRatio;
 import dev.infectedware.skysong.render.CustomFonts;
 import dev.infectedware.skysong.render.fx.DeathFx;
@@ -601,7 +602,7 @@ public final class ModuleRegistry {
         ),
         new ClientModule(
             "Party",
-            "Add friends who use Skysong, see what they're playing and listen along together.",
+            "Invite players who use Skysong, see what they're playing and listen along together.",
             Category.UTILS,
             () -> ModSettings.partyEnabled,
             v -> ModSettings.partyEnabled = v,
@@ -1075,32 +1076,44 @@ public final class ModuleRegistry {
             s.add(new Setting.Action("Stop listening with " + followed.name(), PartyClient::unfollow));
         }
 
-        s.add(new Setting.Header("Add a friend"));
-        s.add(new Setting.Input("Minecraft name…", "Send request", PartyClient::addFriend));
-        s.add(new Setting.Info(() -> "They need Skysong with Party turned on."));
+        s.add(new Setting.Header("Invite a player"));
+        s.add(new Setting.Input("Minecraft name…", "Send invite", name -> {
+            PartyClient.invite(name);
+            SettingsPopup.rebuildSoon();
+        }));
+        s.add(new Setting.Info(() -> "Or in chat: /" + PartyCommands.ROOT + " invite <name>"));
+        List<PartyClient.Candidate> here = PartyClient.isConnected() ? PartyClient.playersHere() : List.of();
+        if (!here.isEmpty()) {
+            s.add(new Setting.Header("Players on this server"));
+            s.add(new Setting.Info(() -> "Click a name to invite them."));
+            for (PartyClient.Candidate c : here.subList(0, Math.min(here.size(), 12))) {
+                s.add(new Setting.ListRow(c.name() + " · invite", () -> false, () -> PartyClient.invite(c), () -> {}));
+            }
+        }
+
         List<PartyClient.Person> incoming = PartyClient.incoming();
         if (!incoming.isEmpty()) {
-            s.add(new Setting.Header("Friend requests"));
-            s.add(new Setting.Info(() -> "Click a name to accept, × twice to decline."));
+            s.add(new Setting.Header("Invites for you"));
+            s.add(new Setting.Info(() -> "Click a name to join, × twice to decline."));
             for (PartyClient.Person p : incoming) {
-                s.add(new Setting.ListRow(p.name() + " · click to accept", () -> false, () -> PartyClient.accept(p.uuid()), () -> PartyClient.decline(p.uuid())));
+                s.add(new Setting.ListRow(p.name() + " · click to join", () -> false, () -> PartyClient.accept(p.uuid()), () -> PartyClient.decline(p.uuid())));
             }
         }
 
         List<PartyClient.Person> outgoing = PartyClient.outgoing();
         if (!outgoing.isEmpty()) {
-            s.add(new Setting.Header("Sent requests"));
+            s.add(new Setting.Header("Sent invites"));
             for (PartyClient.Person p : outgoing) {
                 s.add(new Setting.ListRow(p.name() + " · waiting", () -> false, () -> {}, () -> PartyClient.cancel(p.uuid())));
             }
         }
 
-        s.add(new Setting.Header("Friends"));
+        s.add(new Setting.Header("Party"));
         List<PartyClient.Friend> friends = PartyClient.friends();
         if (friends.isEmpty()) {
-            s.add(new Setting.Info(() -> PartyClient.isConnected() ? "No friends yet: send a request above." : "Friends show up once you're connected."));
+            s.add(new Setting.Info(() -> PartyClient.isConnected() ? "Nobody yet: invite someone above." : "Your party shows up once you're connected."));
         } else {
-            s.add(new Setting.Info(() -> "Click a friend to listen along."));
+            s.add(new Setting.Info(() -> "Click someone to listen along."));
         }
 
         for (PartyClient.Friend f : friends) {

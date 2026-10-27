@@ -30,8 +30,9 @@ public final class ModConfig {
     private static final String EFFECT_LIST_KEY = "effectListVersion";
     private static final int EFFECT_LIST_VERSION = 3;
     private static final Set<String> PERSONAL = Set.of(
-        "spotifyClientId", "popupPositions", "shareMySong", "partyEnabled", "partyShareSong", "partyRelayUrl"
+        "spotifyClientId", "popupPositions", "shareMySong", "partyEnabled", "partyShareSong", "partyRelayUrl", "partyKey"
     );
+    private static final Set<String> KEPT_ON_RESET = Set.of("partyKey");
 
     private ModConfig() {
     }
@@ -181,7 +182,9 @@ public final class ModConfig {
     public static void resetToDefaults() {
         try {
             for (Entry<Field, Object> e : DEFAULTS.entrySet()) {
-                e.getKey().set(null, e.getValue());
+                if (!KEPT_ON_RESET.contains(e.getKey().getName())) {
+                    e.getKey().set(null, e.getValue());
+                }
             }
         } catch (IllegalAccessException e) {
             SkysongClient.LOGGER.warn("[Skysong] Could not reset config: {}", e.getMessage());

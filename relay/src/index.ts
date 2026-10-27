@@ -31,6 +31,11 @@ interface Account {
   outgoing: string[];
 }
 
+interface Claim {
+  hash: string;
+  seen: number;
+}
+
 const NAME = /^[A-Za-z0-9_]{3,16}$/;
 const SPOTIFY_ID = /^[A-Za-z0-9]{22}$/;
 const MAX_FRIENDS = 200;
@@ -41,6 +46,8 @@ const SONG_INTERVAL_MS = 500;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const B64 = /^[A-Za-z0-9+/]+={0,2}$/;
 const MAX_KEY_LIFETIME_MS = 14 * 86_400_000;
+const INSTALL_KEY = /^[A-Za-z0-9_-]{32,128}$/;
+const CLAIM_EXPIRY_MS = 30 * 86_400_000;
 
 function bytes(b64: string): Uint8Array {
   return Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
@@ -61,6 +68,11 @@ function number(value: unknown): number {
 
 function without(list: string[], uuid: string): string[] {
   return list.filter((entry) => entry !== uuid);
+}
+
+async function sha256(value: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export default {
@@ -116,7 +128,9 @@ export class Hub extends DurableObject<Env> {
     const session = sessionOf(ws);
     if (!session) {
       const pending = ws.deserializeAttachment() as { nonce?: string } | null;
-      if (message.t === "hello" && pending?.nonce) {
+      if (message.t === "hello" && typeof message.installKey === "string") {
+        await this.helloByInstall(ws, message);
+      } else if (message.t === "hello" && pending?.nonce) {
         await this.hello(ws, message, pending.nonce);
       }
       return;
@@ -125,7 +139,8 @@ export class Hub extends DurableObject<Env> {
     const name = UUID.test(text(message.uuid)) ? text(message.uuid) : "";
     switch (message.t) {
       case "add":
-        await this.add(ws, session, name);
+      case "invite":
+        await this.add(ws, session, name, text(message.name));
         break;
       case "accept":
         await this.accept(ws, session, name);
@@ -212,6 +227,31 @@ export class Hub extends DurableObject<Env> {
       return;
     }
 
+    await this.signIn(ws, uuid, realName);
+  }
+
+  private async helloByInstall(ws: WebSocket, message: Record<string, unknown>): Promise<void> {
+    const realName = text(message.name);
+    const uuid = text(message.uuid).toLowerCase();
+    const installKey = message.installKey as string;
+    if (!NAME.test(realName) || !UUID.test(uuid) || !INSTALL_KEY.test(installKey)) {
+      this.fail(ws, "Invalid sign-in");
+      return;
+    }
+
+    const now = Date.now();
+    const hash = await sha256(installKey);
+    const claim = await this.ctx.storage.get<Claim>(`k:${uuid}`);
+    if (claim && claim.hash !== hash && now - claim.seen < CLAIM_EXPIRY_MS) {
+      this.fail(ws, "This account is linked to Skysong on another PC: copy partyKey from its config/skysong.json");
+      return;
+    }
+
+    await this.ctx.storage.put(`k:${uuid}`, { hash, seen: now });
+    await this.signIn(ws, uuid, realName);
+  }
+
+  private async signIn(ws: WebSocket, uuid: string, realName: string): Promise<void> {
     const account = (await this.account(uuid)) ?? { name: realName, friends: [], incoming: [], outgoing: [] };
     account.name = realName;
     await this.ctx.storage.put(`u:${uuid}`, account);
@@ -247,10 +287,15 @@ export class Hub extends DurableObject<Env> {
     return false;
   }
 
-  private async add(ws: WebSocket, session: Session, name: string): Promise<void> {
-    const target = await this.uuidOf(name);
+  private async add(ws: WebSocket, session: Session, name: string, displayName: string): Promise<void> {
+    let target = await this.uuidOf(name);
+    if (!target && UUID.test(name) && NAME.test(displayName)) {
+      await this.save(name, { name: displayName, friends: [], incoming: [], outgoing: [] });
+      target = name;
+    }
+
     if (!target) {
-      this.send(ws, { t: "error", message: "That player hasn't turned on Skysong party yet" });
+      this.send(ws, { t: "error", message: "That player couldn't be found" });
       return;
     }
 
@@ -266,22 +311,22 @@ export class Hub extends DurableObject<Env> {
     }
 
     if (me.friends.includes(target)) {
-      this.send(ws, { t: "error", message: `${them.name} is already your friend` });
+      this.send(ws, { t: "error", message: `${them.name} is already in your party` });
       return;
     }
 
     if (me.incoming.includes(target)) {
-      await this.accept(ws, session, them.name);
+      await this.accept(ws, session, target);
       return;
     }
 
     if (me.outgoing.includes(target)) {
-      this.send(ws, { t: "error", message: `Request to ${them.name} already sent` });
+      this.send(ws, { t: "error", message: `${them.name} already has your invite` });
       return;
     }
 
     if (me.friends.length >= MAX_FRIENDS || me.outgoing.length >= MAX_PENDING || them.incoming.length >= MAX_PENDING) {
-      this.send(ws, { t: "error", message: "Too many friends or requests" });
+      this.send(ws, { t: "error", message: "Too many party members or invites" });
       return;
     }
 
@@ -289,8 +334,8 @@ export class Hub extends DurableObject<Env> {
     them.incoming.push(session.uuid);
     await this.save(session.uuid, me);
     await this.save(target, them);
-    this.notice(target, `${session.name} sent you a friend request`);
-    this.send(ws, { t: "notice", message: `Friend request sent to ${them.name}` });
+    this.notice(target, `${session.name} invited you to their party`);
+    this.send(ws, { t: "notice", message: `Party invite sent to ${them.name}` });
     await this.pushState(session.uuid);
     await this.pushState(target);
   }
@@ -304,7 +349,7 @@ export class Hub extends DurableObject<Env> {
     }
 
     if (me.friends.length >= MAX_FRIENDS || them.friends.length >= MAX_FRIENDS) {
-      this.send(ws, { t: "error", message: "Too many friends" });
+      this.send(ws, { t: "error", message: "Too many party members" });
       return;
     }
 
@@ -316,7 +361,7 @@ export class Hub extends DurableObject<Env> {
     them.friends.push(session.uuid);
     await this.save(session.uuid, me);
     await this.save(target, them);
-    this.notice(target, `${session.name} accepted your friend request`);
+    this.notice(target, `${session.name} joined your party`);
     await this.pushState(session.uuid);
     await this.pushState(target);
   }
@@ -405,7 +450,7 @@ export class Hub extends DurableObject<Env> {
     const target = await this.uuidOf(name);
     const me = await this.account(session.uuid);
     if (!target || !me || !me.friends.includes(target) || this.sockets(target).length === 0) {
-      this.send(ws, { t: "error", message: "That friend isn't online" });
+      this.send(ws, { t: "error", message: "That player isn't online" });
       return;
     }
 
