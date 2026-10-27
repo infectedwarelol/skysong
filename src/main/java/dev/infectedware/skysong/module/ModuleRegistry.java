@@ -542,7 +542,10 @@ public final class ModuleRegistry {
                 new Setting.Header("Online login (optional)"),
                 new Setting.Info(() -> "Needs Spotify Premium. Not needed"),
                 new Setting.Info(() -> "when reading Spotify on this PC."),
-                new Setting.Action("Connect Spotify", () -> spotify().authenticate()),
+                new Setting.Shown(() -> !spotify().isLoggedIn(), new Setting.Action("Connect Spotify", () -> spotify().authenticate())),
+                new Setting.Shown(() -> !spotify().isLoggedIn(), new Setting.Info(() -> "Opens your browser; log in once and it stays connected.")),
+                new Setting.Shown(() -> spotify().isLoggedIn(), new Setting.Info(() -> "Logged in, renews itself in the background.")),
+                new Setting.Shown(() -> spotify().isLoggedIn(), new Setting.Action("Disconnect Spotify", () -> spotify().logout())),
                 new Setting.Header("Multiplayer"),
                 new Setting.Toggle("Share my song", () -> ModSettings.shareMySong, v -> ModSettings.shareMySong = v),
                 new Setting.Toggle("Show others' songs", () -> ModSettings.showOthersSongs, v -> ModSettings.showOthersSongs = v),
@@ -555,8 +558,8 @@ public final class ModuleRegistry {
                 new Setting.Action("Previous track", () -> spotify().previousTrack()),
                 new Setting.Action("Like / unlike this song", () -> spotify().toggleLike()),
                 new Setting.Header("Link"),
-                new Setting.Info(() -> "Didn't connect? Paste the link:"),
-                new Setting.Input("google.com/?code=…", "Submit link", ModuleRegistry::submitLink),
+                new Setting.Info(() -> "Page said it can't connect? Paste its address:"),
+                new Setting.Input("127.0.0.1:43821/callback?code=…", "Submit link", link -> spotify().submitCallbackLink(link)),
                 new Setting.Header("Your own Spotify app"),
                 new Setting.Info(() -> spotify().usingOwnClientId() ? "Using: your app (auto login)" : "Using: built-in app"),
                 new Setting.Action("Set up automatically", () -> {
@@ -1376,20 +1379,4 @@ public final class ModuleRegistry {
         }
     }
 
-    private static void submitLink(String link) {
-        if (link != null && link.contains("code=")) {
-            String query = link.contains("?") ? link.substring(link.indexOf(63) + 1) : link;
-
-            for (String p : query.split("&")) {
-                if (p.startsWith("code=")) {
-                    String code = p.substring(5).split("#")[0].trim();
-                    if (!code.isEmpty()) {
-                        spotify().exchangeCodeForTokenPublic(code);
-                    }
-
-                    return;
-                }
-            }
-        }
-    }
 }

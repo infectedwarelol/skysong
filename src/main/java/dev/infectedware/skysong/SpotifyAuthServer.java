@@ -15,20 +15,22 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 final class SpotifyAuthServer {
+    private final int port;
     private final String expectedState;
     private final Consumer<String> onCode;
     private final Consumer<String> onError;
     private volatile boolean running = true;
     private ServerSocket socket;
 
-    SpotifyAuthServer(String expectedState, Consumer<String> onCode, Consumer<String> onError) {
+    SpotifyAuthServer(int port, String expectedState, Consumer<String> onCode, Consumer<String> onError) {
+        this.port = port;
         this.expectedState = expectedState;
         this.onCode = onCode;
         this.onError = onError;
     }
 
     void start() throws IOException {
-        this.socket = new ServerSocket(43821, 4, InetAddress.getLoopbackAddress());
+        this.socket = new ServerSocket(this.port, 4, InetAddress.getByName("127.0.0.1"));
         this.socket.setSoTimeout(1000);
         Thread t = new Thread(this::serve, "Skysong Spotify login");
         t.setDaemon(true);

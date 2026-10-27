@@ -19,6 +19,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -35,6 +36,10 @@ import java.util.Base64;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
@@ -42,6 +47,7 @@ import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -49,10 +55,24 @@ import net.minecraft.util.Util;
 
 public class SpotifyManager {
     private static final File TOKEN_FILE = new File(Minecraft.getInstance().gameDirectory, "spotify_token.txt");
-    private String accessToken = null;
-    private String refreshToken = null;
-    private long expiresAt = 0L;
+    private static final String BUILT_IN_CLIENT_ID = "e719b5b5423244d989964a16df70f95c";
+    private static final int REDIRECT_PORT = 43821;
+    private static final String REDIRECT_URI = "http://127.0.0.1:" + REDIRECT_PORT + "/callback";
+    private static final String TOKEN_URL = "https://accounts.spotify.com/api/token";
+    private static final long REFRESH_EARLY_MS = 300000L;
+    private static final long REFRESH_RETRY_MS = 30000L;
+    private static final long REFRESH_RETRY_MAX_MS = 600000L;
+    private static final ScheduledExecutorService AUTH = Executors.newSingleThreadScheduledExecutor(task -> {
+        Thread thread = new Thread(task, "Skysong Spotify login");
+        thread.setDaemon(true);
+        return thread;
+    });
+    private volatile String accessToken = null;
+    private volatile String refreshToken = null;
+    private volatile long expiresAt = 0L;
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
+    private volatile ScheduledFuture<?> refreshTask;
+    private int refreshFailures;
     private volatile String status = "Not connected";
     private String lastProblemShown = null;
     private final LocalMediaSource local = new LocalMediaSource();
@@ -70,9 +90,9 @@ public class SpotifyManager {
     private String paletteTrack = "";
     private final HttpClient httpClient;
     private volatile String codeVerifier = null;
+    private volatile String pendingState = null;
     private final AtomicBoolean exchanging = new AtomicBoolean(false);
     private boolean waitingForClipboard = false;
-    private String redirectUri = "https://google.com/";
     private SpotifyAuthServer authServer;
     private boolean awaitingClientId = false;
     private String albumImageUrl = "";
@@ -202,7 +222,7 @@ public class SpotifyManager {
 
     private static String clientId() {
         String own = ModSettings.spotifyClientId == null ? "" : ModSettings.spotifyClientId.trim();
-        return own.isEmpty() ? "e719b5b5423244d989964a16df70f95c" : own;
+        return own.isEmpty() ? BUILT_IN_CLIENT_ID : own;
     }
 
     private void loadToken() {
@@ -228,6 +248,7 @@ public class SpotifyManager {
             if (this.accessToken != null) {
                 this.status = "Connected";
                 SkysongClient.LOGGER.info("[Skysong] Loaded saved Spotify login");
+                this.scheduleRefresh(this.expiresAt - System.currentTimeMillis() - REFRESH_EARLY_MS);
             }
         } catch (Exception e) {
             SkysongClient.LOGGER.warn("[Skysong] Could not load saved Spotify login: {}", e.getMessage());
@@ -255,9 +276,16 @@ public class SpotifyManager {
     }
 
     private void clearSession(String newStatus) {
+        ScheduledFuture<?> pending = this.refreshTask;
+        if (pending != null) {
+            pending.cancel(false);
+        }
+
+        this.refreshTask = null;
         this.accessToken = null;
         this.refreshToken = null;
         this.expiresAt = 0L;
+        this.refreshFailures = 0;
         this.isPlaying = false;
         this.currentTrackName = "";
         this.currentArtist = "";
@@ -267,6 +295,16 @@ public class SpotifyManager {
             Files.deleteIfExists(TOKEN_FILE.toPath());
         } catch (Exception ignored) {
         }
+    }
+
+    public void logout() {
+        this.clearSession("Not connected");
+        this.lastProblemShown = null;
+        this.sendChat("§b[Skysong] §fSpotify disconnected.");
+    }
+
+    public boolean isLoggedIn() {
+        return this.accessToken != null;
     }
 
     public void setClientId(String id) {
@@ -292,7 +330,7 @@ public class SpotifyManager {
     }
 
     public boolean usingOwnClientId() {
-        return !clientId().equals("e719b5b5423244d989964a16df70f95c");
+        return !clientId().equals(BUILT_IN_CLIENT_ID);
     }
 
     public String getStatus() {
@@ -311,24 +349,8 @@ public class SpotifyManager {
             if (this.awaitingClientId && text.matches("[0-9a-fA-F]{32}") && !text.equalsIgnoreCase(clientId())) {
                 this.awaitingClientId = false;
                 this.applyClientId(text, true);
-            } else {
-                if (this.waitingForClipboard && this.codeVerifier != null && text.contains("code=") && text.contains("google.com")) {
-                    String code = null;
-
-                    for (String param : text.split("[?&]")) {
-                        if (param.startsWith("code=")) {
-                            code = param.substring(5).trim();
-                            break;
-                        }
-                    }
-
-                    if (code != null && !code.isEmpty()) {
-                        this.waitingForClipboard = false;
-                        this.sendChat("§b[Skysong] §aLink detected! Connecting to Spotify…");
-                        String finalCode = code;
-                        new Thread(() -> this.exchangeCodeForToken(finalCode)).start();
-                    }
-                }
+            } else if (this.waitingForClipboard && text.startsWith(REDIRECT_URI) && this.submitCallbackLink(text)) {
+                this.sendChat("§b[Skysong] §aLogin link detected! Connecting to Spotify…");
             }
         }
     }
@@ -336,39 +358,53 @@ public class SpotifyManager {
     public void authenticate() {
         try {
             SecureRandom sr = new SecureRandom();
-            byte[] codeBytes = new byte[32];
+            byte[] codeBytes = new byte[64];
             sr.nextBytes(codeBytes);
-            this.codeVerifier = Base64.getUrlEncoder().withoutPadding().encodeToString(codeBytes);
+            String verifier = Base64.getUrlEncoder().withoutPadding().encodeToString(codeBytes);
             byte[] stateBytes = new byte[16];
             sr.nextBytes(stateBytes);
             String state = Base64.getUrlEncoder().withoutPadding().encodeToString(stateBytes);
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(this.codeVerifier.getBytes(StandardCharsets.US_ASCII));
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(verifier.getBytes(StandardCharsets.US_ASCII));
             String codeChallenge = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
-            boolean automatic = this.usingOwnClientId() && this.startAuthServer(state);
-            this.redirectUri = automatic ? "http://127.0.0.1:43821/callback" : "https://google.com/";
+            this.codeVerifier = verifier;
+            this.pendingState = state;
+            boolean listening = this.startAuthServer(state);
             String authUrl = "https://accounts.spotify.com/authorize?client_id="
                 + clientId()
                 + "&response_type=code&redirect_uri="
-                + URLEncoder.encode(this.redirectUri, StandardCharsets.UTF_8)
+                + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8)
                 + "&state="
                 + state
                 + "&code_challenge_method=S256&code_challenge="
                 + codeChallenge
                 + "&scope=" + URLEncoder.encode(SCOPES, StandardCharsets.UTF_8).replace("+", "%20");
-            Util.getPlatform().openUri(URI.create(authUrl));
             this.status = "Waiting for login";
-            if (automatic) {
-                this.waitingForClipboard = false;
+            this.waitingForClipboard = !listening;
+            Util.getPlatform().openUri(URI.create(authUrl));
+            if (listening) {
                 this.sendChat("§b[Skysong] §fBrowser opened! Log in to Spotify and press §lAgree§r§f — Skysong connects by itself.");
             } else {
-                this.waitingForClipboard = true;
-                this.sendChat("§b[Skysong] §fBrowser opened! Log in to Spotify.");
-                this.sendChat("§b[Skysong] §fWhen Google opens, copy its link (§lCtrl+L§r§f, then §lCtrl+C§r§f) — Skysong connects by itself.");
+                this.sendChat("§b[Skysong] §eCouldn't listen on port " + REDIRECT_PORT + ". Log in, then copy the address of the page that fails to load (§lCtrl+L§r§e, §lCtrl+C§r§e).");
             }
+
+            this.sendLoginLink(authUrl);
         } catch (Exception e) {
             SkysongClient.LOGGER.error("Failed to start authentication", e);
             this.sendChat("§b[Skysong] §cError: " + e.getMessage());
+        }
+    }
+
+    private void sendLoginLink(String authUrl) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player != null) {
+            mc.player.displayClientMessage(
+                Component.literal("§b[Skysong] §7No browser? ")
+                    .append(
+                        Component.literal("§b§nOpen the Spotify login")
+                            .withStyle(style -> style.withClickEvent(new ClickEvent.OpenUrl(URI.create(authUrl))))
+                    ),
+                false
+            );
         }
     }
 
@@ -378,8 +414,12 @@ public class SpotifyManager {
         }
 
         this.authServer = new SpotifyAuthServer(
-            state, code -> new Thread(() -> this.exchangeCodeForToken(code)).start(), error -> Minecraft.getInstance().execute(() -> {
+            REDIRECT_PORT,
+            state,
+            code -> AUTH.execute(() -> this.exchangeCodeForToken(code)),
+            error -> Minecraft.getInstance().execute(() -> {
                 this.status = "Not connected";
+                this.codeVerifier = null;
                 this.sendChat("§b[Skysong] §eSpotify login was cancelled. Click §lConnect Spotify§r§e to try again.");
             })
         );
@@ -388,7 +428,7 @@ public class SpotifyManager {
             this.authServer.start();
             return true;
         } catch (IOException e) {
-            SkysongClient.LOGGER.warn("[Skysong] Can't open the login receiver on port 43821: {}", e.getMessage());
+            SkysongClient.LOGGER.warn("[Skysong] Can't open the login receiver on port {}: {}", REDIRECT_PORT, e.getMessage());
             this.authServer = null;
             return false;
         }
@@ -396,7 +436,7 @@ public class SpotifyManager {
 
     public void startGuidedSetup() {
         Minecraft mc = Minecraft.getInstance();
-        mc.keyboardHandler.setClipboard("http://127.0.0.1:43821/callback");
+        mc.keyboardHandler.setClipboard(REDIRECT_URI);
         this.awaitingClientId = true;
         Util.getPlatform().openUri(URI.create("https://developer.spotify.com/dashboard"));
         this.sendChat("§b[Skysong] §fSpotify dashboard opened. Click §lCreate app§r§f:");
@@ -408,90 +448,117 @@ public class SpotifyManager {
     }
 
     public boolean handleChatCode(String message) {
-        if (this.codeVerifier == null) {
+        if (this.codeVerifier == null || !message.contains(REDIRECT_URI) || !message.contains("code=")) {
             return false;
         }
 
-        if (message.contains("code=") && message.contains("google.com")) {
-            String code = null;
-            String query = message.contains("?") ? message.split("\\?")[1] : message;
+        if (this.submitCallbackLink(message.trim())) {
+            this.sendChat("§b[Skysong] §aLink received! Connecting…");
+        }
 
-            for (String param : query.split("&")) {
-                if (param.startsWith("code=")) {
-                    code = param.substring(5).trim();
-                    break;
-                }
-            }
+        return true;
+    }
 
-            if (code != null && !code.isEmpty()) {
-                this.waitingForClipboard = false;
-                this.sendChat("§b[Skysong] §aLink received! Connecting…");
-                String finalCode = code;
-                new Thread(() -> this.exchangeCodeForToken(finalCode)).start();
-                return true;
+    public boolean submitCallbackLink(String link) {
+        if (link == null || !link.contains("code=")) {
+            return false;
+        }
+
+        String query = link.contains("?") ? link.substring(link.indexOf('?') + 1) : link;
+        String code = null;
+        String state = null;
+        for (String param : query.split("[&#]")) {
+            if (param.startsWith("code=")) {
+                code = URLDecoder.decode(param.substring(5).trim(), StandardCharsets.UTF_8);
+            } else if (param.startsWith("state=")) {
+                state = URLDecoder.decode(param.substring(6).trim(), StandardCharsets.UTF_8);
             }
         }
 
-        return false;
-    }
+        if (code == null || code.isEmpty()) {
+            return false;
+        }
 
-    public void exchangeCodeForTokenPublic(String code) {
-        new Thread(() -> this.exchangeCodeForToken(code)).start();
+        if (this.codeVerifier == null) {
+            this.sendChat("§b[Skysong] §eClick Connect Spotify first.");
+            return false;
+        }
+
+        if (state != null && !state.equals(this.pendingState)) {
+            this.sendChat("§b[Skysong] §eThat login link is out of date. Click Connect Spotify again.");
+            return false;
+        }
+
+        this.waitingForClipboard = false;
+        String finalCode = code;
+        AUTH.execute(() -> this.exchangeCodeForToken(finalCode));
+        return true;
     }
 
     private void exchangeCodeForToken(String code) {
         String verifier = this.codeVerifier;
-        if (verifier == null) {
-            if (this.accessToken == null) {
-                this.sendChat("§b[Skysong] §eClick Connect Spotify first, then copy the google.com link.");
-            }
-        } else if (this.exchanging.compareAndSet(false, true)) {
-            try {
-                if (code.contains("#")) {
-                    code = code.split("#")[0];
-                }
-
-                String requestBody = "client_id="
-                    + clientId()
-                    + "&grant_type=authorization_code&code="
-                    + code
-                    + "&redirect_uri="
-                    + URLEncoder.encode(this.redirectUri, StandardCharsets.UTF_8)
-                    + "&code_verifier="
-                    + verifier;
-                HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://accounts.spotify.com/api/token"))
-                    .header("Content-Type", "application/x-www-form-urlencoded")
-                    .POST(BodyPublishers.ofString(requestBody))
-                    .build();
-                HttpResponse<String> response = this.httpClient.send(request, BodyHandlers.ofString());
-                SkysongClient.LOGGER.info("Token response status: {}", response.statusCode());
-                if (response.statusCode() == 200) {
-                    this.applyTokenResponse(JsonParser.parseString(response.body()).getAsJsonObject());
-                    this.codeVerifier = null;
-                    this.lastProblemShown = null;
-                    SkysongClient.LOGGER.info("[Skysong] Spotify login complete");
-                    this.sendChat("§b[Skysong] §a§lConnected to Spotify! §r§aYou won't need to log in again.");
-                } else {
-                    SkysongClient.LOGGER.error("Token exchange failed: {}", response.body());
-                    this.sendChat("§b[Skysong] §cLogin failed: " + response.body());
-                    this.codeVerifier = null;
-                }
-            } catch (Exception e) {
-                SkysongClient.LOGGER.error("Token exchange exception", e);
-                this.sendChat("§b[Skysong] §cError: " + e.getMessage());
-                this.codeVerifier = null;
-            } finally {
-                this.exchanging.set(false);
-            }
+        if (verifier == null || !this.exchanging.compareAndSet(false, true)) {
+            return;
         }
+
+        try {
+            String requestBody = "client_id="
+                + clientId()
+                + "&grant_type=authorization_code&code="
+                + URLEncoder.encode(code, StandardCharsets.UTF_8)
+                + "&redirect_uri="
+                + URLEncoder.encode(REDIRECT_URI, StandardCharsets.UTF_8)
+                + "&code_verifier="
+                + verifier;
+            HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(TOKEN_URL))
+                .timeout(Duration.ofSeconds(15L))
+                .header("Content-Type", "application/x-www-form-urlencoded")
+                .POST(BodyPublishers.ofString(requestBody))
+                .build();
+            HttpResponse<String> response = this.httpClient.send(request, BodyHandlers.ofString());
+            this.codeVerifier = null;
+            this.pendingState = null;
+            if (response.statusCode() == 200) {
+                this.applyTokenResponse(JsonParser.parseString(response.body()).getAsJsonObject());
+                this.lastProblemShown = null;
+                SkysongClient.LOGGER.info("[Skysong] Spotify login complete");
+                this.sendChat("§b[Skysong] §a§lConnected to Spotify! §r§aYou won't need to log in again.");
+            } else {
+                SkysongClient.LOGGER.error("Token exchange failed ({}): {}", response.statusCode(), response.body());
+                this.status = "Not connected";
+                this.sendChat("§b[Skysong] §cLogin failed: " + loginError(response.body()));
+            }
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
+            SkysongClient.LOGGER.error("Token exchange exception", e);
+            this.status = "Not connected";
+            this.sendChat("§b[Skysong] §cError: " + e.getMessage());
+            this.codeVerifier = null;
+        } finally {
+            this.exchanging.set(false);
+        }
+    }
+
+    private static String loginError(String body) {
+        String b = body == null ? "" : body.toLowerCase(Locale.ROOT);
+        if (b.contains("redirect")) {
+            return "add " + REDIRECT_URI + " to the app's Redirect URIs";
+        }
+
+        return b.contains("invalid_grant") ? "the login code expired, click Connect Spotify again" : body;
     }
 
     private void sendChat(String msg) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player != null) {
-            mc.player.displayClientMessage(Component.literal(msg), false);
-        }
+        mc.execute(() -> {
+            if (mc.player != null) {
+                mc.player.displayClientMessage(Component.literal(msg), false);
+            }
+        });
     }
 
     private void applyTokenResponse(JsonObject json) {
@@ -502,32 +569,68 @@ public class SpotifyManager {
 
         long expiresIn = json.has("expires_in") ? json.get("expires_in").getAsLong() : 3600L;
         this.expiresAt = System.currentTimeMillis() + expiresIn * 1000L;
+        this.refreshFailures = 0;
         this.status = "Connected";
         this.saveToken();
+        this.scheduleRefresh(this.expiresAt - System.currentTimeMillis() - REFRESH_EARLY_MS);
+    }
+
+    private void scheduleRefresh(long delayMs) {
+        ScheduledFuture<?> pending = this.refreshTask;
+        if (pending != null) {
+            pending.cancel(false);
+        }
+
+        this.refreshTask = this.refreshToken == null ? null : AUTH.schedule(this::refreshNow, Math.max(0L, delayMs), TimeUnit.MILLISECONDS);
     }
 
     private void refreshAccessToken() {
-        if (this.refreshToken != null && this.refreshing.compareAndSet(false, true)) {
-            String body = "grant_type=refresh_token&refresh_token=" + URLEncoder.encode(this.refreshToken, StandardCharsets.UTF_8) + "&client_id=" + clientId();
+        if (this.refreshToken != null && !this.refreshing.get()) {
+            AUTH.execute(this::refreshNow);
+        }
+    }
+
+    private void refreshNow() {
+        String token = this.refreshToken;
+        if (token == null || !this.refreshing.compareAndSet(false, true)) {
+            return;
+        }
+
+        try {
+            String body = "grant_type=refresh_token&refresh_token=" + URLEncoder.encode(token, StandardCharsets.UTF_8) + "&client_id=" + clientId();
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://accounts.spotify.com/api/token"))
+                .uri(URI.create(TOKEN_URL))
+                .timeout(Duration.ofSeconds(15L))
                 .header("Content-Type", "application/x-www-form-urlencoded")
                 .POST(BodyPublishers.ofString(body))
                 .build();
-            this.httpClient.sendAsync(request, BodyHandlers.ofString()).whenComplete((response, error) -> {
-                try {
-                    if (error == null && response.statusCode() == 200) {
-                        this.applyTokenResponse(JsonParser.parseString(response.body()).getAsJsonObject());
-                        SkysongClient.LOGGER.info("[Skysong] Spotify login refreshed");
-                    } else if (error == null && response.statusCode() == 400) {
-                        this.clearSession("Login expired");
-                        this.reportProblem("expired", "§eYour Spotify login expired. Press §lRight Shift§r§e → Spotify → §lConnect Spotify§r§e.");
-                    }
-                } finally {
-                    this.refreshing.set(false);
-                }
-            });
+            HttpResponse<String> response = this.httpClient.send(request, BodyHandlers.ofString());
+            if (response.statusCode() == 200) {
+                this.applyTokenResponse(JsonParser.parseString(response.body()).getAsJsonObject());
+                SkysongClient.LOGGER.info("[Skysong] Spotify login refreshed");
+            } else if (response.statusCode() == 400 || response.statusCode() == 401) {
+                SkysongClient.LOGGER.warn("[Skysong] Spotify refused the saved login: {}", response.body());
+                this.clearSession("Login expired");
+                this.reportProblem("expired", "§eYour Spotify login expired. Press §lRight Shift§r§e → Spotify → §lConnect Spotify§r§e.");
+            } else {
+                this.retryRefresh("Spotify answered " + response.statusCode());
+            }
+        } catch (Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+
+            this.retryRefresh(e.getMessage());
+        } finally {
+            this.refreshing.set(false);
         }
+    }
+
+    private void retryRefresh(String reason) {
+        long delay = Math.min(REFRESH_RETRY_MAX_MS, REFRESH_RETRY_MS << Math.min(this.refreshFailures, 5));
+        this.refreshFailures++;
+        SkysongClient.LOGGER.warn("[Skysong] Couldn't refresh the Spotify login ({}), trying again in {}s", reason, delay / 1000L);
+        this.scheduleRefresh(delay);
     }
 
     private static String shortReason(String body) {
