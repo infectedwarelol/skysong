@@ -26,6 +26,34 @@ final class Geo {
         this.out.addVertex(this.pose, x, y, z).setColor(argb).setUv(u, v).setOverlay(OverlayTexture.NO_OVERLAY).setLight(this.light).setNormal(this.pose, nx, ny, nz);
     }
 
+    void quad(float ax, float ay, float az, float bx, float by, float bz, float cx, float cy, float cz, float dx, float dy, float dz, int argb) {
+        float e1x = cx - ax;
+        float e1y = cy - ay;
+        float e1z = cz - az;
+        float e2x = dx - bx;
+        float e2y = dy - by;
+        float e2z = dz - bz;
+        float nx = e1y * e2z - e1z * e2y;
+        float ny = e1z * e2x - e1x * e2z;
+        float nz = e1x * e2y - e1y * e2x;
+        float lengthSquared = nx * nx + ny * ny + nz * nz;
+        if (lengthSquared < 1.0E-12F) {
+            nx = 0.0F;
+            ny = -1.0F;
+            nz = 0.0F;
+        } else {
+            float inv = Mth.invSqrt(lengthSquared);
+            nx *= inv;
+            ny *= inv;
+            nz *= inv;
+        }
+
+        this.vertex(ax, ay, az, argb, 0.0F, 0.0F, nx, ny, nz);
+        this.vertex(bx, by, bz, argb, 1.0F, 0.0F, nx, ny, nz);
+        this.vertex(cx, cy, cz, argb, 1.0F, 1.0F, nx, ny, nz);
+        this.vertex(dx, dy, dz, argb, 0.0F, 1.0F, nx, ny, nz);
+    }
+
     void quad(Vector3f a, Vector3f b, Vector3f c, Vector3f d, int argb) {
         this.quad(a, b, c, d, argb, argb, argb, argb);
     }

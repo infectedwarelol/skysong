@@ -45,6 +45,12 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
     };
     private static final float[][] PET_SLOTS = new float[][]{{0.68F, -0.42F, 0.18F}, {-0.68F, -0.42F, 0.18F}, {0.32F, -0.8F, 0.48F}};
     private static final float[][] PET_SLOTS_FIRST_PERSON = new float[][]{{0.95F, -0.1F, -1.45F}, {-0.95F, -0.1F, -1.45F}, {1.55F, -0.3F, -1.9F}};
+    private static final int BANNER_COLUMNS = 8;
+    private static final int BANNER_ROWS = 10;
+    private static final float[] BANNER_HEM = new float[]{0.0F, 0.09F, 0.02F, 0.13F, 0.04F, 0.11F, 0.0F, 0.08F, 0.03F};
+    private static final float[] BANNER_PLEAT = pleats();
+    private static final float[] BANNER_PREVIOUS = new float[(BANNER_COLUMNS + 1) * 3];
+    private static final float[] BANNER_CURRENT = new float[(BANNER_COLUMNS + 1) * 3];
     private static final float[] RIBBON_X = new float[]{-0.17F, 0.0F, 0.17F};
     private static final float[] RIBBON_HALF_WIDTH = new float[]{0.07F, 0.09F, 0.07F};
     private static final float[] RIBBON_LENGTH = new float[]{0.86F, 1.02F, 0.86F};
@@ -377,10 +383,14 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         int c2 = Cosmetics.color(mode, ModSettings.cosmeticCapeColor, ModSettings.cosmeticCapeColor2, 1.0F);
         boolean armored = !state.chestEquipment.isEmpty();
         pose.translate(0.0F, armored ? -0.053F : 0.0F, armored ? 0.19F : 0.135F);
-        pose.mulPose(Axis.XP.rotationDegrees(6.0F + state.capeLean / 2.0F + state.capeFlap));
+        int style = ModSettings.cosmeticCapeStyle;
+        float swing = 6.0F + state.capeLean / 2.0F + state.capeFlap;
+        pose.mulPose(Axis.XP.rotationDegrees(swing));
         pose.mulPose(Axis.ZP.rotationDegrees(state.capeLean2 / 2.0F));
-        if (ModSettings.cosmeticCapeStyle == Cosmetics.SHARD_CAPE) {
+        if (style == Cosmetics.SHARD_CAPE) {
             collector.submitCustomGeometry(pose, RenderTypes.entityTranslucentEmissive(CosmeticTextures.white()), (p, out) -> shards(new Geo(p, out, FULL_BRIGHT), age, c1, c2));
+        } else if (style == Cosmetics.BANNER_CAPE) {
+            collector.submitCustomGeometry(pose, RenderTypes.entityCutoutNoCull(CosmeticTextures.white()), (p, out) -> banner(new Geo(p, out, light), age, c1, c2));
         } else {
             collector.submitCustomGeometry(pose, RenderTypes.entityTranslucent(CosmeticTextures.white()), (p, out) -> {
                 Geo geo = new Geo(p, out, light);
@@ -509,6 +519,61 @@ public class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> 
         }
 
         pose.popPose();
+    }
+
+    private static float[] pleats() {
+        float[] pleats = new float[BANNER_COLUMNS + 1];
+        for (int k = 0; k <= BANNER_COLUMNS; k++) {
+            pleats[k] = (k & 1) == 0 ? 0.012F : -0.004F;
+        }
+
+        return pleats;
+    }
+
+    private static void banner(Geo geo, float age, int c1, int c2) {
+        float[] previous = BANNER_PREVIOUS;
+        float[] current = BANNER_CURRENT;
+        int liningBase = Colors.darken(c2, 0.55F);
+        int previousColor = c1;
+        for (int row = 0; row <= BANNER_ROWS; row++) {
+            float v = (float)row / BANNER_ROWS;
+            float half = 0.25F + 0.06F * v;
+            for (int k = 0; k <= BANNER_COLUMNS; k++) {
+                float u = (float)k / BANNER_COLUMNS;
+                int i = k * 3;
+                current[i] = (u * 2.0F - 1.0F) * half;
+                current[i + 1] = v * (0.98F - BANNER_HEM[k]);
+                current[i + 2] = BANNER_PLEAT[k] * (0.4F + v) + Mth.sin(age * 0.07F - v * 3.0F + u * 1.5F) * 0.035F * v;
+            }
+
+            int rowColor = Colors.lerp(c1, Colors.darken(c1, 0.72F), v);
+            if (row > 0) {
+                int fold = Colors.darken(previousColor, 0.88F);
+                int lining = Colors.lerp(liningBase, Colors.darken(liningBase, 0.8F), v);
+                for (int k = 0; k < BANNER_COLUMNS; k++) {
+                    int a = k * 3;
+                    int b = a + 3;
+                    int color = (k & 1) == 0 ? previousColor : fold;
+                    geo.quad(
+                        previous[a], previous[a + 1], previous[a + 2],
+                        previous[b], previous[b + 1], previous[b + 2],
+                        current[b], current[b + 1], current[b + 2],
+                        current[a], current[a + 1], current[a + 2],
+                        color
+                    );
+                    geo.quad(
+                        previous[a], previous[a + 1], previous[a + 2] - 0.012F,
+                        previous[b], previous[b + 1], previous[b + 2] - 0.012F,
+                        current[b], current[b + 1], current[b + 2] - 0.012F,
+                        current[a], current[a + 1], current[a + 2] - 0.012F,
+                        lining
+                    );
+                }
+            }
+
+            System.arraycopy(current, 0, previous, 0, current.length);
+            previousColor = rowColor;
+        }
     }
 
     private static int petColor(float t) {

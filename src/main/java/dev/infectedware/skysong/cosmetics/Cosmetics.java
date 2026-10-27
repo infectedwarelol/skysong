@@ -27,10 +27,11 @@ public final class Cosmetics {
     public static final String[] COLOR_MODES = new String[]{"Theme", "Rainbow", "Custom", "Two colors"};
     public static final String[] HALOS = new String[]{"Ring", "Double ring", "Rays", "Tilted"};
     public static final String[] HATS = new String[]{"Top hat", "Crown", "Witch hat", "Party hat", "Cat ears", "Bunny ears", "Horns", "Conical hat"};
-    public static final String[] CAPES = new String[]{"Galaxy", "Gradient", "Flames", "Waves", "Stripes", "Checkers", "My image", "Silk ribbons", "Crystal shards"};
+    public static final String[] CAPES = new String[]{"Galaxy", "Gradient", "Flames", "Waves", "Stripes", "Checkers", "My image", "Silk ribbons", "Crystal shards", "Torn banner"};
     public static final int CAPE_IMAGE = 6;
     public static final int RIBBON_CAPE = 7;
     public static final int SHARD_CAPE = 8;
+    public static final int BANNER_CAPE = 9;
     public static final String[] WINGS = new String[]{"Angel", "Demon", "Fairy", "Butterfly", "Dragon", "Neon"};
     public static final int NEON_WINGS = 5;
     public static final String[] AURAS = new String[]{"Energy", "Sparkles", "Energy + sparkles"};
@@ -65,7 +66,8 @@ public final class Cosmetics {
     }
 
     public static boolean shapedCape() {
-        return ModSettings.cosmeticCapeStyle == RIBBON_CAPE || ModSettings.cosmeticCapeStyle == SHARD_CAPE;
+        int style = ModSettings.cosmeticCapeStyle;
+        return style >= RIBBON_CAPE && style <= BANNER_CAPE;
     }
 
     public static boolean shapedPet(int type) {
